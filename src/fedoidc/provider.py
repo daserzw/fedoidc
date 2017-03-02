@@ -1,6 +1,7 @@
 import logging
 
 from fedoidc import ClientMetadataStatement
+from fedoidc.file_system import FileSystem
 from oic.oauth2 import error
 from oic.oic import provider
 from oic.oic.message import DiscoveryRequest
@@ -20,7 +21,8 @@ class Provider(provider.Provider):
                  hostname="", template_lookup=None, template=None,
                  verify_ssl=True, capabilities=None, schema=OpenIDSchema,
                  jwks_uri='', jwks_name='', baseurl=None, client_cert=None,
-                 federation_entity=None, fo_priority=None):
+                 federation_entity=None, fo_priority=None, ms_dir='',
+                 signing_service=None):
         provider.Provider.__init__(
             self, name, sdb, cdb, authn_broker, userinfo, authz,
             client_authn, symkey, urlmap=urlmap, ca_certs=ca_certs,
@@ -31,6 +33,41 @@ class Provider(provider.Provider):
 
         self.federation_entity = federation_entity
         self.fo_priority = fo_priority
+        self.metadata_statements = FileSystem(ms_dir)
+        self.signing_service = signing_service
+
+    def create_metadata_statement_request(self, fos, setup=None):
+        """
+        Create a request to be signed by higher ups.
+
+        :param fos: List of Federations that we like to work within.
+        :return: A JSON document
+        """
+        pcr = self.create_providerinfo(setup=setup)
+        pcr['signing_keys'] = self.federation_entity.signing_keys_as_jwks()
+        _ms = []
+        for fo in fos:
+            try:
+                _ms.append(self.metadata_statements[fo])
+            except KeyError:
+                pass
+        if _ms:
+            pcr['metadata_statements'] = _ms
+
+        return pcr
+
+    def create_fed_providerinfo(self, fos=None, setup=None):
+        if fos is None:
+            fos = list(self.metadata_statements.keys())
+
+        _req = self.create_metadata_statement_request(fos=fos, setup=setup)
+
+        _ms = self.signing_service(_req.to_json)
+
+        del _req['signing_keys']
+        _req['metadata_statements'] = _ms
+
+        return _req
 
     def discovery_endpoint(self, request, handle=None, **kwargs):
         if isinstance(request, dict):

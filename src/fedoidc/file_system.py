@@ -55,23 +55,21 @@ class FileSystem(object):
 
     def keys(self):
         self.sync()
-        res = []
         for k in self.db.keys():
             try:
-                res.append(self.key_conv['from'](k))
+                yield self.key_conv['from'](k)
             except KeyError:
-                res.append(k)
-        return res
+                yield k
 
     @staticmethod
     def get_mtime(fname):
         try:
-            mtime = os.stat(fname).st_mtime
+            mtime = os.stat(fname).st_mtime_ns
         except OSError:
             # The file might be right in the middle of being written
             # so sleep
             time.sleep(1)
-            mtime = os.stat(fname).st_mtime
+            mtime = os.stat(fname).st_mtime_ns
 
         return mtime
 

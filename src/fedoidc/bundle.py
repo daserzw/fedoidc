@@ -75,7 +75,8 @@ class JWKSBundle(object):
 
     def loads(self, jstr):
         """
-        Upload a bundle from a string
+        Upload a bundle from an unsigned JSON document
+
         :param jstr:
         :return:
         """
@@ -106,8 +107,8 @@ class JWKSBundle(object):
         return _int
 
     def upload_signed_bundle(self, sign_bundle, ver_keys):
-        jstr = verify_signed_bundle(sign_bundle, ver_keys)
-        self.loads(jstr)
+        jwt = verify_signed_bundle(sign_bundle, ver_keys)
+        self.loads(jwt['bundle'])
 
     def as_keyjar(self):
         kj = KeyJar()
