@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 from time import time
@@ -10,6 +11,7 @@ from fedoidc.provider import Provider
 from fedoidc.signing_service import SigningService
 from fedoidc.test_utils import make_jwks_bundle
 from fedoidc.test_utils import make_signed_metadata_statements
+from jwkest import jws, as_unicode
 
 from oic import rndstr
 from oic.utils.authn.authn_context import AuthnBroker
@@ -124,9 +126,32 @@ class TestProvider(object):
         self.op.baseurl = self.op.name
 
     def test_create_metadata_statement_request(self):
-        json_req = self.op.create_metadata_statement_request(
+        req = self.op.create_metadata_statement_request(
             self.op.metadata_statements.keys())
 
-        req = ProviderConfigurationResponse().from_json(json_req)
         assert 'signing_keys' in req
         assert len(req['metadata_statements']) == 2
+
+    def test_use_signing_service(self):
+        req = self.op.create_metadata_statement_request(
+            self.op.metadata_statements.keys())
+
+        sjwt = self.op.signing_service(req)
+        assert sjwt
+
+        # should be a signed JWT
+
+        _js = jws.factory(sjwt)
+        assert _js
+        assert _js.jwt.headers['alg'] == 'RS256'
+
+    def test_create_fed_provider_info(self):
+        fedpi = self.op.create_fed_providerinfo()
+
+        assert 'signing_keys' not in fedpi
+
+        _js = jws.factory(fedpi['metadata_statements'][0])
+        assert _js
+        assert _js.jwt.headers['alg'] == 'RS256'
+        _body = json.loads(as_unicode(_js.jwt.part[1]))
+        assert _body['iss'] == self.op.signing_service.iss

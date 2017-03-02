@@ -62,10 +62,10 @@ class Provider(provider.Provider):
 
         _req = self.create_metadata_statement_request(fos=fos, setup=setup)
 
-        _ms = self.signing_service(_req.to_json)
+        _ms = self.signing_service(_req)
 
         del _req['signing_keys']
-        _req['metadata_statements'] = _ms
+        _req['metadata_statements'] = [_ms]
 
         return _req
 
