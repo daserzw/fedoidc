@@ -22,35 +22,48 @@ logger = logging.getLogger(__name__)
 __author__ = 'roland'
 
 
-class Client(oic.Client, FederationEntity):
+class Client(oic.Client):
     def __init__(self, client_id=None, ca_certs=None,
                  client_prefs=None, client_authn_method=None, keyjar=None,
                  verify_ssl=True, config=None, client_cert=None,
-                 fo_jwks_dir=None, signed_metadata_statements_dir=None,
-                 fo_priority_order=None):
+                 federation_entity=None, fo_priority=None):
         oic.Client.__init__(
             self, client_id=client_id, ca_certs=ca_certs,
             client_prefs=client_prefs, client_authn_method=client_authn_method,
             keyjar=keyjar, verify_ssl=verify_ssl, config=config,
             client_cert=client_cert)
 
-        FederationEntity.__init__(
-            self, signed_metadata_statements_dir=signed_metadata_statements_dir,
-            fo_jwks_dir=fo_jwks_dir, keyjar=keyjar, eid=client_id,
-            fo_priority_order=fo_priority_order, ms_cls=ClientMetadataStatement)
+        self.federation_entity = federation_entity
+        self.fo_priority = fo_priority
+        self.federation = ''
 
     def handle_registration_info(self, response):
         err_msg = 'Got error response: {}'
         unk_msg = 'Unknown response: {}'
+
         if response.status_code in [200, 201]:
             resp = RegistrationResponse().deserialize(response.text, "json")
+
             # Some implementations sends back a 200 with an error message inside
             if resp.verify():  # got a proper registration response
-                resp = self.get_metadata_statement(resp)
-                if resp is None: # No metadata statement that I can use
+                resp = self.federation_entity.get_metadata_statement(
+                    resp, cls=RegistrationResponse)
+
+                if not resp: # No metadata statement that I can use
                     raise RegistrationError('No trusted metadata')
-                self.store_response(resp, response.text)
-                self.store_registration_info(resp)
+
+                # response is a dictionary with the FO ID as keys and the
+                # registration info as values
+
+                iss, _rsp = self.federation_entity.pick_by_priority(
+                    resp, self.fo_priority)
+
+                if not iss:
+                    raise RegistrationError('No trusted metadata')
+
+                self.store_response(_rsp, response.text)
+                self.store_registration_info(_rsp)
+                self.federation = iss
             else:
                 resp = ErrorResponse().deserialize(response.text, "json")
                 if resp.verify():
@@ -86,7 +99,7 @@ class Client(oic.Client, FederationEntity):
             pp = kwargs['fo_pattern']
         except KeyError:
             pp = '.'
-        req['metadata_statements'] = self.pick_signed_metadata_statements(pp)
+        req['metadata_statements'] = self.federation_entity.pick_signed_metadata_statements(pp)
 
         try:
             req['redirect_uris'] = kwargs['redirect_uris']

@@ -17,14 +17,14 @@ class FileSystem(object):
 
     def __getitem__(self, item):
         try:
-            item = self.key_conv['in'](item)
+            item = self.key_conv['to'](item)
         except KeyError:
             pass
 
         if self.is_changed(item):
             logger.info("File content change in {}".format(item))
             fname = os.path.join(self.fdir, item)
-            self.db[item] = self._read_info(self.value_conv['from'](fname))
+            self.db[item] = self._read_info(fname)
 
         return self.db[item]
 

@@ -2,13 +2,8 @@ import json
 import logging
 import re
 
-from future.backports.urllib.parse import quote_plus
-from future.backports.urllib.parse import unquote_plus
-
-from fedoidc.file_system import FileSystem
-
+from fedoidc import MetadataStatement
 from oic.utils.keyio import KeyJar
-from fedoidc import ClientMetadataStatement
 from fedoidc.operator import Operator
 
 __author__ = 'roland'
@@ -17,25 +12,26 @@ logger = logging.getLogger(__name__)
 
 
 class FederationEntity(Operator):
-    def __init__(self, srv, jwks_file=None, iss='', keyjar=None,
-                 signed_metadata_statements_dir='.', fo_bundle=None,
-                 ms_cls=ClientMetadataStatement):
+    def __init__(self, srv, iss='', keyjar=None,
+                 signer=None, fo_bundle=None):
+        """
 
-        if jwks_file:
-            keyjar = self.read_jwks_file(jwks_file)
+        :param srv: A Client or Provider instance
+        :param iss: A identifier assigned to this entity by the operator
+        :param keyjar: Key this entity can use to sign things
+        :param signer: A set of signers to use for signing documents
+            (client registration requests/provide info response) this
+            entity produces.
+        :param fo_bundle: A bundle of keys that can be used to verify
+            the root signature of a compounded metadata statement.
+        """
 
         Operator.__init__(self, iss=iss, keyjar=keyjar, httpcli=srv)
 
         # FO keys
         self.fo_bundle = fo_bundle
-
-        # Signed metadata statements
-        self.signed_metadata_statements = FileSystem(
-            signed_metadata_statements_dir,
-            key_conv={'to': quote_plus, 'from': unquote_plus})
-        self.signed_metadata_statements.sync()
-
-        self.ms_cls = ms_cls
+        # Who can sign request from this entity
+        self.signer = signer
 
     def read_jwks_file(self, jwks_file):
         _jwks = open(jwks_file, 'r').read()
@@ -45,36 +41,37 @@ class FederationEntity(Operator):
 
     def pick_by_priority(self, req, priority=None):
         if not priority:
-            return req.values()[0]  # Just return any
+            _key = list(req.keys())[0]  # Just return any
+            return _key, req[_key]
 
         for iss in priority:
             try:
-                return req[iss]
+                return iss, req[iss]
             except KeyError:
                 pass
-        return None
+        return '', None
 
-    def pick_signed_metadata_statements(self, pattern):
+    def pick_signed_metadata_statements(self, pattern, signer):
         """
         Pick signed metadata statements based on ISS pattern matching
         :param pattern: A regular expression to match the iss against
-        :return: list of signed metadata statements
+        :return: list of tuples (FO ID, signed metadata statement)
         """
         comp_pat = re.compile(pattern)
+        sms = self.signer[signer].signed_metadata_statements
         res = []
-        for iss, vals in self.signed_metadata_statements.items():
+        for iss, vals in sms.items():
             if comp_pat.search(iss):
-                res.extend(vals)
+                res.extend((iss, vals))
         return res
 
-    def get_metadata_statement(self, json_ms):
+    def get_metadata_statement(self, json_ms, cls=MetadataStatement):
         """
         Unpack and evaluate a compound metadata statement
         :param json_ms: The metadata statement as a JSON document
         :return: A dictionary with metadata statements per FO
         """
-        _cms = self.unpack_metadata_statement(json_ms=json_ms,
-                                              cls=self.ms_cls)
+        _cms = self.unpack_metadata_statement(json_ms=json_ms, cls=cls)
         ms_per_fo = self.evaluate_metadata_statement(_cms)
 
         return ms_per_fo

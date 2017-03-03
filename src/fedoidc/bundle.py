@@ -103,7 +103,10 @@ class JWKSBundle(object):
         _int = {}
         for iss, kj in self.bundle.items():
             if iss_list is None or iss in iss_list:
-                _int[iss] = kj.export_jwks(issuer=iss)
+                try:
+                    _int[iss] = kj.export_jwks(issuer=iss)
+                except KeyError:
+                    _int[iss] = kj.export_jwks()
         return _int
 
     def upload_signed_bundle(self, sign_bundle, ver_keys):
