@@ -18,7 +18,7 @@ def make_fs_jwks_bundle(iss, fo_liss, sign_keyjar, keydefs, base_path=''):
     the signing keys.
 
     :param iss: The issuer ID of the entity owning the JWKSBundle
-    :param fo_liss: Dictionary with federation identifiers as keys
+    :param fo_liss: List with federation identifiers as keys
     :param sign_keyjar: Keys that the JWKSBundel owner can use to sign
         an export version of the JWKS bundle.
     :param keydefs: What type of keys that should be created for each
@@ -32,7 +32,8 @@ def make_fs_jwks_bundle(iss, fo_liss, sign_keyjar, keydefs, base_path=''):
     # Need to save the private parts on disc
     jb.bundle.value_conv['to'] = keyjar_to_jwks_private
 
-    for entity, _name in fo_liss.items():
+    for entity in fo_liss:
+        _name = entity.replace('/', '_')
         try:
             _ = jb[entity]
         except KeyError:

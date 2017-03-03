@@ -12,6 +12,8 @@ class FileSystem(object):
         self.db = {}
         self.key_conv = key_conv or {}
         self.value_conv = value_conv or {}
+        if not os.path.isdir(fdir):
+            os.makedirs(fdir)
 
     def __getitem__(self, item):
         try:
