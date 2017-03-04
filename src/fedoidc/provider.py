@@ -1,24 +1,18 @@
 import logging
 
 from fedoidc import ClientMetadataStatement
-from fedoidc.file_system import FileSystem
 from oic.oauth2 import error
 from oic.oic import provider
 from oic.oic.message import DiscoveryRequest
 from oic.oic.message import DiscoveryResponse
 from oic.oic.message import OpenIDSchema
+from oic.oic.message import RegistrationRequest
 from oic.oic.provider import SWD_ISSUER
 from oic.utils.http_util import Created, BadRequest
 from oic.utils.http_util import Response
 from oic.utils.sanitize import sanitize
 
 logger = logging.getLogger(__name__)
-
-
-class Signer(object):
-    def __init__(self, signing_service, ms_dir):
-        self.metadata_statements = FileSystem(ms_dir)
-        self.signing_service = signing_service
 
 
 class Provider(provider.Provider):
@@ -39,29 +33,7 @@ class Provider(provider.Provider):
         self.federation_entity = federation_entity
         self.fo_priority = fo_priority
 
-    def create_metadata_statement_request(self, signer, fos=None, setup=None):
-        """
-        Create a request to be signed by higher ups.
-
-        :param fos: List of Federations that we like to work within.
-        :return: A JSON document
-        """
-        pcr = self.create_providerinfo(setup=setup)
-        pcr['signing_keys'] = self.federation_entity.signing_keys_as_jwks()
-        _ms = []
-        for fo in fos:
-            try:
-                _ms.append(
-                    self.federation_entity.signer[signer].metadata_statements[
-                        fo])
-            except KeyError:
-                pass
-        if _ms:
-            pcr['metadata_statements'] = _ms
-
-        return pcr
-
-    def create_signed_metadata_statement(self, signer, fos=None, setup=None):
+    def create_signed_metadata_statement(self, fos=None, setup=None):
         """
 
         :param signer:
@@ -69,16 +41,17 @@ class Provider(provider.Provider):
         :param setup:
         :return:
         """
+        pcr = self.create_providerinfo(setup=setup)
+
         if fos is None:
-            fos = list(self.federation_entity.signer[
-                           signer].metadata_statements.keys())
+            fos = list(self.federation_entity.signer.metadata_statements.keys())
 
-        _req = self.create_metadata_statement_request(signer, fos=fos,
-                                                      setup=setup)
+        _req = self.federation_entity.create_metadata_statement_request(pcr,
+                                                                        fos)
 
-        return self.federation_entity.signer[signer].signing_service(_req)
+        return self.federation_entity.signer.signing_service(_req)
 
-    def create_fed_providerinfo(self, signers, fos=None, setup=None):
+    def create_fed_providerinfo(self, fos=None, setup=None):
         """
 
         :param fos:
@@ -86,13 +59,10 @@ class Provider(provider.Provider):
         :return:
         """
 
-        _ms = []
-        for signer in signers:
-            _ms.append(
-                self.create_signed_metadata_statement(signer, fos, setup))
+        _ms = self.create_signed_metadata_statement(fos, setup)
 
         pcr = self.create_providerinfo(setup=setup)
-        pcr['metadata_statements'] = _ms
+        pcr['metadata_statements'] = [_ms]
 
         return pcr
 
@@ -136,11 +106,12 @@ class Provider(provider.Provider):
         res = self.federation_entity.get_metadata_statement(request)
 
         if res:
-            request = self.federation_entity.pick_by_priority(res)
+            fo, _dict = self.federation_entity.pick_by_priority(res)
         else:  # Nothing I can use
             return error(error='invalid_request',
                          descr='No signed metadata statement I could use')
 
+        request = RegistrationRequest(**_dict)
         result = self.client_registration_setup(request)
         if isinstance(result, Response):
             return result

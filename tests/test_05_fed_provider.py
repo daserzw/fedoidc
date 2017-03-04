@@ -7,7 +7,8 @@ import pytest
 
 from fedoidc.entity import FederationEntity
 from fedoidc.operator import Operator
-from fedoidc.provider import Provider, Signer
+from fedoidc.provider import Provider
+from fedoidc.signing_service import Signer
 from fedoidc.signing_service import SigningService
 from fedoidc.test_utils import make_jwks_bundle
 from fedoidc.test_utils import make_signed_metadata_statements
@@ -120,7 +121,7 @@ class TestProvider(object):
 
         _kj = build_keyjar(KEYDEFS)[1]
         fed_ent = FederationEntity(None, keyjar=_kj, iss=sunet_op,
-                                   signer={'operator': SIGNER})
+                                   signer=SIGNER)
 
         self.op = Provider(sunet_op, SessionDB(sunet_op), {},
                            AUTHN_BROKER, USERINFO,
@@ -129,19 +130,22 @@ class TestProvider(object):
         self.op.baseurl = self.op.name
 
     def test_create_metadata_statement_request(self):
-        req = self.op.create_metadata_statement_request('operator',
-            fos=self.op.federation_entity.signer[
-                'operator'].metadata_statements.keys())
+        _fe = self.op.federation_entity
+        statement = self.op.create_providerinfo()
+
+        req = _fe.create_metadata_statement_request(statement,
+            fos=_fe.signer.metadata_statements.keys())
 
         assert 'signing_keys' in req
         assert len(req['metadata_statements']) == 2
 
     def test_use_signing_service(self):
-        req = self.op.create_metadata_statement_request('operator',
-            fos=self.op.federation_entity.signer[
-                'operator'].metadata_statements.keys())
+        _fe = self.op.federation_entity
+        statement = self.op.create_providerinfo()
+        req = _fe.create_metadata_statement_request(statement,
+            fos=_fe.signer.metadata_statements.keys())
 
-        sjwt = self.op.federation_entity.signer['operator'].signing_service(req)
+        sjwt = _fe.signer.signing_service(req)
         assert sjwt
 
         # should be a signed JWT
@@ -151,7 +155,7 @@ class TestProvider(object):
         assert _js.jwt.headers['alg'] == 'RS256'
 
     def test_create_fed_provider_info(self):
-        fedpi = self.op.create_fed_providerinfo(['operator'])
+        fedpi = self.op.create_fed_providerinfo()
 
         assert 'signing_keys' not in fedpi
 
@@ -159,5 +163,4 @@ class TestProvider(object):
         assert _js
         assert _js.jwt.headers['alg'] == 'RS256'
         _body = json.loads(as_unicode(_js.jwt.part[1]))
-        assert _body['iss'] == self.op.federation_entity.signer[
-            'operator'].signing_service.iss
+        assert _body['iss'] == self.op.federation_entity.signer.signing_service.iss

@@ -130,7 +130,5 @@ def is_lesser(a, b):
 
 #  The resulting metadata must not contain these parameters
 IgnoreKeys = list(JasonWebToken.c_param.keys())
-IgnoreKeys.extend([
-    'signing_keys', 'signing_keys_uri', 'metadata_statement_uris', 'kid',
-    'metadata_statements'])
-
+DoNotCompare= ['signing_keys', 'signing_keys_uri', 'metadata_statement_uris',
+               'kid', 'metadata_statements']

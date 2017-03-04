@@ -19,17 +19,16 @@ class FederationEntity(Operator):
         :param srv: A Client or Provider instance
         :param iss: A identifier assigned to this entity by the operator
         :param keyjar: Key this entity can use to sign things
-        :param signer: A set of signers to use for signing documents
+        :param signer: A signer to use for signing documents
             (client registration requests/provide info response) this
             entity produces.
         :param fo_bundle: A bundle of keys that can be used to verify
             the root signature of a compounded metadata statement.
         """
 
-        Operator.__init__(self, iss=iss, keyjar=keyjar, httpcli=srv)
+        Operator.__init__(self, iss=iss, keyjar=keyjar, httpcli=srv,
+                          jwks_bundle=fo_bundle)
 
-        # FO keys
-        self.fo_bundle = fo_bundle
         # Who can sign request from this entity
         self.signer = signer
 
@@ -51,17 +50,30 @@ class FederationEntity(Operator):
                 pass
         return '', None
 
-    def pick_signed_metadata_statements(self, pattern, signer):
+    def pick_signed_metadata_statements_regex(self, pattern):
         """
         Pick signed metadata statements based on ISS pattern matching
         :param pattern: A regular expression to match the iss against
         :return: list of tuples (FO ID, signed metadata statement)
         """
         comp_pat = re.compile(pattern)
-        sms = self.signer[signer].signed_metadata_statements
+        sms = self.signer.signed_metadata_statements
         res = []
         for iss, vals in sms.items():
             if comp_pat.search(iss):
+                res.extend((iss, vals))
+        return res
+
+    def pick_signed_metadata_statements(self, fo):
+        """
+        Pick signed metadata statements based on ISS pattern matching
+        :param fo: Federation operators ID
+        :return: list of tuples (FO ID, signed metadata statement)
+        """
+        sms = self.signer.signed_metadata_statements
+        res = []
+        for iss, vals in sms.items():
+            if iss == fo:
                 res.extend((iss, vals))
         return res
 
@@ -75,3 +87,23 @@ class FederationEntity(Operator):
         ms_per_fo = self.evaluate_metadata_statement(_cms)
 
         return ms_per_fo
+
+    def create_metadata_statement_request(self, statement, fos):
+        """
+        Create a request to be signed by higher ups.
+
+        :param fos: List of Federations that we like to work within.
+        :return: A JSON document
+        """
+        statement['signing_keys'] = self.signing_keys_as_jwks()
+        _ms = []
+        for fo in fos:
+            try:
+                _ms.append(
+                    self.signer.metadata_statements[fo])
+            except KeyError:
+                pass
+        if _ms:
+            statement['metadata_statements'] = _ms
+
+        return statement

@@ -9,7 +9,7 @@ from fedoidc.bundle import FSJWKSBundle, JWKSBundle
 from fedoidc.bundle import keyjar_to_jwks_private
 from fedoidc.file_system import FileSystem
 from fedoidc.operator import Operator
-from fedoidc.provider import Signer
+from fedoidc.signing_service import Signer
 from fedoidc.signing_service import SigningService
 
 from oic.utils.keyio import build_keyjar
@@ -186,13 +186,14 @@ def setup(keydefs, tool_iss, liss, csms_def, oa, ms_path):
 
     operator = {}
 
-    for entity, _keyjar in jb.items():
+    for entity, _keyjar in key_bundle.items():
         operator[entity] = Operator(iss=entity, keyjar=_keyjar)
 
     signers = {}
     for sig, sms_def in csms_def.items():
         ms_dir = os.path.join(ms_path, sig)
-        metadata_statements = FileSystem(ms_dir)
+        metadata_statements = FileSystem(
+            ms_dir, key_conv={'to': quote_plus, 'from': unquote_plus})
         for name, spec in sms_def.items():
             res = make_signed_metadata_statement(spec, operator)
             metadata_statements[name] = res['ms']

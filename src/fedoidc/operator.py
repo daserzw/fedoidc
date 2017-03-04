@@ -7,6 +7,7 @@ from jwkest.jws import JWSException
 import time
 
 from fedoidc import ClientMetadataStatement
+from fedoidc import DoNotCompare
 from fedoidc import IgnoreKeys
 from fedoidc import is_lesser
 from fedoidc import unfurl
@@ -40,6 +41,9 @@ class Operator(object):
 
     def signing_keys_as_jwks(self):
         _l = [x.serialize() for x in self.keyjar.get_signing_key()]
+        if not _l:
+            _l = [x.serialize() for x in
+                  self.keyjar.get_signing_key(owner=self.iss)]
         return {'keys': _l}
 
     def unpack_metadata_statement(self, json_ms=None, jwt_ms='', keyjar=None,
@@ -145,10 +149,16 @@ class Operator(object):
         _jwt = JWT(keyjar, iss=iss, msgtype=_metadata.__class__)
         if alg:
             _jwt.sign_alg = alg
-        if jwt_args:
-            return _jwt.pack(cls_instance=_metadata, **jwt_args)
+
+        if iss in keyjar.keys():
+            owner = iss
         else:
-            return _jwt.pack(cls_instance=_metadata)
+            owner = ''
+
+        if jwt_args:
+            return _jwt.pack(cls_instance=_metadata, owner=owner, **jwt_args)
+        else:
+            return _jwt.pack(cls_instance=_metadata, owner=owner)
 
     def evaluate_metadata_statement(self, metadata):
         """
@@ -194,10 +204,14 @@ class Operator(object):
                         if k not in _ci:
                             _ci[k] = v
 
+                    _ci = dict([(k, v) for k, v in _ci.items() if
+                                k not in DoNotCompare])
                     cres[_iss] = _ci
             return cres
         else:  # this is the innermost
             _iss = metadata['iss']  # The issuer == FO is interesting
+            res = dict([(k, v) for k, v in res.items() if
+                        k not in DoNotCompare])
             return {_iss: res}
 
 

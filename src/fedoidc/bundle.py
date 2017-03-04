@@ -53,7 +53,12 @@ class JWKSBundle(object):
         :param item: Issuer ID
         :return: A KeyJar instance
         """
-        return self.bundle[item]
+        kj = self.bundle[item]
+        if item not in list(kj.issuer_keys.keys()):
+            kj.issuer_keys[item] = kj.issuer_keys['']
+            del kj.issuer_keys['']
+
+        return kj
 
     def __delitem__(self, key):
         """
