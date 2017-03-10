@@ -132,20 +132,17 @@ class TestProvider(object):
     def test_create_metadata_statement_request(self):
         _fe = self.op.federation_entity
         statement = self.op.create_providerinfo()
-
-        req = _fe.create_metadata_statement_request(statement,
-            fos=_fe.signer.metadata_statements.keys())
-
+        req = _fe.create_metadata_statement_request(statement)
         assert 'signing_keys' in req
-        assert len(req['metadata_statements']) == 2
 
     def test_use_signing_service(self):
         _fe = self.op.federation_entity
         statement = self.op.create_providerinfo()
-        req = _fe.create_metadata_statement_request(statement,
-            fos=_fe.signer.metadata_statements.keys())
+        req = _fe.create_metadata_statement_request(statement)
 
-        sjwt = _fe.signer.signing_service(req)
+        sjwt = _fe.signer.create_signed_metadata_statement(
+            req, fos=_fe.signer.metadata_statements.keys())
+
         assert sjwt
 
         # should be a signed JWT

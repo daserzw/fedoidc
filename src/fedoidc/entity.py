@@ -88,22 +88,11 @@ class FederationEntity(Operator):
 
         return ms_per_fo
 
-    def create_metadata_statement_request(self, statement, fos):
+    def create_metadata_statement_request(self, statement):
         """
         Create a request to be signed by higher ups.
 
-        :param fos: List of Federations that we like to work within.
         :return: A JSON document
         """
         statement['signing_keys'] = self.signing_keys_as_jwks()
-        _ms = []
-        for fo in fos:
-            try:
-                _ms.append(
-                    self.signer.metadata_statements[fo])
-            except KeyError:
-                pass
-        if _ms:
-            statement['metadata_statements'] = _ms
-
         return statement

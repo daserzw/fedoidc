@@ -1,13 +1,14 @@
+import copy
 import logging
 
-from oic.exception import RegistrationError
-
 from oic import oic
-from fedoidc import ClientMetadataStatement
+from oic.exception import RegistrationError
 from oic.oauth2 import ErrorResponse
 from oic.oauth2 import MissingRequiredAttribute
 from oic.oauth2 import sanitize
 from oic.oic import RegistrationResponse
+
+from fedoidc import ClientMetadataStatement
 
 try:
     from json import JSONDecodeError
@@ -116,13 +117,14 @@ class Client(oic.Client):
 
         _fe = self.federation_entity
         if self.federation:
-            _cms = _fe.create_metadata_statement_request(req, [self.federation])
-            sms = _fe.signer.signing_service(_cms)
+            _cms = _fe.create_metadata_statement_request(req)
+            sms = _fe.signer.create_signed_metadata_statement(_cms,
+                                                              [self.federation])
             req['metadata_statements'] = [sms]
         else:
             _fos = list(self.provider_federations.keys())
-            _cms = _fe.create_metadata_statement_request(req, _fos)
-            sms = _fe.signer.signing_service(_cms)
+            _cms = _fe.create_metadata_statement_request(copy.copy(req))
+            sms = _fe.signer.create_signed_metadata_statement(_cms, _fos)
             req['metadata_statements'] = [sms]
 
         return req

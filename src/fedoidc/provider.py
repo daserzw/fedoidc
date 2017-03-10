@@ -42,14 +42,13 @@ class Provider(provider.Provider):
         :return:
         """
         pcr = self.create_providerinfo(setup=setup)
+        _fe = self.federation_entity
 
         if fos is None:
-            fos = list(self.federation_entity.signer.metadata_statements.keys())
+            fos = list(_fe.signer.metadata_statements.keys())
 
-        _req = self.federation_entity.create_metadata_statement_request(pcr,
-                                                                        fos)
-
-        return self.federation_entity.signer.signing_service(_req)
+        _req = _fe.create_metadata_statement_request(pcr)
+        return _fe.signer.create_signed_metadata_statement(_req, fos)
 
     def create_fed_providerinfo(self, fos=None, setup=None):
         """

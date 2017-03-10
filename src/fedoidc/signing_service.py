@@ -50,5 +50,20 @@ class Signer(object):
             ms_dir, key_conv={'to': quote_plus, 'from': unquote_plus})
         self.signing_service = signing_service
 
+    def create_signed_metadata_statement(self, req, fos=None):
+        if fos is None:
+            fos = list(self.metadata_statements.keys())
 
+        _msl = []
+        for f in fos:
+            try:
+                _msl.append(self.metadata_statements[f])
+            except KeyError:
+                pass
+
+        if not _msl:
+            raise KeyError('No metadata statements matched')
+
+        req['metadata_statements'] = _msl
+        return self.signing_service(req)
 
