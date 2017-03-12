@@ -61,9 +61,11 @@ class Signer(object):
             except KeyError:
                 pass
 
-        if not _msl:
+        if fos and not _msl:
             raise KeyError('No metadata statements matched')
 
-        req['metadata_statements'] = _msl
+        if _msl:
+            req['metadata_statements'] = _msl
+
         return self.signing_service(req)
 
