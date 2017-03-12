@@ -38,7 +38,7 @@ class Client(oic.Client):
         self.federation = ''
         self.provider_federations = None
 
-    def parse_federation_provider_info(self, resp):
+    def parse_federation_provider_info(self, resp, issuer):
         """
 
         :param resp: A MetadataStatement instance
@@ -55,9 +55,9 @@ class Client(oic.Client):
         # At this point in time I may not know within which
         # federation I'll be working.
         if len(resp) == 1:
-            iss = list(resp.keys())[0]
-            self.store_registration_info(resp[iss])
-            self.federation = iss
+            fo = list(resp.keys())[0]
+            self.handle_provider_config(resp[fo], issuer)
+            self.federation = fo
         else:
             self.provider_federations = resp
 
@@ -152,23 +152,23 @@ class Client(oic.Client):
 
         return self.handle_registration_info(rsp)
 
-    def handle_provider_config(self, pcr, issuer, keys=True, endpoints=True):
-        pass
+    # def handle_provider_config(self, pcr, issuer, keys=True, endpoints=True):
+    #     pass
 
-    def create_signed_metadata_statement(self, statement, fos=None, setup=None):
-        """
-
-        :param signer:
-        :param fos:
-        :param setup:
-        :return:
-        """
-        pcr = self.create_providerinfo(setup=setup)
-
-        if fos is None:
-            fos = list(self.federation_entity.signer.metadata_statements.keys())
-
-        _req = self.federation_entity.create_metadata_statement_request(pcr,
-                                                                        fos)
-
-        return self.federation_entity.signer.signing_service(_req)
+    # def create_signed_metadata_statement(self, statement, fos=None, setup=None):
+    #     """
+    #
+    #     :param signer:
+    #     :param fos:
+    #     :param setup:
+    #     :return:
+    #     """
+    #     pcr = self.create_providerinfo(setup=setup)
+    #
+    #     if fos is None:
+    #         fos = list(self.federation_entity.signer.metadata_statements.keys())
+    #
+    #     _req = self.federation_entity.create_metadata_statement_request(pcr,
+    #                                                                     fos)
+    #
+    #     return self.federation_entity.signer.signing_service(_req)
