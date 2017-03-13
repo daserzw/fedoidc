@@ -1,8 +1,9 @@
 import copy
 import logging
 
-from oic import oic
-from oic.exception import RegistrationError
+from oic import oic, OIDCONF_PATTERN
+from oic.exception import RegistrationError, ParseError, CommunicationError
+from oic.federation import ProviderConfigurationResponse
 from oic.oauth2 import ErrorResponse
 from oic.oauth2 import MissingRequiredAttribute
 from oic.oauth2 import sanitize
@@ -37,6 +38,7 @@ class Client(oic.Client):
         self.fo_priority = fo_priority
         self.federation = ''
         self.provider_federations = None
+        self.registration_federations = None
 
     def parse_federation_provider_info(self, resp, issuer):
         """
@@ -61,17 +63,39 @@ class Client(oic.Client):
         else:
             self.provider_federations = resp
 
-    def handle_registration_info(self, response):
+    def parse_federation_registration(self, resp, issuer):
+        """
+
+        :param resp: A MetadataStatement instance
+        """
+        resp = self.federation_entity.get_metadata_statement(
+            resp, cls=ProviderConfigurationResponse)
+
+        if not resp:  # No metadata statement that I can use
+            raise RegistrationError('No trusted metadata')
+
+        # response is a dictionary with the FO ID as keys and the
+        # registration info as values
+
+        # At this point in time I may not know within which
+        # federation I'll be working.
+        if len(resp) == 1:
+            fo = list(resp.keys())[0]
+            self.store_registration_info(resp[fo])
+            self.federation = fo
+        else:
+            self.registration_federations = resp
+
+    def handle_response(self, response, issuer, func, response_cls):
         err_msg = 'Got error response: {}'
         unk_msg = 'Unknown response: {}'
 
         if response.status_code in [200, 201]:
-            resp = RegistrationResponse().deserialize(response.text, "json")
+            resp = response_cls().deserialize(response.text, "json")
 
             # Some implementations sends back a 200 with an error message inside
-            if resp.verify():  # got a proper registration response
-                self.parse_federation_provider_info(resp)
-                self.store_response(resp, response.text)
+            if resp.verify():  # got a proper response
+                func(resp, issuer)
             else:
                 resp = ErrorResponse().deserialize(response.text, "json")
                 if resp.verify():
@@ -98,7 +122,76 @@ class Client(oic.Client):
                 logger.error(unk_msg.format(sanitize(response.text)))
                 raise RegistrationError(response.text)
 
-        return resp
+    def chose_federation(self, federations):
+        """
+        Given the set of possible provider info responses I got chose
+        one. This simple one uses federation_priority if present.
+        :return: A ProviderConfigurationResponse instance
+        """
+        for fo in self.fo_priority:
+            try:
+                _pcr = federations[fo]
+            except KeyError:
+                continue
+            else:
+                return fo
+
+        return list(federations.keys())[0]
+
+    def chose_provider_federation(self, issuer):
+        fo = self.chose_federation(self.provider_federations)
+        _pcr = self.provider_federations[fo]
+        self.federation = fo
+        self.handle_provider_config(_pcr, issuer)
+        return _pcr
+
+    def chose_registration_federation(self):
+        fo = self.chose_federation(self.registration_federations)
+        _pcr = self.registration_federations[fo]
+        self.federation = fo
+        self.store_registration_info(_pcr)
+        return _pcr
+
+    def provider_config(self, issuer, keys=True, endpoints=True,
+                        response_cls=ProviderConfigurationResponse,
+                        serv_pattern=OIDCONF_PATTERN):
+        if issuer.endswith("/"):
+            _issuer = issuer[:-1]
+        else:
+            _issuer = issuer
+
+        url = serv_pattern % _issuer
+
+        pcr = None
+        r = self.http_request(url, allow_redirects=True)
+        if r.status_code == 200:
+            try:
+                pcr = response_cls().from_json(r.text)
+            except:
+                _err_txt = "Faulty provider config response: {}".format(r.text)
+                logger.error(sanitize(_err_txt))
+                raise ParseError(_err_txt)
+
+        # logger.debug("Provider info: %s" % sanitize(pcr))
+        if pcr is None:
+            raise CommunicationError(
+                "Trying '%s', status %s" % (url, r.status_code))
+
+        # 3 possible outcomes
+        # a) No usable provider info -> Exception
+        # b) Exactly one possible provider info to use
+        # c) 2 or more usable provider info responses
+        try:
+            self.handle_response(r, _issuer,
+                                 self.parse_federation_provider_info,
+                                 ProviderConfigurationResponse)
+        except RegistrationError as err:
+            raise
+
+        if self.provider_federations:
+            return self.chose_provider_federation(_issuer)
+        else:  # Otherwise there should be exactly one metadata statement I
+            return self.provider_info
 
     def federated_client_registration_request(self, **kwargs):
         req = ClientMetadataStatement()
@@ -150,25 +243,10 @@ class Client(oic.Client):
         rsp = self.http_request(url, "POST", data=req.to_json(),
                                 headers=headers)
 
-        return self.handle_registration_info(rsp)
+        self.handle_response(rsp, '', self.parse_federation_registration,
+                             RegistrationResponse)
 
-    # def handle_provider_config(self, pcr, issuer, keys=True, endpoints=True):
-    #     pass
-
-    # def create_signed_metadata_statement(self, statement, fos=None, setup=None):
-    #     """
-    #
-    #     :param signer:
-    #     :param fos:
-    #     :param setup:
-    #     :return:
-    #     """
-    #     pcr = self.create_providerinfo(setup=setup)
-    #
-    #     if fos is None:
-    #         fos = list(self.federation_entity.signer.metadata_statements.keys())
-    #
-    #     _req = self.federation_entity.create_metadata_statement_request(pcr,
-    #                                                                     fos)
-    #
-    #     return self.federation_entity.signer.signing_service(_req)
+        if self.registration_federations:
+            return self.chose_registration_federation()
+        else:  # Otherwise there should be exactly one metadata statement I
+            return self.registration_response

@@ -190,15 +190,14 @@ def setup(keydefs, tool_iss, liss, csms_def, oa, ms_path):
         operator[entity] = Operator(iss=entity, keyjar=_keyjar)
 
     signers = {}
-    for sig, sms_def in csms_def.items():
-        ms_dir = os.path.join(ms_path, sig)
+    for iss, sms_def in csms_def.items():
+        ms_dir = os.path.join(ms_path, quote_plus(iss))
         metadata_statements = FileSystem(
             ms_dir, key_conv={'to': quote_plus, 'from': unquote_plus})
         for name, spec in sms_def.items():
             res = make_signed_metadata_statement(spec, operator)
             metadata_statements[name] = res['ms']
-        _iss = oa[sig]
-        signers[_iss] = Signer(
-            SigningService(_iss, operator[_iss].keyjar), ms_dir)
+        signers[iss] = Signer(
+            SigningService(iss, operator[iss].keyjar), ms_dir)
 
     return signers, key_bundle

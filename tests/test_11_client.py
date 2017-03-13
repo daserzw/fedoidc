@@ -32,7 +32,7 @@ EO = {'sunet.op': 'https://sunet.se/op',
 BASE = {'sunet.op': EO['sunet.op']}
 
 SMS_DEF = {
-    'sunet': {
+    OA['sunet']: {
         FO['swamid']: [
             {'request': {}, 'requester': OA['sunet'],
              'signer_add': {}, 'signer': FO['swamid']},
@@ -42,7 +42,7 @@ SMS_DEF = {
              'signer_add': {}, 'signer': FO['feide']},
         ],
     },
-    'uninett': {
+    OA['uninett']: {
         FO['feide']: [
             {'request': {}, 'requester': OA['uninett'],
              'signer_add': {}, 'signer': FO['feide']},
@@ -87,12 +87,13 @@ def test_parse_pi():
 
     assert pi
 
-    rp.parse_federation_provider_info(pi)
+    rp.parse_federation_provider_info(pi, sunet_op)
 
     assert len(rp.provider_federations) == 2
     assert set(rp.provider_federations.keys()) == {'https://swamid.sunet.se',
                                                    'https://www.feide.no'}
 
+    # Got two alternative FOs one I can use the other I can't
     req = rp.federated_client_registration_request(
         redirect_uris='https://foodle.uninett.no/authz',
         claims=['openid', 'email', 'phone']
