@@ -1,5 +1,8 @@
 import copy
+from urllib.parse import quote_plus
+from urllib.parse import unquote_plus
 
+from fedoidc.file_system import FileSystem
 from oic.utils.jwt import JWT
 
 
@@ -30,9 +33,39 @@ class SigningService(object):
         _jwt = JWT(keyjar, iss=iss, msgtype=_metadata.__class__)
         _jwt.sign_alg = self.alg
 
-        if kwargs:
-            return _jwt.pack(cls_instance=_metadata, **kwargs)
+        if iss in keyjar.issuer_keys:
+            owner = iss
         else:
-            return _jwt.pack(cls_instance=_metadata)
+            owner = ''
 
+        if kwargs:
+            return _jwt.pack(cls_instance=_metadata, owner=owner, **kwargs)
+        else:
+            return _jwt.pack(cls_instance=_metadata, owner=owner)
+
+
+class Signer(object):
+    def __init__(self, signing_service, ms_dir):
+        self.metadata_statements = FileSystem(
+            ms_dir, key_conv={'to': quote_plus, 'from': unquote_plus})
+        self.signing_service = signing_service
+
+    def create_signed_metadata_statement(self, req, fos=None):
+        if fos is None:
+            fos = list(self.metadata_statements.keys())
+
+        _msl = []
+        for f in fos:
+            try:
+                _msl.append(self.metadata_statements[f])
+            except KeyError:
+                pass
+
+        if fos and not _msl:
+            raise KeyError('No metadata statements matched')
+
+        if _msl:
+            req['metadata_statements'] = _msl
+
+        return self.signing_service(req)
 

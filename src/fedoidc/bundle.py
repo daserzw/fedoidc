@@ -53,7 +53,12 @@ class JWKSBundle(object):
         :param item: Issuer ID
         :return: A KeyJar instance
         """
-        return self.bundle[item]
+        kj = self.bundle[item]
+        if item not in list(kj.issuer_keys.keys()):
+            kj.issuer_keys[item] = kj.issuer_keys['']
+            del kj.issuer_keys['']
+
+        return kj
 
     def __delitem__(self, key):
         """
@@ -103,7 +108,10 @@ class JWKSBundle(object):
         _int = {}
         for iss, kj in self.bundle.items():
             if iss_list is None or iss in iss_list:
-                _int[iss] = kj.export_jwks(issuer=iss)
+                try:
+                    _int[iss] = kj.export_jwks(issuer=iss)
+                except KeyError:
+                    _int[iss] = kj.export_jwks()
         return _int
 
     def upload_signed_bundle(self, sign_bundle, ver_keys):

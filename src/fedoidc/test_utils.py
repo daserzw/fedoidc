@@ -7,7 +7,10 @@ from urllib.parse import unquote_plus
 from fedoidc import MetadataStatement
 from fedoidc.bundle import FSJWKSBundle, JWKSBundle
 from fedoidc.bundle import keyjar_to_jwks_private
+from fedoidc.file_system import FileSystem
 from fedoidc.operator import Operator
+from fedoidc.signing_service import Signer
+from fedoidc.signing_service import SigningService
 
 from oic.utils.keyio import build_keyjar
 
@@ -18,7 +21,7 @@ def make_fs_jwks_bundle(iss, fo_liss, sign_keyjar, keydefs, base_path=''):
     the signing keys.
 
     :param iss: The issuer ID of the entity owning the JWKSBundle
-    :param fo_liss: Dictionary with federation identifiers as keys
+    :param fo_liss: List with federation identifiers as keys
     :param sign_keyjar: Keys that the JWKSBundel owner can use to sign
         an export version of the JWKS bundle.
     :param keydefs: What type of keys that should be created for each
@@ -32,7 +35,8 @@ def make_fs_jwks_bundle(iss, fo_liss, sign_keyjar, keydefs, base_path=''):
     # Need to save the private parts on disc
     jb.bundle.value_conv['to'] = keyjar_to_jwks_private
 
-    for entity, _name in fo_liss.items():
+    for entity in fo_liss:
+        _name = entity.replace('/', '_')
         try:
             _ = jb[entity]
         except KeyError:
@@ -109,6 +113,38 @@ def make_ms(desc, ms, root, leaf, operator):
     return ms, _fo
 
 
+def make_signed_metadata_statement(ms_chain, operator):
+    _ms = []
+    depth = len(ms_chain)
+    i = 1
+    _fo = []
+    _root_fo = []
+    root = True
+    leaf = False
+    for desc in ms_chain:
+        if i == depth:
+            leaf = True
+        if isinstance(desc, dict):
+            _ms, _fo = make_ms(desc, _ms, root, leaf, operator)
+        else:
+            _mss = []
+            _fos = []
+            for d in desc:
+                _m, _f = make_ms(d, _ms, root, leaf, operator)
+                _mss.append(_m)
+                if _f:
+                    _fos.append(_f)
+            _ms = _mss
+            if _fos:
+                _fo = _fos
+        if root:
+            _root_fo = _fo
+        root = False
+        i += 1
+
+    return {'fo':_root_fo, 'ms':_ms}
+
+
 def make_signed_metadata_statements(smsdef, operator):
     """
     Create a compounded metadata statement.
@@ -121,33 +157,47 @@ def make_signed_metadata_statements(smsdef, operator):
     res = []
 
     for ms_chain in smsdef:
-        _ms = []
-        depth = len(ms_chain)
-        i = 1
-        _fo = []
-        _root_fo = []
-        root = True
-        leaf = False
-        for desc in ms_chain:
-            if i == depth:
-                leaf = True
-            if isinstance(desc, dict):
-                _ms, _fo = make_ms(desc, _ms, root, leaf, operator)
-            else:
-                _mss = []
-                _fos = []
-                for d in desc:
-                    _m, _f = make_ms(d, _ms, root, leaf, operator)
-                    _mss.append(_m)
-                    if _f:
-                        _fos.append(_f)
-                _ms = _mss
-                if _fos:
-                    _fo = _fos
-            if root:
-                _root_fo = _fo
-            root = False
-            i += 1
+        res.append(make_signed_metadata_statement(ms_chain, operator))
 
-        res.append({'fo':_root_fo, 'ms':_ms})
     return res
+
+
+def setup(keydefs, tool_iss, liss, csms_def, oa, ms_path):
+    """
+
+    :param keydefs: Definition of which signing keys to create/load
+    :param tool_iss: An identifier for the JWKSBundle instance
+    :param liss: List of federation entity IDs
+    :param csms_def: Definition of which signed metadata statements to build
+    :param oa: Dictionary with Organization agents
+    :param ms_path: Where to store the signed metadata statements
+    :return: A tuple of (Signer dictionary and FSJWKSBundle instance)
+    """
+    sig_keys = build_keyjar(keydefs)[1]
+    key_bundle = make_fs_jwks_bundle(tool_iss, liss, sig_keys, keydefs, './')
+
+    sig_keys = build_keyjar(keydefs)[1]
+    jb = FSJWKSBundle(tool_iss, sig_keys, 'fo_jwks',
+                      key_conv={'to': quote_plus, 'from': unquote_plus})
+
+    # Need to save the private parts
+    jb.bundle.value_conv['to'] = keyjar_to_jwks_private
+    jb.bundle.sync()
+
+    operator = {}
+
+    for entity, _keyjar in key_bundle.items():
+        operator[entity] = Operator(iss=entity, keyjar=_keyjar)
+
+    signers = {}
+    for iss, sms_def in csms_def.items():
+        ms_dir = os.path.join(ms_path, quote_plus(iss))
+        metadata_statements = FileSystem(
+            ms_dir, key_conv={'to': quote_plus, 'from': unquote_plus})
+        for name, spec in sms_def.items():
+            res = make_signed_metadata_statement(spec, operator)
+            metadata_statements[name] = res['ms']
+        signers[iss] = Signer(
+            SigningService(iss, operator[iss].keyjar), ms_dir)
+
+    return signers, key_bundle
