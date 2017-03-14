@@ -222,13 +222,7 @@ class Client(oic.Client):
 
         return req
 
-    def register(self, url, **kwargs):
-        try:
-            reg_type = kwargs['registration_type']
-        except KeyError:
-            reg_type = 'core'
-        else:
-            del kwargs['registration_type']
+    def register(self, url, reg_type='federation', **kwargs):
 
         if reg_type == 'federation':
             req = self.federated_client_registration_request(**kwargs)

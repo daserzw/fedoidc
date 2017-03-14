@@ -1,23 +1,30 @@
 import logging
 import traceback
 import sys
+import hashlib
 import requests
+
+from jwkest import as_bytes
 
 from fedoidc import client
 
-from oic.utils.http_util import Response
-from oic.utils.authn.client import CLIENT_AUTHN_METHOD
+from oic import rndstr
 from oic.oauth2 import PBase
 from oic.oauth2.message import ErrorResponse
 
 from oic.oic.message import AuthorizationResponse
 from oic.oic.message import AuthorizationRequest
 from oic.oic.message import AccessTokenResponse
+from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from oic.utils.webfinger import WebFinger
 
 __author__ = 'rolandh'
 
 logger = logging.getLogger(__name__)
+
+
+class HandlerError(Exception):
+    pass
 
 
 def token_secret_key(sid):
@@ -30,25 +37,29 @@ CLIENT_CONFIG = {}
 
 class FedRPHandler(object):
     def __init__(self, attribute_map=None, authenticating_authority=None,
-                 name="", registration_info=None, flow_type='code',
-                 federation_entity=None, **kwargs):
+                 base_url='', name="", registration_info=None, flow_type='code',
+                 federation_entity=None, hash_seed="", scope=None, **kwargs):
         self.attribute_map = attribute_map
         self.authenticating_authority = authenticating_authority
         self.federation_entity = federation_entity
         self.flow_type = flow_type
         self.name = name
         self.registration_info = registration_info
+        self.base_url = base_url
+        self.hash_seed = as_bytes(hash_seed)
+        self.scope = scope or ['openid']
 
         self.extra = kwargs
 
         self.access_token_response = AccessTokenResponse
         self.client_cls = client.Client
         self.authn_method = None
+        self.issuer2rp = {}
+        self.state2issuer = {}
 
-    def dynamic(self, server_env, callback, logout_callback, session, key,
-                srv_discovery_url):
+    def dynamic(self, callback, logout_callback, issuer):
         try:
-            client = server_env["OIC_CLIENT"][key]
+            client = self.issuer2rp[issuer]
         except KeyError:
             client = self.client_cls(client_authn_method=CLIENT_AUTHN_METHOD)
             client.redirect_uris = [callback]
@@ -58,10 +69,10 @@ class FedRPHandler(object):
             _me = self.registration_info.copy()
             _me["redirect_uris"] = [callback]
 
-            provider_conf = client.provider_config(srv_discovery_url)
+            provider_conf = client.provider_config(issuer)
 
             logger.debug("Got provider config: %s", provider_conf)
-            session['provider'] = provider_conf["issuer"]
+
             logger.debug("Registering RP")
             reg_info = client.register(provider_conf["registration_endpoint"],
                                        **_me)
@@ -71,126 +82,73 @@ class FedRPHandler(object):
                     setattr(client, prop, reg_info[prop])
                 except KeyError:
                     pass
-            try:
-                server_env["OIC_CLIENT"][key] = client
-            except KeyError:
-                server_env["OIC_CLIENT"] = {key: client}
+
+            self.issuer2rp[issuer] = client
         return client
 
-    def static(self, server_env, callback, logout_callback, key):
-        try:
-            client = server_env["OIC_CLIENT"][key]
-            logger.debug("Static client: %s", server_env["OIC_CLIENT"])
-        except KeyError:
-            client = self.client_cls(client_authn_method=CLIENT_AUTHN_METHOD)
-            client.redirect_uris = [callback]
-            client.post_logout_redirect_uris = [logout_callback]
-            for typ in ["authorization", "token", "userinfo"]:
-                endpoint = "%s_endpoint" % typ
-                setattr(client, endpoint, self.extra[endpoint])
+    def create_callback(self, issuer):
+        _hash = hashlib.sha256()
+        _hash.update(self.hash_seed)
+        _hash.update(as_bytes(issuer))
 
-            client.client_id = self.client_id
-            client.client_secret = self.client_secret
-
-            if "keys" in self.extra:
-                client.keyjar.add(self.extra["keys"][0], self.extra["keys"][1])
-
-            try:
-                server_env["OIC_CLIENT"][key] = client
-            except KeyError:
-                server_env["OIC_CLIENT"] = {key: client}
-        return client
+        return "{}/{}".format(self.base_url, _hash.hexdigest())
 
     # noinspection PyUnusedLocal
-    def begin(self, environ, server_env, start_response, session, key):
+    def begin(self, issuer):
         """Step 1: Get a access grant.
 
-        :param environ:
-        :param start_response:
-        :param server_env:
-        :param session:
+        :param issuer
         """
         try:
             logger.debug("FLOW type: %s", self.flow_type)
-            logger.debug("begin environ: %s", server_env)
-            client = session['client']
-            if client is not None and self.srv_discovery_url:
+            client = self.issuer2rp[issuer]
+
+            # check that the registration is still active
+            if client is not None:
                 data = {"client_id": client.client_id}
-                resp = requests.get(self.srv_discovery_url + "verifyClientId",
-                                    params=data, verify=False)
+                resp = requests.get(issuer + "verifyClientId", params=data,
+                                    verify=False)
                 if not resp.ok and resp.status_code == 400:
                     client = None
-                    server_env["OIC_CLIENT"].pop(key, None)
+                    del self.issuer2rp[issuer]
 
-            _state = ""
             if client is None:
-                callback = server_env["base_url"] + key
-                logout_callback = server_env["base_url"]
-                if self.srv_discovery_url:
-                    client = self.dynamic(server_env, callback, logout_callback,
-                                          session, key)
-                else:
-                    client = self.static(server_env, callback, logout_callback,
-                                         key)
-                _state = session['state']
-                session['client'] = client
+                callback = self.create_callback(issuer)
+                logout_callback = self.base_url
+                client = self.dynamic(callback, logout_callback, issuer)
 
-            acr_value = session.get_acr_value(client.authorization_endpoint)
-            try:
-                acr_values = client.provider_info["acr_values_supported"]
-                session['acr_values'] = acr_values
-            except KeyError:
-                acr_values = None
-
-            if acr_value is None and acr_values is not None and \
-                            len(acr_values) > 1:
-                resp_headers = [("Location", str("/rpAcr"))]
-                start_response("302 Found", resp_headers)
-                return []
-            elif acr_values is not None and len(acr_values) == 1:
-                acr_value = acr_values[0]
-            return self.create_authnrequest(environ, server_env, start_response,
-                                            session, acr_value, _state)
+            _state = rndstr(24)
+            self.state2issuer[_state] = issuer
+            return self.create_authnrequest(client, _state)
         except Exception:
             message = traceback.format_exception(*sys.exc_info())
             logger.error(message)
-            return self.result(
-                environ, start_response, server_env,
-                (False, "Cannot find the OP! Please view your configuration."))
+            raise HandlerError(
+                "Cannot find the OP! Please view your configuration.")
 
     # noinspection PyUnusedLocal
-    def create_authnrequest(self, environ, server_env, start_response, session,
-                            acr_value, state):
+    def create_authnrequest(self, client, state):
         try:
-            client = session['client']
-            session.set_acr_value(client.authorization_endpoint, acr_value)
             request_args = {
                 "response_type": self.flow_type,
-                "scope": server_env["SCOPE"],
+                "scope": self.scope,
                 "state": state,
             }
 
-            if acr_value is not None:
-                request_args["acr_values"] = acr_value
-
             if self.flow_type == "token":
                 request_args["nonce"] = rndstr(16)
-                session['nonce'] = request_args["nonce"]
             else:
                 use_nonce = getattr(self, "use_nonce", None)
                 if use_nonce:
                     request_args["nonce"] = rndstr(16)
-                    session['nonce'] = request_args["nonce"]
 
             logger.info("client args: %s", list(client.__dict__.items()))
             logger.info("request_args: %s", request_args)
-            # User info claims
         except Exception:
             message = traceback.format_exception(*sys.exc_info())
             logger.error(message)
-            return self.result(
-                environ, start_response, server_env,
-                (False, "Cannot find the OP! Please view your configuration."))
+            raise HandlerError(
+                "Cannot find the OP! Please view your configuration.")
 
         try:
             cis = client.construct_AuthorizationRequest(
@@ -204,32 +162,26 @@ class FedRPHandler(object):
         except Exception:
             message = traceback.format_exception(*sys.exc_info())
             logger.error(message)
-            return self.result(environ, start_response, server_env, (
-                False, "Authorization request can not be performed!"))
+            raise HandlerError("Authorization request can not be performed!")
 
         logger.info("URL: %s", url)
         logger.debug("ht_args: %s", ht_args)
 
-        session['client'] = client
         resp_headers = [("Location", str(url))]
         if ht_args:
             resp_headers.extend([(a, b) for a, b in ht_args.items()])
         logger.debug("resp_headers: %s", resp_headers)
-        start_response("302 Found", resp_headers)
-        return []
+        return resp_headers
 
     def get_accesstoken(self, client, authresp):
-        if self.srv_discovery_url:
-            issuer = list(client.provider_info.keys())[0]
-            # logger.debug("state: %s (%s)" % (client.state, msg["state"]))
-            key = client.keyjar.get_verify_key(owner=issuer)
-            kwargs = {"key": key}
-            logger.debug("key: %s", key)
-        else:
-            kwargs = {"keyjar": client.keyjar}
+        issuer = client.provider_info["issuer"]
+        key = client.keyjar.get_verify_key(owner=issuer)
+        kwargs = {"key": key}
 
         if self.authn_method:
             kwargs["authn_method"] = self.authn_method
+
+        logger.debug('access_token_request args: {}'.format(kwargs))
 
         # get the access token
         return client.do_access_token_request(
@@ -248,27 +200,21 @@ class FedRPHandler(object):
                                            **kwargs)
 
     # noinspection PyUnusedLocal
-    def phaseN(self, environ, query, server_env, session):
+    def phaseN(self, client, query):
         """Step 2: Once the consumer has redirected the user back to the
         callback URL you can request the access token the user has
         approved."""
-
-        client = session['client']
-        logger.debug("info: %s", query)
-        logger.debug("keyjar: %s", client.keyjar)
 
         authresp = client.parse_response(AuthorizationResponse, query,
                                          sformat="dict", keyjar=client.keyjar)
 
         if isinstance(authresp, ErrorResponse):
             return False, "Access denied"
+
         try:
             client.id_token = authresp["id_token"]
         except:
             pass
-        # session.session_id = msg["state"]
-
-        logger.debug("callback environ: %s", environ)
 
         if self.flow_type == "code":
             # get the access token
@@ -279,7 +225,7 @@ class FedRPHandler(object):
                 raise
 
             if isinstance(tokenresp, ErrorResponse):
-                return (False, "Invalid response %s." % tokenresp["error"])
+                return False, "Invalid response %s." % tokenresp["error"]
 
             access_token = tokenresp["access_token"]
         else:
@@ -290,7 +236,7 @@ class FedRPHandler(object):
         inforesp = self.get_userinfo(client, authresp, access_token)
 
         if isinstance(inforesp, ErrorResponse):
-            return False, "Invalid response %s." % inforesp["error"], session
+            return False, "Invalid response %s." % inforesp["error"]
 
         tot_info = userinfo.update(inforesp.to_dict())
 
@@ -299,42 +245,28 @@ class FedRPHandler(object):
         return True, userinfo, access_token, client
 
     # noinspection PyUnusedLocal
-    def callback(self, environ, server_env, start_response, query, session):
+    def callback(self, query):
         """
         This is where we come back after the OP has done the
         Authorization Request.
 
-        :param environ:
-        :param server_env:
-        :param start_response:
         :param query:
-        :param session:
         :return:
         """
-        _service = self.__class__.__name__
-
-        logger.debug("[do_%s] environ: %s", _service, environ)
-        logger.debug("[do_%s] query: %s", _service, query)
+        try:
+            client = self.issuer2rp[self.state2issuer[query['state']]]
+        except KeyError:
+            raise HandlerError('Unknown session')
 
         try:
-            result = self.phaseN(environ, query, server_env, session)
-            session['login'] = True
-            logger.debug("[do_%s] response: %s", _service, result)
+            result = self.phaseN(client, query)
+            logger.debug("phaseN response: {}".format(result))
         except Exception:
             message = traceback.format_exception(*sys.exc_info())
             logger.error(message)
-            result = (False, "An unknown exception has occurred.")
+            raise HandlerError("An unknown exception has occurred.")
 
-        return self.result(environ, start_response, server_env, result)
-
-    def result(self, environ, start_response, server_env, result):
-        resp = Response(mako_template="opresult.mako",
-                        template_lookup=server_env["template_lookup"],
-                        headers=[])
-        argv = {
-            "result": result
-        }
-        return resp(environ, start_response, **argv)
+        return result
 
     def find_srv_discovery_url(self, resource):
         """
