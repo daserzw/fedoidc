@@ -36,14 +36,10 @@ CLIENT_CONFIG = {}
 
 
 class FedRPHandler(object):
-    def __init__(self, attribute_map=None, authenticating_authority=None,
-                 base_url='', name="", registration_info=None, flow_type='code',
+    def __init__(self, base_url='', registration_info=None, flow_type='code',
                  federation_entity=None, hash_seed="", scope=None, **kwargs):
-        self.attribute_map = attribute_map
-        self.authenticating_authority = authenticating_authority
         self.federation_entity = federation_entity
         self.flow_type = flow_type
-        self.name = name
         self.registration_info = registration_info
         self.base_url = base_url
         self.hash_seed = as_bytes(hash_seed)
@@ -56,6 +52,7 @@ class FedRPHandler(object):
         self.authn_method = None
         self.issuer2rp = {}
         self.state2issuer = {}
+        self.hash2issuer = {}
 
     def dynamic(self, callback, logout_callback, issuer):
         try:
@@ -90,29 +87,20 @@ class FedRPHandler(object):
         _hash = hashlib.sha256()
         _hash.update(self.hash_seed)
         _hash.update(as_bytes(issuer))
-
+        self.hash2issuer[_hash] = issuer
         return "{}/{}".format(self.base_url, _hash.hexdigest())
 
     # noinspection PyUnusedLocal
     def begin(self, issuer):
-        """Step 1: Get a access grant.
+        """
+        Make sure we have a client registered at the issuer
 
-        :param issuer
+        :param issuer: Issuer ID
         """
         try:
-            logger.debug("FLOW type: %s", self.flow_type)
-            client = self.issuer2rp[issuer]
-
-            # check that the registration is still active
-            if client is not None:
-                data = {"client_id": client.client_id}
-                resp = requests.get(issuer + "verifyClientId", params=data,
-                                    verify=False)
-                if not resp.ok and resp.status_code == 400:
-                    client = None
-                    del self.issuer2rp[issuer]
-
-            if client is None:
+            try:
+                client = self.issuer2rp[issuer]
+            except KeyError:
                 callback = self.create_callback(issuer)
                 logout_callback = self.base_url
                 client = self.dynamic(callback, logout_callback, issuer)
@@ -245,7 +233,7 @@ class FedRPHandler(object):
         return True, userinfo, access_token, client
 
     # noinspection PyUnusedLocal
-    def callback(self, query):
+    def callback(self, query, hash):
         """
         This is where we come back after the OP has done the
         Authorization Request.
@@ -253,10 +241,22 @@ class FedRPHandler(object):
         :param query:
         :return:
         """
+
+        try:
+            assert self.state2issuer[query['state']] == self.hash2issuer[hash]
+        except AssertionError:
+            raise HandlerError('Got back state to wrong callback URL')
+        except KeyError:
+            raise HandlerError('Unknown state or callback URL')
+
+        del self.hash2issuer[hash]
+
         try:
             client = self.issuer2rp[self.state2issuer[query['state']]]
         except KeyError:
             raise HandlerError('Unknown session')
+
+        del self.state2issuer[query['state']]
 
         try:
             result = self.phaseN(client, query)
@@ -280,5 +280,9 @@ class FedRPHandler(object):
         :return:
         """
 
-        wf = WebFinger(httpd=PBase(ca_certs=self.extra["ca_bundle"]))
+        try:
+            wf = WebFinger(httpd=PBase(ca_certs=self.extra["ca_bundle"]))
+        except KeyError:
+            wf = WebFinger(httpd=PBase())
+
         return wf.discovery_query(resource)

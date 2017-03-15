@@ -34,11 +34,8 @@ class Root(object):
 class Consumer(Root):
     _cp_config = {'request.error_response': handle_error}
 
-    def __init__(self, rp, scope, response_type, path):
-        self.rp = rp
-        self.scope = scope
-        self.response_type = response_type
-        self.path = path
+    def __init__(self, rph):
+        self.rph = rph
 
     def __index__(self, uid='', iss=''):
         link = ''
@@ -46,16 +43,12 @@ class Consumer(Root):
             link = iss
         elif uid:
             try:
-                link = self.rp.find_srv_discovery_url(resource=uid)
+                link = self.rph.find_srv_discovery_url(resource=uid)
             except requests.ConnectionError:
                 return cherrypy.HTTPError(
                     message="Webfinger lookup failed, connection error")
 
-            self.rp.srv_discovery_url = link
-            #cherrypy.session['callback'] = True
-
-            sid, location = self.rp.begin(scope=self.scope,
-                                          response_type=self.response_type,
-                                          path=self.path)
+        if link:
+            sid, location = self.rph.begin(link)
 
 

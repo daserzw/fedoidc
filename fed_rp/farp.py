@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from urllib.parse import quote_plus, unquote_plus
 
 import cherrypy
 import importlib
@@ -6,8 +7,14 @@ import logging
 import os
 import sys
 
-from oic.utils import webfinger
-from fedoidc.provider import Provider
+from fedoidc.bundle import FSJWKSBundle
+from fedoidc.entity import FederationEntity
+from fedoidc.signing_service import Signer, SigningService
+
+from fed_rp.rp_handler import FedRPHandler
+
+from oic.utils.keyio import build_keyjar
+
 
 logger = logging.getLogger("")
 LOGFILE_NAME = 'farp.log'
@@ -59,20 +66,21 @@ if __name__ == '__main__':
 
     sys.path.insert(0, ".")
     config = importlib.import_module(args.config)
-    cpop = importlib.import_module('cpop')
-    setup = importlib.import_module('setup')
+    cprp = importlib.import_module('cprp')
 
-    # OIDC Provider
-    _op = setup.op_setup(args, config, Provider)
-    setup.fed_setup(_op.baseurl, _op, config)
+    _kj = build_keyjar(config.KEYDEFS)[1]
+    signer = Signer(SigningService(config.base_url, _kj), config.ms_dir)
+    fo_keybundle = FSJWKSBundle('', fdir='fo_jwks',
+                      key_conv={'to': quote_plus, 'from': unquote_plus})
 
-    # WebFinger
-    webfinger_config = {
-        '/': {'base_url': _op.baseurl}}
-    cherrypy.tree.mount(cpop.WebFinger(webfinger.WebFinger()),
-                        '/.well-known/webfinger', webfinger_config)
+    rp_fed_ent = FederationEntity(None, keyjar=_kj, iss=config.base_url,
+                                  signer=signer,
+                                  fo_bundle=fo_keybundle)
 
-    cherrypy.tree.mount(cpop.Provider(_op), '/', provider_config)
+    rph = FedRPHandler(base_url='', registration_info=None, flow_type='code',
+                       federation_entity=None, hash_seed="", scope=None)
+
+    cherrypy.tree.mount(cprp.Consumer(rph), '/', provider_config)
 
     # If HTTPS
     if args.tls:
