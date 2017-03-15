@@ -2,7 +2,9 @@ import copy
 import logging
 
 from oic import oic, OIDCONF_PATTERN
-from oic.exception import RegistrationError, ParseError, CommunicationError
+from oic.exception import CommunicationError, ParameterError
+from oic.exception import ParseError
+from oic.exception import RegistrationError
 from oic.federation import ProviderConfigurationResponse
 from oic.oauth2 import ErrorResponse
 from oic.oauth2 import MissingRequiredAttribute
@@ -49,7 +51,7 @@ class Client(oic.Client):
             resp, cls=RegistrationResponse)
 
         if not resp:  # No metadata statement that I can use
-            raise RegistrationError('No trusted metadata')
+            raise ParameterError('No trusted metadata')
 
         # response is a dictionary with the FO ID as keys and the
         # registration info as values
