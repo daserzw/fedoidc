@@ -162,13 +162,13 @@ class Provider(Root):
     @cherrypy_cors.tools.expose_public()
     @cherrypy.tools.allow(methods=["POST", "OPTIONS"])
     def registration(self, **kwargs):
+        logger.debug('Request headers: {}'.format(cherrypy.request.headers))
         if cherrypy.request.method == "OPTIONS":
-            logger.debug('Request headers: {}'.format(cherrypy.request.headers))
             cherrypy_cors.preflight(
                 allowed_methods=["POST"], origins='*',
                 allowed_headers=['Authorization', 'content-type'])
         else:
-            logger.debug('ClientRegistration request: {}'.format(kwargs))
+            logger.debug('ClientRegistration kwargs: {}'.format(kwargs))
             _request = None
 
             if cherrypy.request.process_request_body is True:
