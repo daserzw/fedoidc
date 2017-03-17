@@ -15,7 +15,6 @@ from fed_rp.rp_handler import FedRPHandler
 
 from oic.utils.keyio import build_keyjar
 
-
 logger = logging.getLogger("")
 LOGFILE_NAME = 'farp.log'
 hdlr = logging.FileHandler(LOGFILE_NAME)
@@ -25,7 +24,6 @@ base_formatter = logging.Formatter(
 hdlr.setFormatter(base_formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
-
 
 if __name__ == '__main__':
     import argparse
@@ -68,19 +66,26 @@ if __name__ == '__main__':
     config = importlib.import_module(args.config)
     cprp = importlib.import_module('cprp')
 
+    if args.port:
+        _base_url = "{}:{}".format(config.BASEURL, args.port)
+    else:
+        _base_url = config.BASEURL
+
     _kj = build_keyjar(config.KEYDEFS)[1]
-    signer = Signer(SigningService(config.base_url, _kj), config.ms_dir)
+    signer = Signer(SigningService(_base_url, _kj), config.MS_DIR)
     fo_keybundle = FSJWKSBundle('', fdir='fo_jwks',
-                      key_conv={'to': quote_plus, 'from': unquote_plus})
+                                key_conv={'to': quote_plus,
+                                          'from': unquote_plus})
 
-    rp_fed_ent = FederationEntity(None, keyjar=_kj, iss=config.base_url,
-                                  signer=signer,
-                                  fo_bundle=fo_keybundle)
+    rp_fed_ent = FederationEntity(None, keyjar=_kj, iss=_base_url,
+                                  signer=signer, fo_bundle=fo_keybundle)
 
-    rph = FedRPHandler(base_url='', registration_info=None, flow_type='code',
-                       federation_entity=None, hash_seed="", scope=None)
+    rph = FedRPHandler(base_url=_base_url,
+                       registration_info=config.CONSUMER_CONFIG,
+                       flow_type='code', federation_entity=rp_fed_ent,
+                       hash_seed="BabyHoldOn", scope=None)
 
-    cherrypy.tree.mount(cprp.Consumer(rph), '/', provider_config)
+    cherrypy.tree.mount(cprp.Consumer(rph, 'html'), '/', provider_config)
 
     # If HTTPS
     if args.tls:

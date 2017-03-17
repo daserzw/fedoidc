@@ -1,7 +1,6 @@
 __author__ = 'roland'
 
-PORT = 8666
-BASE = "https://localhost:" + str(PORT) + "/"
+BASEURL = "https://localhost"
 
 # If BASE is https these has to be specified
 SERVER_KEY = 'certs/key.pem'
@@ -21,3 +20,6 @@ CONSUMER_CONFIG = {
     "scope": ["openid", "profile", "email", "address", "phone"],
     "response_type": "code",
 }
+
+KEYDEFS= [{"type": "RSA", "key": "keys/sig_key.pem", "use": ["sig"]}]
+MS_DIR = './ms_dir'

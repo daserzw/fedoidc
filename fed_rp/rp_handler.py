@@ -2,7 +2,6 @@ import logging
 import traceback
 import sys
 import hashlib
-import requests
 
 from jwkest import as_bytes
 
@@ -37,13 +36,15 @@ CLIENT_CONFIG = {}
 
 class FedRPHandler(object):
     def __init__(self, base_url='', registration_info=None, flow_type='code',
-                 federation_entity=None, hash_seed="", scope=None, **kwargs):
+                 federation_entity=None, hash_seed="", scope=None,
+                 verify_ssl=False, **kwargs):
         self.federation_entity = federation_entity
         self.flow_type = flow_type
         self.registration_info = registration_info
         self.base_url = base_url
         self.hash_seed = as_bytes(hash_seed)
         self.scope = scope or ['openid']
+        self.verify_ssl = verify_ssl
 
         self.extra = kwargs
 
@@ -58,7 +59,8 @@ class FedRPHandler(object):
         try:
             client = self.issuer2rp[issuer]
         except KeyError:
-            client = self.client_cls(client_authn_method=CLIENT_AUTHN_METHOD)
+            client = self.client_cls(client_authn_method=CLIENT_AUTHN_METHOD,
+                                     verify_ssl=self.verify_ssl)
             client.redirect_uris = [callback]
             client.post_logout_redirect_uris = [logout_callback]
             client.federation_entity = self.federation_entity
@@ -71,8 +73,14 @@ class FedRPHandler(object):
             logger.debug("Got provider config: %s", provider_conf)
 
             logger.debug("Registering RP")
-            reg_info = client.register(provider_conf["registration_endpoint"],
-                                       **_me)
+            if client.federation:
+                reg_info = client.register(
+                    provider_conf["registration_endpoint"], **_me)
+            else:
+                reg_info = client.register(
+                    provider_conf["registration_endpoint"], reg_type='core',
+                    **_me)
+
             logger.debug("Registration response: %s", reg_info)
             for prop in ["client_id", "client_secret"]:
                 try:
@@ -88,7 +96,7 @@ class FedRPHandler(object):
         _hash.update(self.hash_seed)
         _hash.update(as_bytes(issuer))
         self.hash2issuer[_hash] = issuer
-        return "{}/{}".format(self.base_url, _hash.hexdigest())
+        return "{}/authz_cb/{}".format(self.base_url, _hash.hexdigest())
 
     # noinspection PyUnusedLocal
     def begin(self, issuer):
@@ -116,6 +124,13 @@ class FedRPHandler(object):
 
     # noinspection PyUnusedLocal
     def create_authnrequest(self, client, state):
+        """
+        Constructs an Authorization Request
+
+        :param client: A Client instance
+        :param state: State variable
+        :return: Dictionary with response headers
+        """
         try:
             request_args = {
                 "response_type": self.flow_type,
@@ -155,9 +170,10 @@ class FedRPHandler(object):
         logger.info("URL: %s", url)
         logger.debug("ht_args: %s", ht_args)
 
-        resp_headers = [("Location", str(url))]
+        resp_headers = {"Location": str(url)}
         if ht_args:
-            resp_headers.extend([(a, b) for a, b in ht_args.items()])
+            resp_headers.update(ht_args)
+
         logger.debug("resp_headers: %s", resp_headers)
         return resp_headers
 
@@ -188,12 +204,12 @@ class FedRPHandler(object):
                                            **kwargs)
 
     # noinspection PyUnusedLocal
-    def phaseN(self, client, query):
+    def phaseN(self, client, response):
         """Step 2: Once the consumer has redirected the user back to the
         callback URL you can request the access token the user has
         approved."""
 
-        authresp = client.parse_response(AuthorizationResponse, query,
+        authresp = client.parse_response(AuthorizationResponse, response,
                                          sformat="dict", keyjar=client.keyjar)
 
         if isinstance(authresp, ErrorResponse):
@@ -283,6 +299,6 @@ class FedRPHandler(object):
         try:
             wf = WebFinger(httpd=PBase(ca_certs=self.extra["ca_bundle"]))
         except KeyError:
-            wf = WebFinger(httpd=PBase())
+            wf = WebFinger(httpd=PBase(verify_ssl=False))
 
         return wf.discovery_query(resource)
