@@ -95,7 +95,7 @@ class WebFinger(object):
         else:
             raise cherrypy.HTTPError(400, "URI type I don't support")
 
-        return self.srv.response(subj, _base)
+        return as_bytes(self.srv.response(subj, _base))
 
 
 class Configuration(object):
@@ -168,14 +168,18 @@ class Provider(Root):
                 allowed_methods=["POST"], origins='*',
                 allowed_headers=['Authorization', 'content-type'])
         else:
-            logger.debug('ClientRegistration request')
+            logger.debug('ClientRegistration request: {}'.format(kwargs))
+            _request = None
+
             if cherrypy.request.process_request_body is True:
                 _request = cherrypy.request.body.read()
+                logger.debug('request_body: {}'.format(_request))
+
+            if _request:
+                resp = self.op.registration_endpoint(_request)
             else:
-                raise cherrypy.HTTPError(400,
-                                         'Missing Client registration body')
-            logger.debug('request_body: {}'.format(_request))
-            resp = self.op.registration_endpoint(as_unicode(_request))
+                resp = self.op.registration_endpoint(kwargs)
+
             return conv_response(resp)
 
     @cherrypy.expose

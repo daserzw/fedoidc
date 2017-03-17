@@ -174,6 +174,13 @@ class Client(oic.Client):
                 logger.error(sanitize(_err_txt))
                 raise ParseError(_err_txt)
 
+        if 'metadata_statements' not in pcr:
+            if 'metadata_statement_uris' not in pcr:
+                # Talking to a federation unaware OP
+                self.store_response(pcr, r.text)
+                self.handle_provider_config(pcr, issuer, keys, endpoints)
+                return pcr
+
         # logger.debug("Provider info: %s" % sanitize(pcr))
         if pcr is None:
             raise CommunicationError(
@@ -239,10 +246,13 @@ class Client(oic.Client):
         rsp = self.http_request(url, "POST", data=req.to_json(),
                                 headers=headers)
 
-        self.handle_response(rsp, '', self.parse_federation_registration,
-                             RegistrationResponse)
+        if reg_type == 'federation':
+            self.handle_response(rsp, '', self.parse_federation_registration,
+                                 RegistrationResponse)
 
-        if self.registration_federations:
-            return self.chose_registration_federation()
-        else:  # Otherwise there should be exactly one metadata statement I
-            return self.registration_response
+            if self.registration_federations:
+                return self.chose_registration_federation()
+            else:  # Otherwise there should be exactly one metadata statement I
+                return self.registration_response
+        else:
+            return self.handle_registration_info(rsp)

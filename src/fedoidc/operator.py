@@ -74,8 +74,10 @@ class Operator(object):
                         try:
                             _ms = self.unpack_metadata_statement(
                                 jwt_ms=meta_s, keyjar=keyjar, cls=cls)
-                        except (JWSException, BadSignature, MissingSigningKey):
-                            pass
+                        except (
+                            JWSException, BadSignature,
+                            MissingSigningKey) as err:
+                            logger.error('Encountered: {}'.format(err))
                         else:
                             msl.append(_ms)
 
@@ -87,7 +89,8 @@ class Operator(object):
 
                 try:
                     _ms = cls().from_jwt(jwt_ms, keyjar=keyjar)
-                except MissingSigningKey:
+                except MissingSigningKey as err:
+                    logger.error('Encountered: {}'.format(err))
                     raise
 
                 if msl:
