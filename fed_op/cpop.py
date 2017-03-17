@@ -172,13 +172,17 @@ class Provider(Root):
             _request = None
 
             if cherrypy.request.process_request_body is True:
-                _request = cherrypy.request.body.read()
+                _request = as_unicode(cherrypy.request.body.read())
                 logger.debug('request_body: {}'.format(_request))
 
-            if _request:
-                resp = self.op.registration_endpoint(_request)
-            else:
-                resp = self.op.registration_endpoint(kwargs)
+            try:
+                if _request:
+                    resp = self.op.registration_endpoint(_request)
+                else:
+                    resp = self.op.registration_endpoint(kwargs)
+            except Exception as err:
+                logger.error(err)
+                raise cherrypy.HTTPError(message=err)
 
             return conv_response(resp)
 
