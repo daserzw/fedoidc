@@ -273,19 +273,18 @@ class Provider(Root):
                 allowed_headers=['Authorization', 'content-type'])
         else:
             logger.debug('UserinfoRequest')
-            args = {}
+            args = {'request': kwargs}
             if cherrypy.request.process_request_body is True:
                 _req = cherrypy.request.body.read()
                 if _req:
-                    args = {'request': _req}
+                    args['request'] = _req
 
             try:
                 args['authn'] = cherrypy.request.headers['Authorization']
             except KeyError:
                 pass
 
-            kwargs.update(args)
-            resp = self.op.userinfo_endpoint(**kwargs)
+            resp = self.op.userinfo_endpoint(**args)
             return conv_response(resp)
 
     @cherrypy.expose

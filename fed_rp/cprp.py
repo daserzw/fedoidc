@@ -48,61 +48,44 @@ def escape(string):
     return pattern.sub(escape_entity, string)
 
 
-def create_result_page(userinfo, access_token):
+def create_result_page(userinfo, access_token, client):
     """
     Display information from the Authentication.
     """
-    element = ""
-    if result[0]:
-        element += "<p>You have successfully loged in!</p>"
-        element += "<div class='row'>"
-        element += "<div class='col-md-10'>Accesstoken</div>"
-        element += "</div>"
-        element += "<div class='row'>"
-        element += "<div class='col-md-10'>" + str(result[2]) + "</div>"
-        element += "</div>"
-        try:
-            text = str(result[3].authorization_endpoint)
-            element += "<div class='row'>"
-            element += "<div class='col-md-3'>Authorization endpoint</div>"
-            element += "<div class='col-md-7'>" + text + "</div>"
-            element += "</div>"
-        except:
-            pass
-        try:
-            text = str(result[3].registration_endpoint)
-            element += "<div class='row'>"
-            element += "<div class='col-md-3'>Registration endpoint</div>"
-            element += "<div class='col-md-7'>" + text + "</div>"
-            element += "</div>"
-        except:
-            pass
-        try:
-            text = str(result[3].token_endpoint)
-            element += "<div class='row'>"
-            element += "<div class='col-md-3'>Token endpoint</div>"
-            element += "<div class='col-md-7'>" + text + "</div>"
-            element += "</div>"
-        except:
-            pass
-        try:
-            text = str(result[3].userinfo_endpoint)
-            element += "<div class='row'>"
-            element += "<div class='col-md-3'>User info endpoint</div>"
-            element += "<div class='col-md-7'>" + text + "</div>"
-            element += "</div>"
-        except:
-            pass
-        for key, value in result[1].items():
-            element += "<div class='row'>"
-            element += "<div class='col-md-3'>" + escape(str(key)) + "</div>"
-            element += "<div class='col-md-7'>" + escape(str(value)) + "</div>"
-            element += "</div>"
-    else:
-        element += "<p>You have failed to connect to the designated OP with " \
-                   "the message:</p><p> " + \
-                   result[1] + "</p>"
-    return element
+    element = ["<h2>You have successfully loged in!</h2>",
+               "<dl><dt>Accesstoken</dt><dd>{}</dd>".format(access_token),
+               "<h3>Endpoints</h3>"]
+
+    try:
+        text = str(client.authorization_endpoint)
+        element.append(
+            "<dt>Authorization endpoint</dt><dd>{}</dd>".format(text))
+    except:
+        pass
+    try:
+        text = str(client.registration_endpoint)
+        element.append("<dt>Registration endpoint</dt><dd>{}</dd>".format(text))
+    except:
+        pass
+    try:
+        text = str(client.token_endpoint)
+        element.append("<dt>Token endpoint</dt><dd>{}</dd>".format(text))
+    except:
+        pass
+    try:
+        text = str(client.userinfo_endpoint)
+        element.append("<dt>User info endpoint</dt><dd>{}</dd>".format(text))
+    except:
+        pass
+    element.append('</dl>')
+    element.append('<h3>User information</h3>')
+    element.append('<dl>')
+    for key, value in userinfo.items():
+        element.append("<dt>" + escape(str(key)) + "</dt>")
+        element.append("<dd>" + escape(str(value)) + "</dd>")
+    element.append('</dl>')
+
+    return "\n".join(element)
 
 
 class Root(object):
@@ -158,7 +141,10 @@ class Consumer(Root):
         res = self.rph.phaseN(rp, kwargs)
 
         if res[0] is True:
-            return as_bytes(create_result_page(*res[1:]))
+            fname = os.path.join(self.html_home, 'opresult.html')
+            _pre_html = open(fname, 'r').read()
+            _html = _pre_html.format(result=create_result_page(*res[1:]))
+            return as_bytes(_html)
         else:
             raise cherrypy.HTTPError(400, res[1])
 

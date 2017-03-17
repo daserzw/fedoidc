@@ -95,8 +95,9 @@ class FedRPHandler(object):
         _hash = hashlib.sha256()
         _hash.update(self.hash_seed)
         _hash.update(as_bytes(issuer))
-        self.hash2issuer[_hash] = issuer
-        return "{}/authz_cb/{}".format(self.base_url, _hash.hexdigest())
+        _hex = _hash.hexdigest()
+        self.hash2issuer[_hex] = issuer
+        return "{}/authz_cb/{}".format(self.base_url, _hex)
 
     # noinspection PyUnusedLocal
     def begin(self, issuer):
@@ -217,7 +218,7 @@ class FedRPHandler(object):
 
         try:
             client.id_token = authresp["id_token"]
-        except:
+        except KeyError:
             pass
 
         if self.flow_type == "code":
@@ -235,18 +236,18 @@ class FedRPHandler(object):
         else:
             access_token = authresp["access_token"]
 
-        userinfo = self.verify_token(client, access_token)
+        #userinfo = self.verify_token(client, access_token)
 
         inforesp = self.get_userinfo(client, authresp, access_token)
 
         if isinstance(inforesp, ErrorResponse):
             return False, "Invalid response %s." % inforesp["error"]
 
-        tot_info = userinfo.update(inforesp.to_dict())
+        # tot_info = userinfo.update(inforesp.to_dict())
 
         logger.debug("UserInfo: %s", inforesp)
 
-        return True, userinfo, access_token, client
+        return True, inforesp, access_token, client
 
     # noinspection PyUnusedLocal
     def callback(self, query, hash):
