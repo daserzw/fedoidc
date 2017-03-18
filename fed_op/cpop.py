@@ -113,7 +113,14 @@ class Configuration(object):
             )
         else:
             logger.debug('ProviderInfo request')
-            resp = op.providerinfo_endpoint()
+
+            try:
+                _ = op.federation_entity  # Federation aware ?
+            except AttributeError:
+                resp = op.providerinfo_endpoint()
+            else:
+                resp = op.create_fed_providerinfo()
+
             # cherrypy.response.headers['Content-Type'] = 'application/json'
             # return as_bytes(resp.message)
             return conv_response(resp)

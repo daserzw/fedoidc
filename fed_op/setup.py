@@ -1,14 +1,12 @@
-import importlib
 import json
 import logging
-import sys
 from urllib.parse import quote_plus, unquote_plus
 
-from jwkest import as_unicode
+from fedoidc.bundle import FSJWKSBundle
+from fedoidc.entity import FederationEntity
+from fedoidc.signing_service import Signer
+from fedoidc.signing_service import SigningService
 
-from oic.federation.bundle import FSJWKSBundle
-from oic.federation.entity import FederationEntity
-from oic.federation.operator import Operator
 from oic.utils import shelve_wrapper
 from oic.utils.authn.authn_context import AuthnBroker
 from oic.utils.authn.authn_context import make_auth_verify
@@ -282,10 +280,13 @@ def fed_setup(iss, provider, conf):
     bundle = FSJWKSBundle(iss, fdir=conf.JWKS_DIR,
                           key_conv={'to': quote_plus, 'from': unquote_plus})
 
-    sig_keys = build_keyjar(conf.SIG_KEYS)[1]
+    # Internal, is real life should be a net based service
+    sig_keys = build_keyjar(conf.SIG_KEYS_DEFS)[1]
+    signing_service = SigningService(iss=conf.SIGNER_ID, signing_keys=sig_keys)
+    signer = Signer(signing_service, conf.MS_DIR)
 
+    _keys = build_keyjar(conf.SIG_KEYS_DEFS)[1]
     provider.federation_entity = FederationEntity(
-        provider, iss=iss, keyjar=sig_keys, fo_bundle=bundle,
-        signed_metadata_statements_dir=conf.SMS_DIR)
+        provider, iss=iss, keyjar=_keys, signer=signer, fo_bundle=bundle)
 
     provider.fo_priority = conf.FO_PRIORITY
