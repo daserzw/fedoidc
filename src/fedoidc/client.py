@@ -1,8 +1,8 @@
 import copy
 import logging
 
-from fedoidc import ProviderConfigurationResponse
 from fedoidc import ClientMetadataStatement
+from fedoidc import ProviderConfigurationResponse
 
 from oic import oic, OIDCONF_PATTERN
 from oic.exception import CommunicationError, ParameterError
@@ -247,5 +247,13 @@ class Client(oic.Client):
         rsp = self.http_request(url, "POST", data=req.to_json(),
                                 headers=headers)
 
-        # The response is the same inside or outside an federation context
-        return self.handle_registration_info(rsp)
+        if reg_type == 'federation':
+            self.handle_response(rsp, '', self.parse_federation_registration,
+                                 RegistrationResponse)
+
+            if self.registration_federations:
+                return self.chose_registration_federation()
+            else:  # Otherwise there should be exactly one metadata statement I
+                return self.registration_response
+        else:
+            return self.handle_registration_info(rsp)
