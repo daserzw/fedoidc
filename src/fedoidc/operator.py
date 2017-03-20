@@ -2,6 +2,7 @@ import copy
 import json
 import logging
 
+from fedoidc.signing_service import InternalSigningService
 from jwkest import BadSignature
 from jwkest.jws import JWSException
 import time

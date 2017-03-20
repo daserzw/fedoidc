@@ -4,13 +4,15 @@ import os
 from urllib.parse import quote_plus
 from urllib.parse import unquote_plus
 
+from fedoidc.entity import FederationEntity
+
 from fedoidc import MetadataStatement
 from fedoidc.bundle import FSJWKSBundle, JWKSBundle
 from fedoidc.bundle import keyjar_to_jwks_private
 from fedoidc.file_system import FileSystem
 from fedoidc.operator import Operator
 from fedoidc.signing_service import Signer
-from fedoidc.signing_service import SigningService
+from fedoidc.signing_service import InternalSigningService
 
 from oic.utils.keyio import build_keyjar
 
@@ -142,7 +144,7 @@ def make_signed_metadata_statement(ms_chain, operator):
         root = False
         i += 1
 
-    return {'fo':_root_fo, 'ms':_ms}
+    return {'fo': _root_fo, 'ms': _ms}
 
 
 def make_signed_metadata_statements(smsdef, operator):
@@ -198,6 +200,26 @@ def setup(keydefs, tool_iss, liss, csms_def, oa, ms_path):
             res = make_signed_metadata_statement(spec, operator)
             metadata_statements[name] = res['ms']
         signers[iss] = Signer(
-            SigningService(iss, operator[iss].keyjar), ms_dir)
+            InternalSigningService(iss, operator[iss].keyjar), ms_dir)
 
     return signers, key_bundle
+
+
+def create_federation_entity(iss, conf, fos, sup, entity=''):
+    _keybundle = FSJWKSBundle('', fdir=conf.JWKS_DIR,
+                              key_conv={'to': quote_plus, 'from': unquote_plus})
+
+    # Organisation information
+    _kj = _keybundle[sup]
+    fname = os.path.join(conf.MS_DIR, quote_plus(sup))
+    signer = Signer(InternalSigningService(sup, _kj), fname)
+
+    # And then the FOs
+    jb = JWKSBundle('')
+    for fo in fos:
+        jb[fo] = _keybundle[fo]
+
+    # The OPs own signing keys
+    _keys = build_keyjar(conf.SIG_DEF_KEYS)[1]
+    return FederationEntity(entity, iss=iss, keyjar=_keys, signer=signer,
+                            fo_bundle=jb)

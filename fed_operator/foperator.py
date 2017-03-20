@@ -1,39 +1,38 @@
 #!/usr/bin/env python3
-import json
-from urllib.parse import quote_plus, unquote_plus
-
-import cherrypy
 import importlib
+import json
 import logging
 import os
 import sys
+from urllib.parse import quote_plus
+
+import cherrypy
+import requests
+from jwkest import as_bytes, as_unicode
 
 from oic.exception import MessageException
 from oic.oauth2 import VerificationError
-
-from fedoidc import MetadataStatement
-from jwkest import as_unicode, as_bytes
-
-from fedoidc.bundle import FSJWKSBundle
-from fedoidc.entity import FederationEntity
-from fedoidc.signing_service import Signer, SigningService
-
-from fed_rp.rp_handler import FedRPHandler
-
 from oic.utils.keyio import build_keyjar
 
+from fedoidc import MetadataStatement
+from fedoidc.signing_service import InternalSigningService
+from fedoidc.signing_service import Signer
+
 logger = logging.getLogger("")
-LOGFILE_NAME = 'farp.log'
-hdlr = logging.FileHandler(LOGFILE_NAME)
-base_formatter = logging.Formatter(
-    "%(asctime)s %(name)s:%(levelname)s %(message)s")
-
-hdlr.setFormatter(base_formatter)
-logger.addHandler(hdlr)
-logger.setLevel(logging.DEBUG)
 
 
-class Sign(object):
+def setup_log(name):
+    logfile_name = '{}.log'.format(name)
+    hdlr = logging.FileHandler(logfile_name)
+    base_formatter = logging.Formatter(
+        "%(asctime)s %(name)s:%(levelname)s %(message)s")
+
+    hdlr.setFormatter(base_formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.DEBUG)
+
+
+class Operator(object):
     def __init__(self, signer):
         self.signer = signer
 
@@ -61,6 +60,32 @@ class Sign(object):
 
     def keys(self):
         return as_bytes(self.signer.signing_service.signing_keys.export_jwks())
+
+    @cherrypy.expose
+    def register(self, url):
+        if cherrypy.request.process_request_body is True:
+            _json_doc = cherrypy.request.body.read()
+        else:
+            raise cherrypy.HTTPError(400, 'Missing Client registration body')
+
+        if _json_doc == b'':
+            raise cherrypy.HTTPError(400, 'Missing Client registration body')
+
+        _args = json.loads(as_unicode(_json_doc))
+        _mds = MetadataStatement(**_args)
+
+        try:
+            _mds.verify()
+        except (MessageException, VerificationError) as err:
+            raise cherrypy.CherryPyException(str(err))
+        else:
+            res = requests.post(url, json=_mds.to_json())
+            if 200 <= res.status_code < 300:
+                self.signer.metadata_statements[url] = res.text
+                cherrypy.response.headers['Content-Type'] = 'application/jwt'
+                return as_bytes(res.text)
+            else:
+                raise cherrypy.HTTPError(message=res.text)
 
 
 if __name__ == '__main__':
@@ -116,10 +141,11 @@ if __name__ == '__main__':
         _keydefs.append(spec)
 
     sig_keys = build_keyjar(_keydefs)[1]
-    signing_service = SigningService(iss=_signer_id, signing_keys=sig_keys)
+    signing_service = InternalSigningService(iss=_signer_id,
+                                             signing_keys=sig_keys)
     signer = Signer(signing_service, config.MS_DIR)
 
-    cherrypy.tree.mount(Sign(signer), '/', operator_config)
+    cherrypy.tree.mount(Operator(signer), '/', operator_config)
 
     # If HTTPS
     if args.tls:

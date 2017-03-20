@@ -1,17 +1,18 @@
 import copy
 import logging
 
+from fedoidc import ProviderConfigurationResponse
+from fedoidc import ClientMetadataStatement
+
 from oic import oic, OIDCONF_PATTERN
 from oic.exception import CommunicationError, ParameterError
 from oic.exception import ParseError
 from oic.exception import RegistrationError
-from oic.federation import ProviderConfigurationResponse
 from oic.oauth2 import ErrorResponse
 from oic.oauth2 import MissingRequiredAttribute
 from oic.oauth2 import sanitize
 from oic.oic import RegistrationResponse
 
-from fedoidc import ClientMetadataStatement
 
 try:
     from json import JSONDecodeError
@@ -71,7 +72,7 @@ class Client(oic.Client):
         :param resp: A MetadataStatement instance
         """
         resp = self.federation_entity.get_metadata_statement(
-            resp, cls=ProviderConfigurationResponse)
+            resp, cls=ClientMetadataStatement)
 
         if not resp:  # No metadata statement that I can use
             raise RegistrationError('No trusted metadata')
@@ -246,13 +247,5 @@ class Client(oic.Client):
         rsp = self.http_request(url, "POST", data=req.to_json(),
                                 headers=headers)
 
-        if reg_type == 'federation':
-            self.handle_response(rsp, '', self.parse_federation_registration,
-                                 RegistrationResponse)
-
-            if self.registration_federations:
-                return self.chose_registration_federation()
-            else:  # Otherwise there should be exactly one metadata statement I
-                return self.registration_response
-        else:
-            return self.handle_registration_info(rsp)
+        # The response is the same inside or outside an federation context
+        return self.handle_registration_info(rsp)

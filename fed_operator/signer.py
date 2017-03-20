@@ -5,7 +5,8 @@ import argparse
 import json
 
 from fedoidc import MetadataStatement
-from fedoidc.signing_service import SigningService, Signer
+from fedoidc.signing_service import InternalSigningService
+from fedoidc.signing_service import Signer
 
 from oic.utils.keyio import build_keyjar
 
@@ -23,7 +24,7 @@ for spec in KEYDEFS:
     _keydefs.append(spec)
 
 sig_keys = build_keyjar(KEYDEFS)[1]
-signing_service = SigningService(iss=args.iss, signing_keys=sig_keys)
+signing_service = InternalSigningService(iss=args.iss, signing_keys=sig_keys)
 signer = Signer(signing_service, args.ms_dir)
 
 _args = json.loads(open(args.statement,'r').read())

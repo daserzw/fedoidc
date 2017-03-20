@@ -106,6 +106,7 @@ class Provider(provider.Provider):
 
         if res:
             fo, _dict = self.federation_entity.pick_by_priority(res)
+            self.federation = fo
         else:  # Nothing I can use
             return error(error='invalid_request',
                          descr='No signed metadata statement I could use')

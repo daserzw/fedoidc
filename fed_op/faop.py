@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 
+from fedoidc.test_utils import create_federation_entity
 from oic.utils import webfinger
 from fedoidc.provider import Provider
 
@@ -18,7 +19,6 @@ base_formatter = logging.Formatter(
 hdlr.setFormatter(base_formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
-
 
 if __name__ == '__main__':
     import argparse
@@ -71,7 +71,12 @@ if __name__ == '__main__':
 
     # OIDC Provider
     _op = setup.op_setup(args, config, Provider)
-    setup.fed_setup(_op.baseurl, _op, config)
+
+    fed_ent = create_federation_entity(iss=_op.baseurl, conf=config,
+                                       fos=['https://swamid.sunet.se'],
+                                       sup='https://sunet.se')
+    _op.federation_entity = fed_ent
+    fed_ent.httpcli = _op
 
     # WebFinger
     webfinger_config = {

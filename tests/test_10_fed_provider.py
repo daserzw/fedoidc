@@ -9,7 +9,7 @@ from fedoidc.entity import FederationEntity
 from fedoidc.operator import Operator
 from fedoidc.provider import Provider
 from fedoidc.signing_service import Signer
-from fedoidc.signing_service import SigningService
+from fedoidc.signing_service import InternalSigningService
 from fedoidc.test_utils import make_jwks_bundle
 from fedoidc.test_utils import make_signed_metadata_statements
 from jwkest import jws, as_unicode
@@ -108,7 +108,7 @@ USERDB = {
 USERINFO = UserInfo(USERDB)
 
 SIGNER = Signer(ms_dir='ms_dir',
-                signing_service=SigningService(
+                signing_service=InternalSigningService(
                     'https://operator.example.com',
                     build_keyjar(KEYDEFS)[1]
                 ))

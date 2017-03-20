@@ -117,7 +117,7 @@ class FedRPHandler(object):
             _state = rndstr(24)
             self.state2issuer[_state] = issuer
             return self.create_authnrequest(client, _state)
-        except Exception:
+        except Exception as err:
             message = traceback.format_exception(*sys.exc_info())
             logger.error(message)
             raise HandlerError(

@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
-from urllib.parse import quote_plus, unquote_plus
-
-import cherrypy
 import importlib
 import logging
 import os
 import sys
 
-from fedoidc.bundle import FSJWKSBundle
-from fedoidc.entity import FederationEntity
-from fedoidc.signing_service import Signer, SigningService
+import cherrypy
 
-from fed_rp.rp_handler import FedRPHandler
-
-from oic.utils.keyio import build_keyjar
+from fedoidc.rp_handler import FedRPHandler
+from fedoidc.test_utils import create_federation_entity
 
 logger = logging.getLogger("")
 LOGFILE_NAME = 'farp.log'
@@ -71,14 +65,9 @@ if __name__ == '__main__':
     else:
         _base_url = config.BASEURL
 
-    _kj = build_keyjar(config.KEYDEFS)[1]
-    signer = Signer(SigningService(_base_url, _kj), config.MS_DIR)
-    fo_keybundle = FSJWKSBundle('', fdir='fo_jwks',
-                                key_conv={'to': quote_plus,
-                                          'from': unquote_plus})
-
-    rp_fed_ent = FederationEntity(None, keyjar=_kj, iss=_base_url,
-                                  signer=signer, fo_bundle=fo_keybundle)
+    rp_fed_ent = create_federation_entity(iss=_base_url, conf=config,
+                                          fos=['https://swamid.sunet.se'],
+                                          sup='https://catalogix.se')
 
     rph = FedRPHandler(base_url=_base_url,
                        registration_info=config.CONSUMER_CONFIG,

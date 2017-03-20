@@ -118,12 +118,11 @@ class Configuration(object):
                 _ = op.federation_entity  # Federation aware ?
             except AttributeError:
                 resp = op.providerinfo_endpoint()
+                return conv_response(resp)
             else:
                 resp = op.create_fed_providerinfo()
-
-            # cherrypy.response.headers['Content-Type'] = 'application/json'
-            # return as_bytes(resp.message)
-            return conv_response(resp)
+                cherrypy.response.headers['Content-Type'] = 'application/json'
+                return as_bytes(json.dumps(resp.to_dict()))
 
 
 class Root(object):

@@ -7,8 +7,6 @@ SERVER_KEY = 'certs/key.pem'
 SERVER_CERT = 'certs/cert.pem'
 CA_BUNDLE = None
 
-KEYDEFS= [{"type": "RSA",
-           "key": "keys/{}.key",
-           "use": ["sig"]}]
+KEYDEFS= [{"type": "RSA", "key": "keys/{}.key", "use": ["sig"]}]
 
 MS_DIR = './ms_dir'

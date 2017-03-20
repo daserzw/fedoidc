@@ -1,11 +1,13 @@
 import json
 import logging
-from urllib.parse import quote_plus, unquote_plus
 
-from fedoidc.bundle import FSJWKSBundle
+from urllib.parse import quote_plus
+from urllib.parse import unquote_plus
+
+from fedoidc.bundle import FSJWKSBundle, JWKSBundle
 from fedoidc.entity import FederationEntity
+from fedoidc.signing_service import InternalSigningService
 from fedoidc.signing_service import Signer
-from fedoidc.signing_service import SigningService
 
 from oic.utils import shelve_wrapper
 from oic.utils.authn.authn_context import AuthnBroker
@@ -274,19 +276,3 @@ def op_setup(args, config, provider_cls):
         logger.info("OC3 server keys: %s" % b)
 
     return _op
-
-
-def fed_setup(iss, provider, conf):
-    bundle = FSJWKSBundle(iss, fdir=conf.JWKS_DIR,
-                          key_conv={'to': quote_plus, 'from': unquote_plus})
-
-    # Internal, is real life should be a net based service
-    sig_keys = build_keyjar(conf.SIG_KEYS_DEFS)[1]
-    signing_service = SigningService(iss=conf.SIGNER_ID, signing_keys=sig_keys)
-    signer = Signer(signing_service, conf.MS_DIR)
-
-    _keys = build_keyjar(conf.SIG_KEYS_DEFS)[1]
-    provider.federation_entity = FederationEntity(
-        provider, iss=iss, keyjar=_keys, signer=signer, fo_bundle=bundle)
-
-    provider.fo_priority = conf.FO_PRIORITY

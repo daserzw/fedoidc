@@ -22,14 +22,14 @@ PASSWD = {
     "upper": "crust"
 }
 
+SIG_DEF_KEYS = [{"type": "RSA", "key": "keys/op_key.pem", "use": ["sig"]}]
+MS_DIR = '../fed_conf/ms_dir'
+JWKS_DIR = '../fed_conf/fo_jwks'
+
 JWKS_FILE_NAME = "static/jwks.json"
-JWKS_DIR = 'jwks'
-SIG_KEYS_DEFS = [{"type": "RSA", "key": "keys/fed_sig.pem", "use": ["sig"]}]
-SIGNER_ID = 'https://example.com'
-MS_DIR = 'ms_dir'
 FO_PRIORITY = []
 
-MAKO_ROOT = '.'
+MAKO_ROOT = './'
 
 COOKIENAME = 'pyoic'
 COOKIETTL = 4 * 60  # 4 hours
