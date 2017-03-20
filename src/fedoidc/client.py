@@ -5,12 +5,12 @@ from oic import oic, OIDCONF_PATTERN
 from oic.exception import CommunicationError, ParameterError
 from oic.exception import ParseError
 from oic.exception import RegistrationError
-from oic.federation import ProviderConfigurationResponse
 from oic.oauth2 import ErrorResponse
 from oic.oauth2 import MissingRequiredAttribute
 from oic.oauth2 import sanitize
 from oic.oic import RegistrationResponse
 
+from fedoidc import ProviderConfigurationResponse
 from fedoidc import ClientMetadataStatement
 
 try:
