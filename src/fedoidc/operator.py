@@ -74,8 +74,10 @@ class Operator(object):
                         try:
                             _ms = self.unpack_metadata_statement(
                                 jwt_ms=meta_s, keyjar=keyjar, cls=cls)
-                        except (JWSException, BadSignature, MissingSigningKey):
-                            pass
+                        except (
+                            JWSException, BadSignature,
+                            MissingSigningKey) as err:
+                            logger.error('Encountered: {}'.format(err))
                         else:
                             msl.append(_ms)
 
@@ -87,7 +89,8 @@ class Operator(object):
 
                 try:
                     _ms = cls().from_jwt(jwt_ms, keyjar=keyjar)
-                except MissingSigningKey:
+                except MissingSigningKey as err:
+                    logger.error('Encountered: {}'.format(err))
                     raise
 
                 if msl:
@@ -96,17 +99,22 @@ class Operator(object):
 
         if json_ms:
             msl = []
+            ms_flag = False
             if 'metadata_statements' in json_ms:
+                ms_flag = True
                 for ms in json_ms['metadata_statements']:
                     try:
                         res = self.unpack_metadata_statement(
                             jwt_ms=ms, keyjar=keyjar, cls=cls)
-                    except (JWSException, BadSignature):
+                    except (JWSException,
+                            BadSignature, MissingSigningKey) as err:
+                        logger.error('Encountered: {}'.format(err))
                         pass
                     else:
                         msl.append(res)
 
             if 'metadata_statement_uris' in json_ms:
+                ms_flag = True
                 if self.httpcli:
                     for iss, url in json_ms['metadata_statement_uris'].items():
                         if iss not in keyjar:  # FO I don't know about
@@ -122,6 +130,9 @@ class Operator(object):
                                 msl.append(_res)
             if msl:
                 json_ms['metadata_statements'] = [x.to_json() for x in msl]
+            elif ms_flag:
+                return {}
+
             return json_ms
         else:
             raise AttributeError('Need one of json_ms or jwt_ms')

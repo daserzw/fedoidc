@@ -74,7 +74,8 @@ class JWKSBundle(object):
         :param sign_alg: Which algorithm to use when signing the JWT
         :return: A signed JWT
         """
-        data = json.dumps(self.dict(iss_list))
+        #data = json.dumps(self.dict(iss_list))
+        data = self.dict(iss_list)
         _jwt = JWT(self.sign_keys, iss=self.iss, sign_alg=sign_alg)
         return _jwt.pack(bundle=data)
 
@@ -85,7 +86,11 @@ class JWKSBundle(object):
         :param jstr:
         :return:
         """
-        _info = json.loads(jstr)
+        if isinstance(jstr, dict):
+            _info = jstr
+        else:
+            _info = json.loads(jstr)
+
         for iss, jwks in _info.items():
             kj = KeyJar()
             kj.import_jwks(jwks, issuer=iss)

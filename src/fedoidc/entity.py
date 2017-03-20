@@ -84,9 +84,11 @@ class FederationEntity(Operator):
         :return: A dictionary with metadata statements per FO
         """
         _cms = self.unpack_metadata_statement(json_ms=json_ms, cls=cls)
-        ms_per_fo = self.evaluate_metadata_statement(_cms)
-
-        return ms_per_fo
+        if _cms:
+            ms_per_fo = self.evaluate_metadata_statement(_cms)
+            return ms_per_fo
+        else:
+            return {}
 
     def create_metadata_statement_request(self, statement):
         """

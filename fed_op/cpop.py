@@ -95,7 +95,7 @@ class WebFinger(object):
         else:
             raise cherrypy.HTTPError(400, "URI type I don't support")
 
-        return self.srv.response(subj, _base)
+        return as_bytes(self.srv.response(subj, _base))
 
 
 class Configuration(object):
@@ -113,7 +113,14 @@ class Configuration(object):
             )
         else:
             logger.debug('ProviderInfo request')
-            resp = op.providerinfo_endpoint()
+
+            try:
+                _ = op.federation_entity  # Federation aware ?
+            except AttributeError:
+                resp = op.providerinfo_endpoint()
+            else:
+                resp = op.create_fed_providerinfo()
+
             # cherrypy.response.headers['Content-Type'] = 'application/json'
             # return as_bytes(resp.message)
             return conv_response(resp)
@@ -162,20 +169,28 @@ class Provider(Root):
     @cherrypy_cors.tools.expose_public()
     @cherrypy.tools.allow(methods=["POST", "OPTIONS"])
     def registration(self, **kwargs):
+        logger.debug('Request headers: {}'.format(cherrypy.request.headers))
         if cherrypy.request.method == "OPTIONS":
-            logger.debug('Request headers: {}'.format(cherrypy.request.headers))
             cherrypy_cors.preflight(
                 allowed_methods=["POST"], origins='*',
                 allowed_headers=['Authorization', 'content-type'])
         else:
-            logger.debug('ClientRegistration request')
+            logger.debug('ClientRegistration kwargs: {}'.format(kwargs))
+            _request = None
+
             if cherrypy.request.process_request_body is True:
-                _request = cherrypy.request.body.read()
-            else:
-                raise cherrypy.HTTPError(400,
-                                         'Missing Client registration body')
-            logger.debug('request_body: {}'.format(_request))
-            resp = self.op.registration_endpoint(as_unicode(_request))
+                _request = as_unicode(cherrypy.request.body.read())
+                logger.debug('request_body: {}'.format(_request))
+
+            try:
+                if _request:
+                    resp = self.op.registration_endpoint(_request)
+                else:
+                    resp = self.op.registration_endpoint(kwargs)
+            except Exception as err:
+                logger.error(err)
+                raise cherrypy.HTTPError(message=err)
+
             return conv_response(resp)
 
     @cherrypy.expose
@@ -265,19 +280,18 @@ class Provider(Root):
                 allowed_headers=['Authorization', 'content-type'])
         else:
             logger.debug('UserinfoRequest')
-            args = {}
+            args = {'request': kwargs}
             if cherrypy.request.process_request_body is True:
                 _req = cherrypy.request.body.read()
                 if _req:
-                    args = {'request': _req}
+                    args['request'] = _req
 
             try:
                 args['authn'] = cherrypy.request.headers['Authorization']
             except KeyError:
                 pass
 
-            kwargs.update(args)
-            resp = self.op.userinfo_endpoint(**kwargs)
+            resp = self.op.userinfo_endpoint(**args)
             return conv_response(resp)
 
     @cherrypy.expose

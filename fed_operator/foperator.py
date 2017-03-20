@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 from urllib.parse import quote_plus, unquote_plus
 
 import cherrypy
@@ -6,6 +7,12 @@ import importlib
 import logging
 import os
 import sys
+
+from oic.exception import MessageException
+from oic.oauth2 import VerificationError
+
+from fedoidc import MetadataStatement
+from jwkest import as_unicode, as_bytes
 
 from fedoidc.bundle import FSJWKSBundle
 from fedoidc.entity import FederationEntity
@@ -24,6 +31,37 @@ base_formatter = logging.Formatter(
 hdlr.setFormatter(base_formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
+
+
+class Sign(object):
+    def __init__(self, signer):
+        self.signer = signer
+
+    @cherrypy.expose
+    def index(self, **kwargs):
+        if cherrypy.request.process_request_body is True:
+            _json_doc = cherrypy.request.body.read()
+        else:
+            raise cherrypy.HTTPError(400, 'Missing Client registration body')
+
+        if _json_doc == b'':
+            raise cherrypy.HTTPError(400, 'Missing Client registration body')
+
+        _args = json.loads(as_unicode(_json_doc))
+        _mds = MetadataStatement(**_args)
+
+        try:
+            _mds.verify()
+        except (MessageException, VerificationError) as err:
+            raise cherrypy.CherryPyException(str(err))
+        else:
+            _jwt = self.signer.create_signed_metadata_statement(_mds)
+            cherrypy.response.headers['Content-Type'] = 'application/jwt'
+            return as_bytes(_jwt)
+
+    def keys(self):
+        return as_bytes(self.signer.signing_service.signing_keys.export_jwks())
+
 
 if __name__ == '__main__':
     import argparse
@@ -49,7 +87,7 @@ if __name__ == '__main__':
          'server.socket_port': args.port
          })
 
-    provider_config = {
+    operator_config = {
         '/': {
             'root_path': 'localhost',
             'log.screen': True
@@ -62,30 +100,26 @@ if __name__ == '__main__':
             'cors.expose_public.on': True
         }}
 
+    # Service specifics
+
     sys.path.insert(0, ".")
     config = importlib.import_module(args.config)
-    cprp = importlib.import_module('cprp')
 
     if args.port:
-        _base_url = "{}:{}".format(config.BASEURL, args.port)
+        _signer_id = "{}:{}".format(config.SIGNER_ID, args.port)
     else:
-        _base_url = config.BASEURL
+        _signer_id = config.SIGNER_ID
 
-    _kj = build_keyjar(config.KEYDEFS)[1]
-    signer = Signer(SigningService(_base_url, _kj), config.MS_DIR)
-    fo_keybundle = FSJWKSBundle('', fdir='fo_jwks',
-                                key_conv={'to': quote_plus,
-                                          'from': unquote_plus})
+    _keydefs = []
+    for spec in config.KEYDEFS:
+        spec['key'] = spec['key'].format(quote_plus(_signer_id))
+        _keydefs.append(spec)
 
-    rp_fed_ent = FederationEntity(None, keyjar=_kj, iss=_base_url,
-                                  signer=signer, fo_bundle=fo_keybundle)
+    sig_keys = build_keyjar(_keydefs)[1]
+    signing_service = SigningService(iss=_signer_id, signing_keys=sig_keys)
+    signer = Signer(signing_service, config.MS_DIR)
 
-    rph = FedRPHandler(base_url=_base_url,
-                       registration_info=config.CONSUMER_CONFIG,
-                       flow_type='code', federation_entity=rp_fed_ent,
-                       hash_seed="BabyHoldOn", scope=None)
-
-    cherrypy.tree.mount(cprp.Consumer(rph, 'html'), '/', provider_config)
+    cherrypy.tree.mount(Sign(signer), '/', operator_config)
 
     # If HTTPS
     if args.tls:
