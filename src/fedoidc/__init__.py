@@ -30,7 +30,8 @@ class MetadataStatement(JasonWebToken):
         'signing_keys_uri': SINGLE_OPTIONAL_STRING,
         'metadata_statements': OPTIONAL_LIST_OF_STRINGS,
         'metadata_statement_uris': OPTIONAL_MESSAGE,
-        'signed_jwks_uri': SINGLE_OPTIONAL_STRING
+        'signed_jwks_uri': SINGLE_OPTIONAL_STRING,
+        'federation_usage': SINGLE_OPTIONAL_STRING
     })
 
     def verify(self, **kwargs):
@@ -46,10 +47,6 @@ class MetadataStatement(JasonWebToken):
                     kj.import_jwks(self['signing_keys'], '')
                 except Exception:
                     raise VerificationError('"signing_keys" not a proper JWKS')
-        elif not 'signing_keys_uri' in self:
-            raise VerificationError(
-                ' You must have one of "signing_keys" or '
-                '"signing_keys_uri" in a metadata statement')
 
         if "metadata_statements" in self and "metadata_statement_uris" in self:
             raise VerificationError(
@@ -131,4 +128,4 @@ def is_lesser(a, b):
 #  The resulting metadata must not contain these parameters
 IgnoreKeys = list(JasonWebToken.c_param.keys())
 DoNotCompare= ['signing_keys', 'signing_keys_uri', 'metadata_statement_uris',
-               'kid', 'metadata_statements']
+               'kid', 'metadata_statements', 'usage']
