@@ -72,12 +72,13 @@ class WebSigningService(SigningService):
 
 
 class Signer(object):
-    def __init__(self, signing_service, ms_dir):
+    def __init__(self, signing_service, ms_dir=None):
         self.metadata_statements = {}
 
-        for key, _dir in ms_dir.items():
-            self.metadata_statements[key] = FileSystem(
-                _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
+        if ms_dir:
+            for key, _dir in ms_dir.items():
+                self.metadata_statements[key] = FileSystem(
+                    _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
 
         self.signing_service = signing_service
 
@@ -92,21 +93,27 @@ class Signer(object):
         :return: signed Metadata Statement
         """
 
-        if fos is None:
-            fos = list(self.metadata_statements[context].keys())
 
-        _msl = []
-        for f in fos:
-            try:
-                _msl.append(self.metadata_statements[context][f])
-            except KeyError:
-                pass
+        try:
+            cms = self.metadata_statements[context]
+        except KeyError:
+            pass
+        else:
+            if fos is None:
+                fos = list(cms.keys())
 
-        if fos and not _msl:
-            raise KeyError('No metadata statements matched')
+            _msl = []
+            for f in fos:
+                try:
+                    _msl.append(cms[f])
+                except KeyError:
+                    pass
 
-        if _msl:
-            req['metadata_statements'] = _msl
+            if fos and not _msl:
+                raise KeyError('No metadata statements matched')
+
+            if _msl:
+                req['metadata_statements'] = _msl
 
         return self.signing_service(req)
 
