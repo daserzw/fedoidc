@@ -77,13 +77,19 @@ class FederationEntity(Operator):
                 res.extend((iss, vals))
         return res
 
-    def get_metadata_statement(self, json_ms, cls=MetadataStatement):
+    def get_metadata_statement(self, json_ms, cls=MetadataStatement,
+                               federation_usage=''):
         """
         Unpack and evaluate a compound metadata statement
+
         :param json_ms: The metadata statement as a JSON document
         :return: A dictionary with metadata statements per FO
         """
         _cms = self.unpack_metadata_statement(json_ms=json_ms, cls=cls)
+
+        if federation_usage:
+            _cms = self.weed_wrong_usage(_cms, federation_usage)
+
         if _cms:
             ms_per_fo = self.evaluate_metadata_statement(_cms)
             return ms_per_fo

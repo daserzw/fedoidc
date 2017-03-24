@@ -5,7 +5,8 @@ from fedoidc import ClientMetadataStatement
 from fedoidc import ProviderConfigurationResponse
 
 from oic import oic, OIDCONF_PATTERN
-from oic.exception import CommunicationError, ParameterError
+from oic.exception import CommunicationError
+from oic.exception import ParameterError
 from oic.exception import ParseError
 from oic.exception import RegistrationError
 from oic.oauth2 import ErrorResponse

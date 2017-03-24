@@ -55,8 +55,7 @@ def make_fs_jwks_bundle(iss, fo_liss, sign_keyjar, keydefs, base_path=''):
 def make_jwks_bundle(iss, fo_liss, sign_keyjar, keydefs, base_path=''):
     """
     Given a list of Federation identifiers creates a FSJWKBundle containing all
-    the signing keys and a dictionary with Operator instances representing all
-    the FOs.
+    the signing keys.
 
     :param iss: The issuer ID of the entity owning the JWKSBundle
     :param fo_liss: List of federation identifiers
@@ -64,7 +63,7 @@ def make_jwks_bundle(iss, fo_liss, sign_keyjar, keydefs, base_path=''):
         an export version of the JWKS bundle.
     :param keydefs: What type of keys that should be created for each
         federation. The same for all of them.
-    :return: A tuple with a JWKSBundle instance and an operator dictionary.
+    :return: A JWKSBundle instance.
     """
     jb = JWKSBundle(iss, sign_keyjar)
 

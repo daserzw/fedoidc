@@ -73,18 +73,32 @@ class WebSigningService(SigningService):
 
 class Signer(object):
     def __init__(self, signing_service, ms_dir):
-        self.metadata_statements = FileSystem(
-            ms_dir, key_conv={'to': quote_plus, 'from': unquote_plus})
+        self.metadata_statements = {}
+
+        for key, _dir in ms_dir.items():
+            self.metadata_statements[key] = FileSystem(
+                _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
+
         self.signing_service = signing_service
 
-    def create_signed_metadata_statement(self, req, fos=None):
+    def create_signed_metadata_statement(self, req, context, fos=None):
+        """
+
+        :param req: The metadata statement to be signed
+        :param fos: Signed metadata statements from these Federation Operators
+            should be added.
+        :param context: The context in which this Signed metadata
+            statement should be used
+        :return: signed Metadata Statement
+        """
+
         if fos is None:
-            fos = list(self.metadata_statements.keys())
+            fos = list(self.metadata_statements[context].keys())
 
         _msl = []
         for f in fos:
             try:
-                _msl.append(self.metadata_statements[f])
+                _msl.append(self.metadata_statements[context][f])
             except KeyError:
                 pass
 

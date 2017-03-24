@@ -76,8 +76,8 @@ class Operator(object):
                             _ms = self.unpack_metadata_statement(
                                 jwt_ms=meta_s, keyjar=keyjar, cls=cls)
                         except (
-                            JWSException, BadSignature,
-                            MissingSigningKey) as err:
+                                JWSException, BadSignature,
+                                MissingSigningKey) as err:
                             logger.error('Encountered: {}'.format(err))
                         else:
                             msl.append(_ms)
@@ -225,6 +225,35 @@ class Operator(object):
             res = dict([(k, v) for k, v in res.items() if
                         k not in DoNotCompare])
             return {_iss: res}
+
+    def weed_wrong_usage(self, metadata, federation_usage):
+        """
+        Remove MS paths that are marked to be used for another usage
+
+        :param metadata:
+        :param federation_usage:
+        :return:
+        """
+
+        if 'metadata_statements' in metadata:
+            _msl = []
+            for ms in metadata['metadata_statements']:
+                if self.weed_wrong_usage(json.loads(ms),
+                                         federation_usage=federation_usage):
+                    _msl.append(ms)
+            if _msl:
+                metadata['metadata_statements'] = _msl
+                return metadata
+            else:
+                return None
+        else:  # this is the innermost
+            try:
+                assert federation_usage == metadata['federation_usage']
+            except KeyError:
+                pass
+            except AssertionError:
+                return None
+            return metadata
 
 
 class FederationOperator(Operator):
