@@ -4,16 +4,16 @@
 
                                                          R. Hedberg, Ed.
                                                              independent
-                                                           R. Gulliksson
-                                                                     UmU
+                                                           S. Gulliksson
+                                                               Schibsted
                                                                 M. Jones
                                                                Microsoft
                                                               J. Bradley
                                                            Ping Identity
-                                                           July 23, 2016
+                                                          March 25, 2017
 
 
-                OpenID Connect Federation 1.0 - draft 01
+                OpenID Connect Federation 1.0 - draft 02
                      openid-connect-federation-1_0
 
 Abstract
@@ -38,49 +38,55 @@ Table of Contents
    2.  Requirements Language . . . . . . . . . . . . . . . . . . . .   3
    3.  Metadata Statement  . . . . . . . . . . . . . . . . . . . . .   3
      3.1.  Metadata Common to All Entities . . . . . . . . . . . . .   3
-     3.2.  Specific Client Metadata  . . . . . . . . . . . . . . . .   4
-     3.3.  Specific Provider Metadata  . . . . . . . . . . . . . . .   4
-     3.4.  Compounded Metadata Statement . . . . . . . . . . . . . .   4
-     3.5.  Conceptual Model  . . . . . . . . . . . . . . . . . . . .   6
-   4.  Trust Model . . . . . . . . . . . . . . . . . . . . . . . . .   6
-     4.1.  Federation Operator . . . . . . . . . . . . . . . . . . .   7
-     4.2.  The Building Block  . . . . . . . . . . . . . . . . . . .   7
-     4.3.  Constructing a Signed Metadata Statement  . . . . . . . .   7
-     4.4.  Verifying the Metadata Statement  . . . . . . . . . . . .   8
-   5.  OpenID Connect Communication  . . . . . . . . . . . . . . . .   9
-     5.1.  Provider Discovery  . . . . . . . . . . . . . . . . . . .  10
-     5.2.  Client Registration . . . . . . . . . . . . . . . . . . .  10
+     3.2.  Specific Client Metadata  . . . . . . . . . . . . . . . .   5
+     3.3.  Specific Provider Metadata  . . . . . . . . . . . . . . .   5
+     3.4.  Compounded Metadata Statement . . . . . . . . . . . . . .   5
+       3.4.1.  Basic components  . . . . . . . . . . . . . . . . . .   5
+       3.4.2.  Relationship between Metadata Statements  . . . . . .   6
+       3.4.3.  Constructing Entity Metadata  . . . . . . . . . . . .   6
+     3.5.  Conceptual Model  . . . . . . . . . . . . . . . . . . . .   8
+     3.6.  Usage . . . . . . . . . . . . . . . . . . . . . . . . . .   8
+   4.  Trust Model . . . . . . . . . . . . . . . . . . . . . . . . .   9
+     4.1.  Federation Operator . . . . . . . . . . . . . . . . . . .   9
+     4.2.  The Building Block  . . . . . . . . . . . . . . . . . . .   9
+     4.3.  Constructing a Signed Metadata Statement  . . . . . . . .  10
 
 
 
-Hedberg, et al.         Expires January 24, 2017                [Page 1]
+Hedberg, et al.        Expires September 26, 2017               [Page 1]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
 
-   6.  Belonging to Several Federations  . . . . . . . . . . . . . .  10
-     6.1.  Choosing federation . . . . . . . . . . . . . . . . . . .  10
-     6.2.  Relying Party . . . . . . . . . . . . . . . . . . . . . .  11
-     6.3.  OpenID Provider . . . . . . . . . . . . . . . . . . . . .  12
-   7.  Timeouts  . . . . . . . . . . . . . . . . . . . . . . . . . .  12
-   8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  13
-   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  13
-   10. Security Considerations . . . . . . . . . . . . . . . . . . .  13
-   11. Normative References  . . . . . . . . . . . . . . . . . . . .  13
-   Appendix A.  Example  . . . . . . . . . . . . . . . . . . . . . .  14
-     A.1.  Relying Party joining a federation  . . . . . . . . . . .  15
-       A.1.1.  Step 1 - Developer creates its signing key pair.  . .  15
-       A.1.2.  Step 2 - Developer submits registration data to FO  .  16
-       A.1.3.  Step 3 - FO returns a signed metadata statement . . .  17
-       A.1.4.  Step 4 - The RP gets a signing key  . . . . . . . . .  18
-       A.1.5.  Step 5 - RP produces a client registration request  .  19
-       A.1.6.  Step 6 - Developer produces metadata statement for RP  20
+     4.4.  Verifying the Metadata Statement  . . . . . . . . . . . .  11
+     4.5.  Flattening the compounded metadata statement  . . . . . .  12
+   5.  OpenID Connect Communication  . . . . . . . . . . . . . . . .  12
+     5.1.  Provider Discovery  . . . . . . . . . . . . . . . . . . .  12
+     5.2.  Client Registration . . . . . . . . . . . . . . . . . . .  12
+     5.3.  Client Registration response  . . . . . . . . . . . . . .  13
+   6.  Belonging to Several Federations  . . . . . . . . . . . . . .  13
+     6.1.  Choosing federation . . . . . . . . . . . . . . . . . . .  13
+     6.2.  Relying Party . . . . . . . . . . . . . . . . . . . . . .  13
+     6.3.  OpenID Provider . . . . . . . . . . . . . . . . . . . . .  14
+   7.  Timeouts  . . . . . . . . . . . . . . . . . . . . . . . . . .  15
+   8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  15
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  16
+   10. Security Considerations . . . . . . . . . . . . . . . . . . .  16
+   11. Normative References  . . . . . . . . . . . . . . . . . . . .  16
+   Appendix A.  Example  . . . . . . . . . . . . . . . . . . . . . .  17
+     A.1.  Relying Party joining a federation  . . . . . . . . . . .  18
+       A.1.1.  Step 1 - FMR creates its signing key pair.  . . . . .  18
+       A.1.2.  Step 2 - The FMR submits registration data to FO  . .  19
+       A.1.3.  Step 3 - FO returns a signed metadata statement . . .  20
+       A.1.4.  Step 4 - The RP gets a signing key  . . . . . . . . .  21
+       A.1.5.  Step 5 - RP produces a client registration request  .  22
+       A.1.6.  Step 6 - Developer produces metadata statement for RP  23
        A.1.7.  Step 7 - RP sends a client registration request to an
-               OP  . . . . . . . . . . . . . . . . . . . . . . . . .  21
-       A.1.8.  Step 8 - OP handles metadata statement  . . . . . . .  22
-   Appendix B.  Notices  . . . . . . . . . . . . . . . . . . . . . .  22
-   Appendix C.  Document History . . . . . . . . . . . . . . . . . .  23
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  23
+               OP  . . . . . . . . . . . . . . . . . . . . . . . . .  24
+       A.1.8.  Step 8 - OP handles metadata statement  . . . . . . .  25
+   Appendix B.  Notices  . . . . . . . . . . . . . . . . . . . . . .  25
+   Appendix C.  Document History . . . . . . . . . . . . . . . . . .  26
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  26
 
 1.  Introduction
 
@@ -99,20 +105,21 @@ Hedberg, et al.         Expires January 24, 2017                [Page 1]
    is probably the most widely used TLS library, has been discovered
    that puts reasonable doubt into this dependency.
 
-   We are using the idea behind Software Statements, as introduced by
-   RFC 7591 [RFC7591], to create what we call metadata statements.
-   Metadata statements together with the use of a trusted third party
-   (that verifies and enforces some common policy), can be used to
-   transfer verified data and trust in the data between clients and
-   servers.
 
 
 
 
-Hedberg, et al.         Expires January 24, 2017                [Page 2]
+Hedberg, et al.        Expires September 26, 2017               [Page 2]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
+
+   We are extending Signed Metadata, as introduced by OAuth 2.0
+   Authorization Server Metadata [I-D.draft-ietf-oauth-discovery], to
+   create what we call metadata statements.  Metadata statements
+   together with the use of a trusted third party (that verifies and
+   enforces some common policy), can be used to transfer verified data
+   and trust in the data between clients and servers.
 
 2.  Requirements Language
 
@@ -134,6 +141,15 @@ Hedberg, et al.         Expires January 24, 2017                [Page 2]
       OPTIONAL.  A JSON Web Key Set (JWKS) [RFC7517] representing the
       public part of the entity's signing keys.
 
+      The keys that can be found here or at "signing_keys_uri" must not
+      be confused with the keys that an OIDC entity are using for
+      Authorization/AccessToken/RefreshToken/UserInfo requests and
+      responses those keys are found at "jwks_uri" or in the case of
+      client registration also possibly at "jwks".  The signing keys are
+      used to sign metadata statements, keys found at "signed_jwks_uri"
+      and can also be used by an OP to sign a client registration
+      request response.
+
    signing_keys_uri
       OPTIONAL.  Location where a JWKS representing the public part of
       the entity's signing keys can be found.  SHOULD return the
@@ -145,6 +161,15 @@ Hedberg, et al.         Expires January 24, 2017                [Page 2]
       OPTIONAL.  JSON array containing a list of metadata statements.
 
    metadata_statement_uris
+
+
+
+
+Hedberg, et al.        Expires September 26, 2017               [Page 3]
+
+                        OpenID Connect Federation             March 2017
+
+
       OPTIONAL.  JSON object where the names are the federation
       identifiers and the values are URLs pointing to metadata
       statements connected to each federation.
@@ -157,19 +182,27 @@ Hedberg, et al.         Expires January 24, 2017                [Page 2]
       JWS using the JWS Compact Serialization.  The key used to sign the
       JWKS can be found in "signing_keys" or "signing_keys_uri"
 
+   federation_usage
+      OPTIONAL.  A metadata statement can be used in several different
+      context.  This parameter can be used to limit the usage to a
+      specific context.  The values specified in this document are
+      'discovery', 'registration' and 'response'.  The corresponding
+      contexts are:
+
+      discovery
+         Provider Information Discovery Response [OpenID.Discovery]
+
+      registration
+         Client Registration Request [OpenID.Registration]
+
+      response
+         Client Registration Request response [OpenID.Registration]
+
    Metadata statements and signing keys can be transferred in two
    different ways: either by including the information in the statement,
    or by providing a URI that points to the information.  How metadata
    statements and signing keys are transferred is independent of each
    other.  It is NOT allowed to divide the information (metadata
-
-
-
-Hedberg, et al.         Expires January 24, 2017                [Page 3]
-
-                        OpenID Connect Federation              July 2016
-
-
    statements or signing keys) into two pieces and send one in the
    statement and leave the rest to be fetched using the URI.
 
@@ -179,6 +212,19 @@ Hedberg, et al.         Expires January 24, 2017                [Page 3]
 
    Metadata statements that do not contain "metadata_statements" or
    "metadata_statement_uris" are called level 0 metadata statements.
+
+   An OP MUST sign it's JWKs and therefore publish a signed_jwks_uri.
+   Unless an RP is not able to handle secrets is MUST also sign it's
+   JWKS and publish a signed_jwks_uri.
+
+
+
+
+
+Hedberg, et al.        Expires September 26, 2017               [Page 4]
+
+                        OpenID Connect Federation             March 2017
+
 
 3.2.  Specific Client Metadata
 
@@ -203,65 +249,133 @@ Hedberg, et al.         Expires January 24, 2017                [Page 3]
 
 3.4.  Compounded Metadata Statement
 
+3.4.1.  Basic components
+
+   To describe Compounded Metadata Statements we need a way of
+   describing the different components in such a statement.  These are
+   the basic components:
+
+   ms_X
+      Metadata Statement signing request by X without signing keys and
+      signed metadata statements.
+
+   SK[X]
+      Signing keys that belongs to X
+
+   X(MS)
+      Metadata Statement signed by X
+
+   Using these basic components we can now describe a simple signed
+   Metadata Statement as:
+
+   A(ms_B + SK[B])
+
+   B being the entity that requested a signature by A of B's metadata
+   statement and signing keys.
+
+   A more complicated compounded metadata statement would then be:
+
+
+
+Hedberg, et al.        Expires September 26, 2017               [Page 5]
+
+                        OpenID Connect Federation             March 2017
+
+
+   B(ms_C + SK[C) + A(ms_B + SK[B])
+
+   Here we have three entities involved: A which is the top level entity
+   (the federation operator) a second level entity (B) representing the
+   federation member and C which could be an entity within the
+   federation like an OP or an RP owned/controlled by B.  If we assume
+   that C is an RP then ms_C would typically be a client registration
+   request and SK[C] would be the signing keys that the RP used to sign
+   the JWKS placed at signed_jwks_uri.  The statement signed by A (ms_b
+   + SK[B]) would contain metadata common to all RPs owned by the member
+   (ms_b) and the signing key (SK[B]) that the member uses to sign
+   requests from the member's RPs.
+
+   Note that the level N requester is the level N+1 signer.
+
+3.4.2.  Relationship between Metadata Statements
+
    The metadata for each entity in the federation is described by one or
-   more metadata statements (for example, MS0, MS1, ..., MSn).  MS0
-   would be the most generic, and MS1-MSn would in turn be successively
-   more specific.  To describe an entity belonging to an organization,
-   MS0 would typically contain information that belongs to the
-   organization, for instance "tos_uri", "contacts" and the like while
-   MSn would contain information that belongs to one specific entity
-   like "authorization_endpoint" for an OP or "redirect_uris" for a RP.
+   more metadata statements (for example, ms_0, ms_1, ..., ms_n).  ms_0
+   (the level 0 metadata statement mentioned above) would be the most
+   generic, and ms_1, ...,ms_n would in turn be successively more
+   specific.  ms_0 would typically contain information that belongs to
+   the organization, for instance "tos_uri", "contacts" and the like,
+   while ms_n would contain information that belongs to one specific
+   entity like "authorization_endpoint" for an OP or "redirect_uris" for
+   a RP.
+
+3.4.3.  Constructing Entity Metadata
 
    The metadata for a specific entity is constructed by starting with
-   the information in MS0 and then adding the information in MS1 to MSn
-   using the rule below.
+   the information in ms_0 and then adding the information in ms_1 to
+   ms_n using the following rule:
+
+   *Given two metadata statements ms_i and ms_j (j > i, i=0,..,n-1,
+   j=1,..,n) For every claim in ms_j: If the claim does not appear in
+   ms_i add it to ms_i.  If the claim appears in ms_i then replace the
+   value of the claim in ms_i with the value of the claim in ms_j if and
+   only if the value in ms_j is less or equal to the value in ms_i.  *
+
+   Less or equal is defined as:
+
+   String
+      less or equal if they are the same.
+
+   Lists
+      For each value in ms_j there MUST be a corresponding value in ms_i
+      that is less or equal.
 
 
 
 
-
-
-Hedberg, et al.         Expires January 24, 2017                [Page 4]
+Hedberg, et al.        Expires September 26, 2017               [Page 6]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
 
-   *If the same claims appear in MSa and MSb (b > a, a=0,..,n, b=0,..,n)
-   then unless the value in MSb is less or equal to the value in MSa
-   then the value in MSb should be ignored.  *
+   Booleans
+      less or equal if they are the same.
 
-      If the values are strings they are less or equal if they are the
-      same.
+   Integer/Floats
+      Numeric comparision is used.
 
-      if the values are lists then for each value in MSb there MUST be a
-      corresponding value in MSa that is less or equal.
+   Associative array/dictionary
+      ms_j is less or equal to ms_i if each key in ms_j exists in ms_i
+      and ms_j[x] is less or equal to ms_i[x].
 
    The following is a non-normative example of a set of client-specific
    metadata statements who together form the metadata for an entity:
 
-   MS0
+   ms_0
 
    {
-     "contacts": ["dev_admin@example.com"],
+     "contacts": ["helpdesk@example.com"],
      "logo_uri": "https://example.com/logo.jpg",
      "policy_uri": "https://example.com/policy.html",
      "tos_uri": "https://example.com/tos.html"
    }
 
-   MS1
+   ms_1
 
    {
      "scope": "openid eduperson",
-     "response_types": ["code"],
+     "response_types": ["code", "code id_token"],
    }
 
-   MS2
+   ms_2
 
    {
+     "contacts": ["rp_helpdesk@example.com"],
      "redirect_uris": ["https://example.com/rp1"],
+     "response_types: ["code"]
    }
 
-   The metadata for the entity in question, using the rule above, would
+   The metadata for the entity in question, using the rules above, would
    then be:
 
 
@@ -275,17 +389,15 @@ Hedberg, et al.         Expires January 24, 2017                [Page 4]
 
 
 
-
-
-Hedberg, et al.         Expires January 24, 2017                [Page 5]
+Hedberg, et al.        Expires September 26, 2017               [Page 7]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
 
-   sum(MS0...2)
+   sum(ms_0...2)
 
    {
-     "contacts": ["dev_admin@example.com"],
+     "contacts": ["helpdesk@example.com"],
      "logo_uri": "https://example.com/logo.jpg",
      "policy_uri": "https://example.com/policy.html",
      "tos_uri": "https://example.com/tos.html"
@@ -296,9 +408,9 @@ Hedberg, et al.         Expires January 24, 2017                [Page 5]
 
 3.5.  Conceptual Model
 
-   A set of metadata statements, like the ones above, together describe
-   an entity are brought together using the "metadata_statement"
-   parameter.
+   A set of metadata statements that, like the ones above, together
+   describe an entity are brought together using the
+   "metadata_statement" parameter.
 
    The following is a non-normative example of a compounded metadata
    statement.  Also note that the the metadata_statement MUST be a
@@ -306,14 +418,16 @@ Hedberg, et al.         Expires January 24, 2017                [Page 5]
    payload pertinent to the example are shown.
 
    {
+     "contacts": ["rp_helpdesk@example.com"],
      "redirect_uris": ["https://example.com/rp1"],
+     "response_types: ["code"]
      "metadata_statements": [
        {
          "scope": "openid eduperson",
-         "response_types": ["code"],
+         "response_types": ["code", "code id_token"],
          "metadata_statements" : [
            {
-             "contacts": ["dev_admin@example.com"],
+             "contacts": ["helpdesk@example.com"],
              "logo_uri": "https://example.com/logo.jpg",
              "policy_uri": "https://example.com/policy.html",
              "tos_uri": "https://example.com/tos.html"
@@ -323,20 +437,31 @@ Hedberg, et al.         Expires January 24, 2017                [Page 5]
      ]
    }
 
+3.6.  Usage
+
+   Metadata statements that are used in different contexts will contain
+   different parameters.  For example, information that an OP publishes
+   about itself is not the same as what an RP wants to register.  This
+
+
+
+Hedberg, et al.        Expires September 26, 2017               [Page 8]
+
+                        OpenID Connect Federation             March 2017
+
+
+   together with the differences in the roles between an OP and an RP,
+   means that policies for RPs will not be the same as for OPs.  There
+   is therefor a need for tagging the Metadata statement such that a
+   Metadata statement intended to be used in one context can not be used
+   in another.  This is the reason for the federation_usage parameter.
+
 4.  Trust Model
 
    The trust model is based on linking together signing keys,
    represented as JWK Sets [RFC7517].  Each signature chain is rooted in
    the trusted third party's signing keys.  By verifying such signature
    chains, the entities can establish trust in the metadata.
-
-
-
-
-Hedberg, et al.         Expires January 24, 2017                [Page 6]
-
-                        OpenID Connect Federation              July 2016
-
 
 4.1.  Federation Operator
 
@@ -353,13 +478,11 @@ Hedberg, et al.         Expires January 24, 2017                [Page 6]
    representatives are allowed to issue metadata signing requests on
    behalf of the member to the federation.  Below such a representative
    is called a Level 0 Requester (L0Req).  Within each member unless all
-   entities belonging to the member is handled by the L0Req there may
-   exists parties that are responsible for single or groups of entities.
-   Within these parties we may have further subdivisions such that we
-   end up with Level 0, 1, 2, 3 or more requesters.  This document makes
-   no assumption on the number of levels.
-
-   Note that the level N requester is the level N+1 signer.
+   entities belonging to the member is handled directly by the L0Req
+   there may exists parties that are responsible for single or groups of
+   entities.  Within these parties we may have further subdivisions such
+   that we end up with Level 0, 1, 2, 3 or more requesters.  This
+   document makes no assumption on the number of levels.
 
 4.2.  The Building Block
 
@@ -369,9 +492,19 @@ Hedberg, et al.         Expires January 24, 2017                [Page 6]
 
    The innermost metadata statement in the nest of metadata statements
    is the one that the FO has signed.  That statement MUST NOT contain
-   any references to other metadata statements.  All other metadata
+   any references to other metadata statements.  See simple signed
+   metadata (Section 3.4.1, Paragraph 2) above.  All other metadata
    statements in the nest MUST contain at least one reference to another
-   metadata statement.
+   metadata statement.  An example of this is can be seen here
+   (Section 3.4.1, Paragraph 3).
+
+
+
+
+Hedberg, et al.        Expires September 26, 2017               [Page 9]
+
+                        OpenID Connect Federation             March 2017
+
 
 4.3.  Constructing a Signed Metadata Statement
 
@@ -382,129 +515,116 @@ Hedberg, et al.         Expires January 24, 2017                [Page 6]
    1.  The "requester" constructs a signing request by collecting the
        necessary client or provider metadata as describe in Section 3.
 
-   2.  If this is about the top most metadata statement (MS0) then no
+   2.  If this is about the top most metadata statement (ms_0) then no
        metadata statement will be added to the metadata statement.  If
-       it is a more specific metadata statement (MS1...n) then more
+       it is a more specific metadata statement (ms_1...n) then more
        general metadata statement/-s MUST be added.  Dependent on setup
-
-
-
-Hedberg, et al.         Expires January 24, 2017                [Page 7]
-
-                        OpenID Connect Federation              July 2016
-
-
        the metadata statement can be added by the requester or the
        signer.
 
    3.  The metadata statement is transported to the signing party.  In
-       the case or MS0 this MUST be the FO.  If it is MS1 it is the
-       "LOReq".  If it is MS2 it is the L1Req and so on.
+       the case or ms_0 this MUST be the FO.  If it is ms_1 it is the
+       "LOReq".  If it is ms_2 it is the L1Req and so on.
 
    4.  The signing party verifies the information in the metadata
        statement, modifies and/or adds more information according to the
-       federation policy before signing the statement.
+       policy before signing the statement.
 
    5.  Once signed by the signer the signed metadata is sent back to the
        "requester".
 
    An example of the construction of a compounded metadata statement.
    The Level 0 Requester (L0Req) sends a metadata statement request to
-   the federation operator (FO).  The FO verifies the information and if
-   the federations policy so demands may add extra information.  After
-   signing with the FOs signing key the signed metadata statement (MS0)
-   is returned to the L0Req.  The L0Req then forwards the MS0 to the
-   Level 1 Requesters (L1Req).  The L1Req includes the MS0 in any
-   Metadata Statement signing requests it sends to the L0Req.
+   the federation operator (FO).
 
- +-----------+                                            +------------+
- | Level 0   |--(A)- Metadata Statement signing Request ->| Federation |
- | Requester |                                            | Operator   |
- |           |<-(B)- Signed Metadata Statement (MS0) -----|            |
- +----+------+                                            +------------+
-      |
-     (C)
-      |
-     MS0
-      |
-      v
- +-----------+                                            +-----------+
- | Level 1   |--(D)- Metadata Statement signing Request ->| Level 0   |
- | Requester |                                            | Requester |
- |           |<-(E)--- Signed Metadata Statement (MS1) ---|           |
- +-----------+                                            +-----------+
+   L0Req -- (ms_L0Req + SK[L0Req]) --> FO
+
+   The FO verifies the information and if the federations policy so
+   demands may add extra information.  After signing with the FOs
+   signing key the signed metadata statement is returned to the L0Req.
+
+   L0Req <-- FO(ms_L0Req + SK[L0Req]) --- FO
+
+   Next step that happens some time later is that the L1Req sends a
+   Metadata Statement signing requests to the L0Reg.
+
+   L1Req -- (ms_L1Req + SK[L1Req]) --> L0Req
+
+   The L0Req verifies the information in the request and adds the signed
+   L0Req metadata.  The L0Req may also add other information to the
+   Metadata Statement before it signs and returns it to the L1Req.
+
+
+
+
+Hedberg, et al.        Expires September 26, 2017              [Page 10]
+
+                        OpenID Connect Federation             March 2017
+
+
+   L1Req <- L0Req(ms_L1Req + SK[L1Req] + FO(ms_L0Req+SK[L0Req])) - L0Req
+
+   This was an example using 3 levels.  As said before this document
+   makes no assumption as to how many levels should be used.
 
 4.4.  Verifying the Metadata Statement
 
+   Verifying a metadata statement you first grab the innermost signed
+   metadata statement.  If this is signed by a FO you have the public
+   part of the signing keys from then you can verify the signature of
+   the metadata statement.  If the verification concludes that the
+   signature was correct you can now take the signing keys that was
+   included in the signed document and use those to verify the second
+   innermost signed metadata statement.  And so on.
+
    Verifying the received metadata statement involves running a function
    similar to this:
-
-
-
-
-
-
-
-Hedberg, et al.         Expires January 24, 2017                [Page 8]
-
-                        OpenID Connect Federation              July 2016
-
 
    def verify(ms, sign_keys):
        keys = []
        pl = get_payload(ms)
        if 'metadata_statements' in pl:
-           md = []
+           msl = []
            for statement in pl['metadata_statements']:
-               _ms, _md = verify(statement, sign_keys)
+               _ms = verify(statement, sign_keys)
                if _ms:
                    keys.append(get_keys(_ms))
-                   if _md:
-                       md.extend([_ms, _md])
-                   else:
-                       md.append(_ms)
+                   msl.append(_ms)
+           pl['metadata_statements'] = msl
        elif 'metadata_statement_uris' in pl:
-           md = []
+           msl = []
            for _iss, uri in pl['metadata_statement_uris'].items():
                statement = html_get(uri)
-               _ms, _md = verify(statement, sign_keys)
+               _ms = verify(statement, sign_keys)
                if _ms:
                    keys.append(get_keys(_ms))
-                   if _md:
-                       md.extend([_ms, _md])
-                   else:
-                       md.append(_ms)
+                   msl.append(_ms)
+           pl['metadata_statements'] = msl
        else:
-           return verify_signature(ms, pl['iss'], sign_keys), []
+           return verify_signature(ms, pl['iss'], sign_keys):
 
-       return verify_signature(ms, pl['iss'], keys), md
+       if verify_signature(ms, pl['iss'], keys):
+           return pl
 
    where the function get_payload unpacks the payload from the JWS
    without verify the signature.  The function verify_signature, on the
    other hand, does verify the signature of the JWS and if everything is
    correct returns the JWS payload.
 
-5.  OpenID Connect Communication
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Hedberg, et al.         Expires January 24, 2017                [Page 9]
+Hedberg, et al.        Expires September 26, 2017              [Page 11]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
+
+4.5.  Flattening the compounded metadata statement
+
+   Once you have a verified compounded metadata statement you have to
+   flatten it to get a useful metadata statement.  To do this you use
+   the method outlined in Section 3.4.3
+
+5.  OpenID Connect Communication
 
    The trust between the entities is established using the above
    described extensions in the first two steps of the communication
@@ -530,6 +650,9 @@ Hedberg, et al.         Expires January 24, 2017                [Page 9]
    provider configuration and the additional metadata parameters
    specified above.
 
+   The OP SHOULD have the complete response signed by it's superior in
+   the signing chain and MAY have them signed in advance.
+
 5.2.  Client Registration
 
    The OP MUST support dynamic client registration as described in
@@ -537,13 +660,41 @@ Hedberg, et al.         Expires January 24, 2017                [Page 9]
    The RP makes a Client Registration Request including the additional
    metadata specified above.
 
+   The RP SHOULD have the complete request signed by it's superior in
+   the signing chain and MAY have it signed in advance.
+
+
+
+
+
+
+
+Hedberg, et al.        Expires September 26, 2017              [Page 12]
+
+                        OpenID Connect Federation             March 2017
+
+
+5.3.  Client Registration response
+
+   It is unlikely that an OP can prepare a number of signed Metadata
+   statements representing client registration responses in advance.
+   Still if the OP wants to have the whole response signed it has two
+   choices.  Either the superior signer has a service that can sign
+   statements on-the-fly or the OP signs it itself.  If the later the OP
+   needs to have a blank (only containing signing_keys) metadata
+   statement signed by the superior.  Once it has that it can sign the
+   response plus the signed metadata statement and construct a
+   compounded metadata statement that can be verified using the method
+   described inSection 4.4.
+
 6.  Belonging to Several Federations
 
 6.1.  Choosing federation
 
    This draft allows any entity to belong to more then one federation.
    During the provider discovery and client registration process the
-   parties has to agree on which federation to use.
+   parties has to agree on which federation to use.  Ultimately the OP
+   decides.
 
       The client asks for the provider information
 
@@ -552,23 +703,14 @@ Hedberg, et al.         Expires January 24, 2017                [Page 9]
       "metadata_statements", then they should be rooted in different
       federations.
 
-
-
-
-
-
-Hedberg, et al.         Expires January 24, 2017               [Page 10]
-
-                        OpenID Connect Federation              July 2016
-
-
       Based on what the OP published, the RP publishes a number of
       "metadata_statements", all rooted in federations that the OP
       belongs to.
 
       If the RP published more then one "metadata_statements", then the
       OP should/must choose one and make that known in the client
-      registration response.
+      registration response.  One way of doing this is described in
+      Section 5.3
 
 6.2.  Relying Party
 
@@ -580,6 +722,14 @@ Hedberg, et al.         Expires January 24, 2017               [Page 10]
    mint a new key pair for each federation, the other is that it will
    use the same key pair for all federations.  It does not matter which
    it chooses, but the end result MUST be that there is one signed RP
+
+
+
+Hedberg, et al.        Expires September 26, 2017              [Page 13]
+
+                        OpenID Connect Federation             March 2017
+
+
    registration request per signing key.  This is then published using
    "metadata_statement_uris" or "metadata_statements".
 
@@ -599,24 +749,8 @@ Hedberg, et al.         Expires January 24, 2017               [Page 10]
    As described above, when the OP receives a request like this it will
    chose which federation it will work within and then signal that by
    only returning that corresponding information in the
-   "metadata_statements" /"metadata_statement_uris" in the registration
+   "metadata_statements" / "metadata_statement_uris" in the registration
    response.
-
-
-
-
-
-
-
-
-
-
-
-
-Hedberg, et al.         Expires January 24, 2017               [Page 11]
-
-                        OpenID Connect Federation              July 2016
-
 
    The following is a non-normative example of an OPs response on the
    client registration request above:
@@ -638,6 +772,19 @@ Hedberg, et al.         Expires January 24, 2017               [Page 11]
    An OP has the choice of whether it wants one key pair per federation,
    one key pair for everyone, or anything in between.  And, like the RP
    owner, it has to produce one signed metadata statement per key used.
+
+
+
+
+
+
+
+
+
+Hedberg, et al.        Expires September 26, 2017              [Page 14]
+
+                        OpenID Connect Federation             March 2017
+
 
    The following is a non-normative example of an OPs response to a
    provider configuration request:
@@ -666,14 +813,6 @@ Hedberg, et al.         Expires January 24, 2017               [Page 11]
 
       Each signature has a timeout.
 
-
-
-
-Hedberg, et al.         Expires January 24, 2017               [Page 12]
-
-                        OpenID Connect Federation              July 2016
-
-
       A client registration has a timeout.
 
    Taking this into consideration, an OP MUST NOT assign a lifetime to a
@@ -682,9 +821,26 @@ Hedberg, et al.         Expires January 24, 2017               [Page 12]
 
 8.  Acknowledgements
 
+      Heather Flanagan
+
+      Andreas Akre Solberg
+
+      The JRA3T3 task force of GEANT4-2
+
       Michael Schwartz
 
       Peter Schober
+
+
+
+
+
+
+
+Hedberg, et al.        Expires September 26, 2017              [Page 15]
+
+                        OpenID Connect Federation             March 2017
+
 
 9.  IANA Considerations
 
@@ -695,6 +851,12 @@ Hedberg, et al.         Expires January 24, 2017               [Page 12]
    TBD
 
 11.  Normative References
+
+   [I-D.draft-ietf-oauth-discovery]
+              Sakimura, N., Bradley, J., and M. Jones, "OAuth 2.0
+              Authorization Server Metadata", August 2016,
+              <https://tools.ietf.org/html/draft-ietf-oauth-discovery-
+              04>.
 
    [OpenID.Core]
               Sakimura, N., Bradley, J., Jones, M., de Medeiros, B., and
@@ -722,17 +884,19 @@ Hedberg, et al.         Expires January 24, 2017               [Page 12]
               RFC 6749, DOI 10.17487/RFC6749, October 2012,
               <http://www.rfc-editor.org/info/rfc6749>.
 
-
-
-
-Hedberg, et al.         Expires January 24, 2017               [Page 13]
-
-                        OpenID Connect Federation              July 2016
-
-
    [RFC6962]  Laurie, B., Langley, A., and E. Kasper, "Certificate
               Transparency", RFC 6962, DOI 10.17487/RFC6962, June 2013,
               <http://www.rfc-editor.org/info/rfc6962>.
+
+
+
+
+
+
+Hedberg, et al.        Expires September 26, 2017              [Page 16]
+
+                        OpenID Connect Federation             March 2017
+
 
    [RFC7515]  Jones, M., Bradley, J., and N. Sakimura, "JSON Web
               Signature (JWS)", RFC 7515, DOI 10.17487/RFC7515, May
@@ -749,10 +913,20 @@ Hedberg, et al.         Expires January 24, 2017               [Page 13]
 
 Appendix A.  Example
 
+   In the following example we have these actors:
+
+                  Federation Operator (FO)
+
+                  Federation Member representative (FMR)
+
+                  Relying Party (RP), whether this is in fact an OpenID
+                  Connect RP or someone acting on behalf of the RP is
+                  immaterial.
+
    The necessary steps for adding a Relying Party to a federation
 
    The following JWKS represents the signing key that the Federation
-   Operator is using in the following example:
+   Operator is using in the example below:
 
 
 
@@ -775,53 +949,47 @@ Appendix A.  Example
 
 
 
-
-
-
-
-
-
-Hedberg, et al.         Expires January 24, 2017               [Page 14]
+Hedberg, et al.        Expires September 26, 2017              [Page 17]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
 
-  {
-    "keys": [
-      {
-        "d": "DpFZnXz8fcKmOxFPfPdh3aZz44U2ZWm1Mxy6CiqHYcA80KVAY-wrjKFV4e
-  iSl9JENpoWXax4dpMcyJa2TdAXL9-4WqGNQAPRvdOfHcJM_uaBSGZwsuqAqZi_0sbNxurG
-  gbjKV38ra-iz42fcSXHCgNdMJjCi3VixS8iASHGU82R6mYyVeMWdX_j2RG--41PDxud4xS
-  YCKDuR6s2qlLVXyCZqFu_Yzl5zChiNxZJ_ggcxyL6i_hngi1oSbbVjgNKTcJNaIdOfzzcn
-  Ud5J9GP941-tylwg7NC3gRo1bXlUx6HFx3LkYe1PdroHhQd92RPyJdPqHDfbizJ4sjXN4c
-  Nq-Q",
-        "e": "AQAB",
-        "kid": "uZX0-P1-TMsZRqK1SeXpdLgsLoeUNskN2W_rwBNKAtc",
-        "kty": "RSA",
-        "n": "rqJ_CFECPF2nBD1eXkFonJo5gGcbnCvDudm_-7f1thcQqiuY2Xz0eKqQ2H
-  P3Nw-wP5q2hKbNVgAQSBbMp_AgNwRFmboJKF4cFEr3ZtmvO94bM6L15vUR2HNyX-4LaZ6S
-  9u35jSikOVJDt1BK-72w_DKeb8O8qa2dl9k7F6QZJQT6Nfh5rEALQLOZgwBgZAUpu2tQUh
-  3TFpwe3J_rQtCBbI3r0W1XoM1pD3EXTm9MI_aANRL82rh7_ZqLwGeBprD3F6ns9i5-psQ0
-  UZ-2eVjN6J1um40U6ysu3QjFUZEwb0yxNVx2D9bzOPMHwo6GAzePhJ46rI8NQ0NwJdB7lN
-  vrhw",
-        "p": "y4VcmM4QZoIjsGlTE7jvkJzYAud9Hz3uexVdeTShHnS-btLySSP70EWdvI
-  CkHK7Z4KikNZaD3cET978LmkoG03WZcs7iEEg7hQ0N7ePMv7P1w6X1Z2_IeWml0c4iFSMa
-  GPJk8a65HgBZ8fYPXFtERI7e1M--oqCrsTFikP8wYQU",
-        "q": "26pTV-JNgwx3LMrqEKIoIvHwLKfjFouRZXtTnOJP9G9BZ9vhAn1qX06M-x
-  W02G3qGzhQEpNZKMj54APNcqkg4PH1wMJmJ-cs1T44KoNhhihoHd6awT7PGNMo9I728CwY
-  fkM3ZW-BsgGBzQcfdI043cV3ebXzIEWwPbqTR44p8Bs",
-        "use": "sig"
-      }
-    ]
-  }
+   {
+     "keys": [
+       {
+         "d": "DpFZnXz8fcKmOxFPfPdh3aZz44U2ZWm1Mxy6CiqHYcA80KVAY
+   -wrjKFV4eiSl9JENpoWXax4dpMcyJa2TdAXL9-4WqGNQAPRvdOfHcJM_uaBSG
+   ZwsuqAqZi_0sbNxurGgbjKV38ra-iz42fcSXHCgNdMJjCi3VixS8iASHGU82R
+   6mYyVeMWdX_j2RG--41PDxud4xSYCKDuR6s2qlLVXyCZqFu_Yzl5zChiNxZJ_
+   ggcxyL6i_hngi1oSbbVjgNKTcJNaIdOfzzcnUd5J9GP941-tylwg7NC3gRo1b
+   XlUx6HFx3LkYe1PdroHhQd92RPyJdPqHDfbizJ4sjXN4cNq-Q",
+         "e": "AQAB",
+         "kid": "uZX0-P1-TMsZRqK1SeXpdLgsLoeUNskN2W_rwBNKAtc",
+         "kty": "RSA",
+         "n": "rqJ_CFECPF2nBD1eXkFonJo5gGcbnCvDudm_-7f1thcQqiuY2
+   Xz0eKqQ2HP3Nw-wP5q2hKbNVgAQSBbMp_AgNwRFmboJKF4cFEr3ZtmvO94bM6
+   L15vUR2HNyX-4LaZ6S9u35jSikOVJDt1BK-72w_DKeb8O8qa2dl9k7F6QZJQT
+   6Nfh5rEALQLOZgwBgZAUpu2tQUh3TFpwe3J_rQtCBbI3r0W1XoM1pD3EXTm9M
+   I_aANRL82rh7_ZqLwGeBprD3F6ns9i5-psQ0UZ-2eVjN6J1um40U6ysu3QjFU
+   ZEwb0yxNVx2D9bzOPMHwo6GAzePhJ46rI8NQ0NwJdB7lNvrhw",
+         "p": "y4VcmM4QZoIjsGlTE7jvkJzYAud9Hz3uexVdeTShHnS-btLyS
+   SP70EWdvICkHK7Z4KikNZaD3cET978LmkoG03WZcs7iEEg7hQ0N7ePMv7P1w6
+   X1Z2_IeWml0c4iFSMaGPJk8a65HgBZ8fYPXFtERI7e1M--oqCrsTFikP8wYQU
+   ",
+         "q": "26pTV-JNgwx3LMrqEKIoIvHwLKfjFouRZXtTnOJP9G9BZ9vhA
+   n1qX06M-xW02G3qGzhQEpNZKMj54APNcqkg4PH1wMJmJ-cs1T44KoNhhihoHd
+   6awT7PGNMo9I728CwYfkM3ZW-BsgGBzQcfdI043cV3ebXzIEWwPbqTR44p8Bs
+   ",
+         "use": "sig"
+       }
+     ]
+   }
 
 A.1.  Relying Party joining a federation
 
-A.1.1.  Step 1 - Developer creates its signing key pair.
+A.1.1.  Step 1 - FMR creates its signing key pair.
 
-   Developer creates its signing key pair.
-
-
+   The Agent for the organisation creates its signing key pair.
 
 
 
@@ -837,49 +1005,46 @@ A.1.1.  Step 1 - Developer creates its signing key pair.
 
 
 
-Hedberg, et al.         Expires January 24, 2017               [Page 15]
+Hedberg, et al.        Expires September 26, 2017              [Page 18]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
 
-  {
-    "keys": [
-      {
-        "d": "RJmqe2KiVOShoTMaZBmoMLkmeZY97PW3TOgSGDgZejL6I2qdhNlBAa3e9N
-  z6ggkWpxEy6IGNGetwNwS9aYA_Z6m45kaaUHXGKol_R_5s4TJryXUppxWDuHScE_dVcfzl
-  usm9Cq8J-U-xoaoKL36I3rakCJ_dWpsGNDpYSMenXcXuX-gJ5-HvSTETV5Bp23izUF4BH8
-  TSVWniD8Vk5Hv8EtWVqsqc7YmIG1zW_ctJhK7peymmNIVpcGpIxaT8agUOS-hcNxpN4AlY
-  rELn2twzq8tXp5bPZNiHHNXgzXANy5BgNFXXnZFqFiNiBn3agQxF2aiu4Ei5k5OidHTV8q
-  eGWQ",
-        "e": "AQAB",
-        "kid": "z414hVxt2-nkbqgG3VFYOZGB3Miwuhe75SfWT1BQQTc",
-        "kty": "RSA",
-        "n": "waDXGJwu9pV3gMY7rtpq3OYSAG1HZy7qilGC3ULMxJxjhSQCJ7M9PBC4uo
-  F_f5178FebpKBIoT3_YzqETt9Ry_6NA_mGBq6xtjEgnmNv6ktQj8hKI0tYheWRHMJIt2ay
-  8IwnV-3LD0Q_Nn7E3YgGaJUBlzDgJxQQcRVGFEOcFL-7TiKtVdPmPDGcSF7FivaGJO-MVq
-  mDkCsZVMTZoqmKeuaqbshsDjxy9GaiImQLe8tyzkhxEoG7qvovlGoV4AE8WroMinx0qWvg
-  lR8n041qQhrUMtoQMDCI53uLy6ZSR0jbNNEwvDBbiqD4Hm3piAwTUrGKWYLxbeicK_7A6g
-  F2Sw",
-        "p": "3SBEMBmIGztaOpCH-C9vwr80SyXm6M1uwCoKjBOiy_-kJ03jvacztd5CEO
-  cCvhRLVvl3rEYSP97DR_Eju-jlKWi92tbIECGvWzgszMHLdEdjvVvpJLlOSAfFMYsaPxa1
-  Sw2HS7RgoAwIxD5HVcdPK-3cJ5Gi0hInbz-ufrH4ru0",
-        "q": "4CphaFI0lSGr0HNifXJBN5JkXmCZp6WX06cI4pR_DwZAHTojc8dK1ECMHU
-  2oP2nPn1pmAVZj4p98vO0MfTxSgNB15EmDRkic_cmS-SenUUf7Pl3avJwpZq_qxYPqDajA
-  gWHuuci-2zKXRlKS_ZCz1MAmx-gV0We3AnletWV52xc",
-        "use": "sig"
-      }
-    ]
-  }
+   {
+     "keys": [
+       {
+         "d": "RJmqe2KiVOShoTMaZBmoMLkmeZY97PW3TOgSGDgZejL6I2qdh
+   NlBAa3e9Nz6ggkWpxEy6IGNGetwNwS9aYA_Z6m45kaaUHXGKol_R_5s4TJryX
+   UppxWDuHScE_dVcfzlusm9Cq8J-U-xoaoKL36I3rakCJ_dWpsGNDpYSMenXcX
+   uX-gJ5-HvSTETV5Bp23izUF4BH8TSVWniD8Vk5Hv8EtWVqsqc7YmIG1zW_ctJ
+   hK7peymmNIVpcGpIxaT8agUOS-hcNxpN4AlYrELn2twzq8tXp5bPZNiHHNXgz
+   XANy5BgNFXXnZFqFiNiBn3agQxF2aiu4Ei5k5OidHTV8qeGWQ",
+         "e": "AQAB",
+         "kid": "z414hVxt2-nkbqgG3VFYOZGB3Miwuhe75SfWT1BQQTc",
+         "kty": "RSA",
+         "n": "waDXGJwu9pV3gMY7rtpq3OYSAG1HZy7qilGC3ULMxJxjhSQCJ
+   7M9PBC4uoF_f5178FebpKBIoT3_YzqETt9Ry_6NA_mGBq6xtjEgnmNv6ktQj8
+   hKI0tYheWRHMJIt2ay8IwnV-3LD0Q_Nn7E3YgGaJUBlzDgJxQQcRVGFEOcFL-
+   7TiKtVdPmPDGcSF7FivaGJO-MVqmDkCsZVMTZoqmKeuaqbshsDjxy9GaiImQL
+   e8tyzkhxEoG7qvovlGoV4AE8WroMinx0qWvglR8n041qQhrUMtoQMDCI53uLy
+   6ZSR0jbNNEwvDBbiqD4Hm3piAwTUrGKWYLxbeicK_7A6gF2Sw",
+         "p": "3SBEMBmIGztaOpCH-C9vwr80SyXm6M1uwCoKjBOiy_-kJ03jv
+   acztd5CEOcCvhRLVvl3rEYSP97DR_Eju-jlKWi92tbIECGvWzgszMHLdEdjvV
+   vpJLlOSAfFMYsaPxa1Sw2HS7RgoAwIxD5HVcdPK-3cJ5Gi0hInbz-ufrH4ru0
+   ",
+         "q": "4CphaFI0lSGr0HNifXJBN5JkXmCZp6WX06cI4pR_DwZAHTojc
+   8dK1ECMHU2oP2nPn1pmAVZj4p98vO0MfTxSgNB15EmDRkic_cmS-SenUUf7Pl
+   3avJwpZq_qxYPqDajAgWHuuci-2zKXRlKS_ZCz1MAmx-gV0We3AnletWV52xc
+   ",
+         "use": "sig"
+       }
+     ]
+   }
 
-A.1.2.  Step 2 - Developer submits registration data to FO
+A.1.2.  Step 2 - The FMR submits registration data to FO
 
-   The developer submits registration data to Federation Operator (FO).
-
-
-
-
-
-
+   The Federation member representative (FMR) submits registration data
+   to the Federation Operator (FO).
 
 
 
@@ -893,31 +1058,34 @@ A.1.2.  Step 2 - Developer submits registration data to FO
 
 
 
-Hedberg, et al.         Expires January 24, 2017               [Page 16]
+
+
+
+Hedberg, et al.        Expires September 26, 2017              [Page 19]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
 
-  {
-    "contacts": [
-      "dev_admin@example.com"
-    ],
-    "logo_uri": "https://example.com/logo.jpg",
-    "policy_uri": "https://example.com/policy.html",
-    "signing_key": {
-      "e": "AQAB",
-      "kid": "z414hVxt2-nkbqgG3VFYOZGB3Miwuhe75SfWT1BQQTc",
-      "kty": "RSA",
-      "n": "waDXGJwu9pV3gMY7rtpq3OYSAG1HZy7qilGC3ULMxJxjhSQCJ7M9PBC4uoF_
-  f5178FebpKBIoT3_YzqETt9Ry_6NA_mGBq6xtjEgnmNv6ktQj8hKI0tYheWRHMJIt2ay8I
-  wnV-3LD0Q_Nn7E3YgGaJUBlzDgJxQQcRVGFEOcFL-7TiKtVdPmPDGcSF7FivaGJO-MVqmD
-  kCsZVMTZoqmKeuaqbshsDjxy9GaiImQLe8tyzkhxEoG7qvovlGoV4AE8WroMinx0qWvglR
-  8n041qQhrUMtoQMDCI53uLy6ZSR0jbNNEwvDBbiqD4Hm3piAwTUrGKWYLxbeicK_7A6gF2
-  Sw",
-      "use": "sig"
-    },
-    "tos_uri": "https://example.com/tos.html"
-  }
+   {
+     "contacts": [
+       "dev_admin@example.com"
+     ],
+     "logo_uri": "https://example.com/logo.jpg",
+     "policy_uri": "https://example.com/policy.html",
+     "signing_key": {
+       "e": "AQAB",
+       "kid": "z414hVxt2-nkbqgG3VFYOZGB3Miwuhe75SfWT1BQQTc",
+       "kty": "RSA",
+       "n": "waDXGJwu9pV3gMY7rtpq3OYSAG1HZy7qilGC3ULMxJxjhSQCJ7M
+   9PBC4uoF_f5178FebpKBIoT3_YzqETt9Ry_6NA_mGBq6xtjEgnmNv6ktQj8hK
+   I0tYheWRHMJIt2ay8IwnV-3LD0Q_Nn7E3YgGaJUBlzDgJxQQcRVGFEOcFL-7T
+   iKtVdPmPDGcSF7FivaGJO-MVqmDkCsZVMTZoqmKeuaqbshsDjxy9GaiImQLe8
+   tyzkhxEoG7qvovlGoV4AE8WroMinx0qWvglR8n041qQhrUMtoQMDCI53uLy6Z
+   SR0jbNNEwvDBbiqD4Hm3piAwTUrGKWYLxbeicK_7A6gF2Sw",
+       "use": "sig"
+     },
+     "tos_uri": "https://example.com/tos.html"
+   }
 
 A.1.3.  Step 3 - FO returns a signed metadata statement
 
@@ -949,99 +1117,100 @@ A.1.3.  Step 3 - FO returns a signed metadata statement
 
 
 
-Hedberg, et al.         Expires January 24, 2017               [Page 17]
+Hedberg, et al.        Expires September 26, 2017              [Page 20]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
 
-  {
-    "contacts": [
-      "dev_admin@example.com"
-    ],
-    "exp": 1462438820,
-    "iat": 1462438820,
-    "iss": "https://swamid.sunet.se/",
-    "jti": "e920396fc2cb4ac0aaeb229674fd286a",
-    "kid": "uZX0-P1-TMsZRqK1SeXpdLgsLoeUNskN2W_rwBNKAtc",
-    "logo_uri": "https://example.com/logo.jpg",
-    "policy_uri": "https://example.com/policy.html",
-    "response_types": [
-      "code",
-      "code id_token",
-      "token"
-    ],
-    "scopes": [
-      "openid",
-      "email",
-      "phone"
-    ],
-    "signing_key": {
-      "e": "AQAB",
-      "kid": "z414hVxt2-nkbqgG3VFYOZGB3Miwuhe75SfWT1BQQTc",
-      "kty": "RSA",
-      "n": "waDXGJwu9pV3gMY7rtpq3OYSAG1HZy7qilGC3ULMxJxjhSQCJ7M9PBC4uoF_
-  f5178FebpKBIoT3_YzqETt9Ry_6NA_mGBq6xtjEgnmNv6ktQj8hKI0tYheWRHMJIt2ay8I
-  wnV-3LD0Q_Nn7E3YgGaJUBlzDgJxQQcRVGFEOcFL-7TiKtVdPmPDGcSF7FivaGJO-MVqmD
-  kCsZVMTZoqmKeuaqbshsDjxy9GaiImQLe8tyzkhxEoG7qvovlGoV4AE8WroMinx0qWvglR
-  8n041qQhrUMtoQMDCI53uLy6ZSR0jbNNEwvDBbiqD4Hm3piAwTUrGKWYLxbeicK_7A6gF2
-  Sw",
-      "use": "sig"
-    },
-    "token_endpoint_auth_method": "private_key_jwt",
-    "tos_uri": "https://example.com/tos.html"
-  }
+   {
+     "contacts": [
+       "dev_admin@example.com"
+     ],
+     "exp": 1462438820,
+     "iat": 1462438820,
+     "iss": "https://swamid.sunet.se/",
+     "jti": "e920396fc2cb4ac0aaeb229674fd286a",
+     "kid": "uZX0-P1-TMsZRqK1SeXpdLgsLoeUNskN2W_rwBNKAtc",
+     "logo_uri": "https://example.com/logo.jpg",
+     "policy_uri": "https://example.com/policy.html",
+     "response_types": [
+       "code",
+       "code id_token",
+       "token"
+     ],
+     "scopes": [
+       "openid",
+       "email",
+       "phone"
+     ],
+     "signing_key": {
+       "e": "AQAB",
+       "kid": "z414hVxt2-nkbqgG3VFYOZGB3Miwuhe75SfWT1BQQTc",
+       "kty": "RSA",
+       "n": "waDXGJwu9pV3gMY7rtpq3OYSAG1HZy7qilGC3ULMxJxjhSQCJ7M
+   9PBC4uoF_f5178FebpKBIoT3_YzqETt9Ry_6NA_mGBq6xtjEgnmNv6ktQj8hK
+   I0tYheWRHMJIt2ay8IwnV-3LD0Q_Nn7E3YgGaJUBlzDgJxQQcRVGFEOcFL-7T
+   iKtVdPmPDGcSF7FivaGJO-MVqmDkCsZVMTZoqmKeuaqbshsDjxy9GaiImQLe8
+   tyzkhxEoG7qvovlGoV4AE8WroMinx0qWvglR8n041qQhrUMtoQMDCI53uLy6Z
+   SR0jbNNEwvDBbiqD4Hm3piAwTUrGKWYLxbeicK_7A6gF2Sw",
+       "use": "sig"
+     },
+     "token_endpoint_auth_method": "private_key_jwt",
+     "tos_uri": "https://example.com/tos.html"
+   }
 
    The signed version of this metadata statement, or a link to it, is
    then expected to be included in the RPs client registration request
-   before being signed by the level 0 signing key.
+   before being signed by the FMR's signing key.
 
 A.1.4.  Step 4 - The RP gets a signing key
 
-   The RP gets a signing key
+   The RP gets a signing key.  This key will be used to sign the JWKS
+   that is stored in a place pointed to by signed_jwks_uri.
 
 
 
 
 
 
-
-Hedberg, et al.         Expires January 24, 2017               [Page 18]
+Hedberg, et al.        Expires September 26, 2017              [Page 21]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
 
-  {
-    "keys": [
-      {
-        "d": "BA0bo5OR3ht2KGDeAUpZsKv-Jjo9IKpYA2x7yQhcIH3bt9T2495pXVAHLQ
-  XXnZpjMenz7WPx94ajxIh96Bt59AYx4AwAEaBnPzK8vXLIP-A92NP3HV7vk0p8KWsrEdDw
-  xBaypqRXxz7V5vPGQVnOGg2eKSlP5F4-HoGpU6xDRo8Lptcs5VNx0a9kKVqEu-YpQkc2z2
-  uLRjl8urOu471sks38U03wRwWDElepUI28jEjhPydVSQw-E5w3yKhHTZeh1mVdNMp7_8LD
-  zScP1Ah5VCRLFfrmx1bOXxXZWHpMD6vgghmaCQGmyhgEr3XNzHVlH4bfVI_2Vrxp6cxHpe
-  3iYw",
-        "e": "AQAB",
-        "kid": "Tvd2gF4mcNtiYx6FyOOH83Xj_MkF-8yn_rD2Gm06RxY",
-        "kty": "RSA",
-        "n": "2kCKMUluhKV2INV3dS89WQ305J6JL8OJQ1cPk3GQ20Zvraa3DCntNns1xy
-  9gynGYUQzom7LYAqcmpu7xFGNXH0gN8JyXcCiWl02IuD6lwS6N2d7y6xJm8-mUBiwVrAlh
-  wWL1Bf8JRycRUQ51c6Y8yYrUf2pjeIFQBQEfUhcjNg13L1OUDoWJizy5QhaTe4p2uezYhK
-  lKtSHC7T6Brs6kWJA57j8BY5Tx4p6cyWRGsN58XXfmWg1hA1LjVIwgtSBvax7KRGUY6TXO
-  d5Km2MvJgBOfqAYfh1z0wZRiBdUa0RzsXavf4HGjnwPknYcSY1MwKZCzz_W0_uAiGlHFlN
-  wLSQ",
-        "p": "5279rRhB4IBf5chMgrTVwsAEKWyEsRrIVs5xLFVA5rpOKLN6qGhLO6PU9j
-  msD7dYEa0IA-eTxVCCuMp09KEfyrRAn0OWpWdndu8IR_n2e4zZxBXbf4WuIeZwxfM5PqKi
-  5LOnp442CthmzbsVD2OLmlgSViWSAP9SLFOBGfniTqs",
-        "q": "8WtasUyu9D9StGJkgolHjofbMnxXzRqpnA-QSV71htsQD3wof-vda8e8Jk
-  DLPPfAYuVYieCHeJYGsT9EHAG1Nyyr9OMzFeo73N1FdKGIGihWHSuvW6sRr6FTta12ZMN7
-  Jkm3l2rQoZALgvMtdYdDGJ-D3gwusW5nNS3-xJqMPds",
-        "use": "sig"
-      }
-    ]
-  }
+   {
+     "keys": [
+       {
+         "d": "BA0bo5OR3ht2KGDeAUpZsKv-Jjo9IKpYA2x7yQhcIH3bt9T24
+   95pXVAHLQXXnZpjMenz7WPx94ajxIh96Bt59AYx4AwAEaBnPzK8vXLIP-A92N
+   P3HV7vk0p8KWsrEdDwxBaypqRXxz7V5vPGQVnOGg2eKSlP5F4-HoGpU6xDRo8
+   Lptcs5VNx0a9kKVqEu-YpQkc2z2uLRjl8urOu471sks38U03wRwWDElepUI28
+   jEjhPydVSQw-E5w3yKhHTZeh1mVdNMp7_8LDzScP1Ah5VCRLFfrmx1bOXxXZW
+   HpMD6vgghmaCQGmyhgEr3XNzHVlH4bfVI_2Vrxp6cxHpe3iYw",
+         "e": "AQAB",
+         "kid": "Tvd2gF4mcNtiYx6FyOOH83Xj_MkF-8yn_rD2Gm06RxY",
+         "kty": "RSA",
+         "n": "2kCKMUluhKV2INV3dS89WQ305J6JL8OJQ1cPk3GQ20Zvraa3D
+   CntNns1xy9gynGYUQzom7LYAqcmpu7xFGNXH0gN8JyXcCiWl02IuD6lwS6N2d
+   7y6xJm8-mUBiwVrAlhwWL1Bf8JRycRUQ51c6Y8yYrUf2pjeIFQBQEfUhcjNg1
+   3L1OUDoWJizy5QhaTe4p2uezYhKlKtSHC7T6Brs6kWJA57j8BY5Tx4p6cyWRG
+   sN58XXfmWg1hA1LjVIwgtSBvax7KRGUY6TXOd5Km2MvJgBOfqAYfh1z0wZRiB
+   dUa0RzsXavf4HGjnwPknYcSY1MwKZCzz_W0_uAiGlHFlNwLSQ",
+         "p": "5279rRhB4IBf5chMgrTVwsAEKWyEsRrIVs5xLFVA5rpOKLN6q
+   GhLO6PU9jmsD7dYEa0IA-eTxVCCuMp09KEfyrRAn0OWpWdndu8IR_n2e4zZxB
+   Xbf4WuIeZwxfM5PqKi5LOnp442CthmzbsVD2OLmlgSViWSAP9SLFOBGfniTqs",
+         "q": "8WtasUyu9D9StGJkgolHjofbMnxXzRqpnA-QSV71htsQD3wof
+   -vda8e8JkDLPPfAYuVYieCHeJYGsT9EHAG1Nyyr9OMzFeo73N1FdKGIGihWHS
+   uvW6sRr6FTta12ZMN7Jkm3l2rQoZALgvMtdYdDGJ-D3gwusW5nNS3-xJqMPds",
+         "use": "sig"
+       }
+     ]
+   }
 
 A.1.5.  Step 5 - RP produces a client registration request
 
-   The RP produces a client registration request
+   The RP produces a client registration request, adding to it
+   information about the signing key.
 
 
 
@@ -1060,97 +1229,99 @@ A.1.5.  Step 5 - RP produces a client registration request
 
 
 
-
-Hedberg, et al.         Expires January 24, 2017               [Page 19]
+Hedberg, et al.        Expires September 26, 2017              [Page 22]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
 
-  {
-    "application_type": "web",
-    "jwks_uri_signed": "https://example.com/rp1/jwks.jws",
-    "redirect_uris": [
-      "https://example.com/rp1/callback"
-    ],
-    "response_types": [
-      "code"
-    ],
-    "signing_key": {
-      "e": "AQAB",
-      "kid": "Tvd2gF4mcNtiYx6FyOOH83Xj_MkF-8yn_rD2Gm06RxY",
-      "kty": "RSA",
-      "n": "2kCKMUluhKV2INV3dS89WQ305J6JL8OJQ1cPk3GQ20Zvraa3DCntNns1xy9g
-  ynGYUQzom7LYAqcmpu7xFGNXH0gN8JyXcCiWl02IuD6lwS6N2d7y6xJm8-mUBiwVrAlhwW
-  L1Bf8JRycRUQ51c6Y8yYrUf2pjeIFQBQEfUhcjNg13L1OUDoWJizy5QhaTe4p2uezYhKlK
-  tSHC7T6Brs6kWJA57j8BY5Tx4p6cyWRGsN58XXfmWg1hA1LjVIwgtSBvax7KRGUY6TXOd5
-  Km2MvJgBOfqAYfh1z0wZRiBdUa0RzsXavf4HGjnwPknYcSY1MwKZCzz_W0_uAiGlHFlNwL
-  SQ",
-      "use": "sig"
-    }
-  }
+   {
+     "application_type": "web",
+     "signed_jwks_uri": "https://example.com/rp1/jwks.jws",
+     "redirect_uris": [
+       "https://example.com/rp1/callback"
+     ],
+     "response_types": [
+       "code"
+     ],
+     "signing_key": {
+       "e": "AQAB",
+       "kid": "Tvd2gF4mcNtiYx6FyOOH83Xj_MkF-8yn_rD2Gm06RxY",
+       "kty": "RSA",
+       "n": "2kCKMUluhKV2INV3dS89WQ305J6JL8OJQ1cPk3GQ20Zvraa3DCntN
+   ns1xy9gynGYUQzom7LYAqcmpu7xFGNXH0gN8JyXcCiWl02IuD6lwS6N2d7y6xJm
+   8-mUBiwVrAlhwWL1Bf8JRycRUQ51c6Y8yYrUf2pjeIFQBQEfUhcjNg13L1OUDoW
+   Jizy5QhaTe4p2uezYhKlKtSHC7T6Brs6kWJA57j8BY5Tx4p6cyWRGsN58XXfmWg
+   1hA1LjVIwgtSBvax7KRGUY6TXOd5Km2MvJgBOfqAYfh1z0wZRiBdUa0RzsXavf4
+   HGjnwPknYcSY1MwKZCzz_W0_uAiGlHFlNwLSQ",
+       "use": "sig"
+     }
+   }
 
 A.1.6.  Step 6 - Developer produces metadata statement for RP
 
    Developer produces metadata statement based on client registration
    request
 
-  {
-    "application_type": "web",
-    "jwks_uri_signed": "https://example.com/rp1/jwks.jws",
-    "redirect_uris": [
-      "https://example.com/rp1/callback"
-    ],
-    "response_types": [
-      "code"
-    ],
-    "signing_key": {
-      "e": "AQAB",
-      "kid": "Tvd2gF4mcNtiYx6FyOOH83Xj_MkF-8yn_rD2Gm06RxY",
-      "kty": "RSA",
-      "n": "2kCKMUluhKV2INV3dS89WQ305J6JL8OJQ1cPk3GQ20Zvraa3DCntNns1xy9g
-  ynGYUQzom7LYAqcmpu7xFGNXH0gN8JyXcCiWl02IuD6lwS6N2d7y6xJm8-mUBiwVrAlhwW
-  L1Bf8JRycRUQ51c6Y8yYrUf2pjeIFQBQEfUhcjNg13L1OUDoWJizy5QhaTe4p2uezYhKlK
-  tSHC7T6Brs6kWJA57j8BY5Tx4p6cyWRGsN58XXfmWg1hA1LjVIwgtSBvax7KRGUY6TXOd5
-  Km2MvJgBOfqAYfh1z0wZRiBdUa0RzsXavf4HGjnwPknYcSY1MwKZCzz_W0_uAiGlHFlNwL
-  SQ",
-      "use": "sig"
+   {
+     "application_type": "web",
+     "signed_jwks_uri": "https://example.com/rp1/jwks.jws",
+     "redirect_uris": [
+       "https://example.com/rp1/callback"
+     ],
+     "response_types": [
+       "code"
+     ],
+     "signing_key": {
+       "e": "AQAB",
+       "kid": "Tvd2gF4mcNtiYx6FyOOH83Xj_MkF-8yn_rD2Gm06RxY",
+       "kty": "RSA",
+       "n": "2kCKMUluhKV2INV3dS89WQ305J6JL8OJQ1cPk3GQ20Zvraa3DCntN
+   ns1xy9gynGYUQzom7LYAqcmpu7xFGNXH0gN8JyXcCiWl02IuD6lwS6N2d7y6xJm
+   8-mUBiwVrAlhwWL1Bf8JRycRUQ51c6Y8yYrUf2pjeIFQBQEfUhcjNg13L1OUDoW
+   Jizy5QhaTe4p2uezYhKlKtSHC7T6Brs6kWJA57j8BY5Tx4p6cyWRGsN58XXfmWg
+   1hA1LjVIwgtSBvax7KRGUY6TXOd5Km2MvJgBOfqAYfh1z0wZRiBdUa0RzsXavf4
+   HGjnwPknYcSY1MwKZCzz_W0_uAiGlHFlNwLSQ",
+       "use": "sig"
 
 
 
-Hedberg, et al.         Expires January 24, 2017               [Page 20]
+Hedberg, et al.        Expires September 26, 2017              [Page 23]
 
-                        OpenID Connect Federation              July 2016
+                        OpenID Connect Federation             March 2017
 
 
-    },
-    "metadata_statements": [
-      "eyJraWQiOiJ1WlgwLVAxLVRNc1pScUsxU2VYcGRMZ3NMb2VVTnNrTjJXX3J3Qk5LQ
-  XRjIiwiYWxnIjoiUlMyNTYifQ.eyJwb2xpY3lfdXJpIjogImh0dHBzOi8vZXhhbXBsZS5j
-  b20vcG9saWN5Lmh0bWwiLCAidG9rZW5fZW5kcG9pbnRfYXV0aF9tZXRob2QiOiAicHJpdm
-  F0ZV9rZXlfand0IiwgImNvbnRhY3RzIjogWyJkZXZfYWRtaW5AZXhhbXBsZS5jb20iXSwg
-  ImxvZ29fdXJpIjogImh0dHBzOi8vZXhhbXBsZS5jb20vbG9nby5qcGciLCAic2NvcGVzIj
-  ogWyJvcGVuaWQiLCAiZW1haWwiLCAicGhvbmUiXSwgImlhdCI6IDE0NjI0Mzg4MjAsICJp
-  c3MiOiAiaHR0cHM6Ly9zd2FtaWQuc3VuZXQuc2UvIiwgImtpZCI6ICJ1WlgwLVAxLVRNc1
-  pScUsxU2VYcGRMZ3NMb2VVTnNrTjJXX3J3Qk5LQXRjIiwgImp0aSI6ICJlOTIwMzk2ZmMy
-  Y2I0YWMwYWFlYjIyOTY3NGZkMjg2YSIsICJyZXNwb25zZV90eXBlcyI6IFsiY29kZSIsIC
-  Jjb2RlIGlkX3Rva2VuIiwgInRva2VuIl0sICJzaWduaW5nX2tleSI6IHsiZSI6ICJBUUFC
-  IiwgImtpZCI6ICJ6NDE0aFZ4dDItbmticWdHM1ZGWU9aR0IzTWl3dWhlNzVTZldUMUJRUV
-  RjIiwgImt0eSI6ICJSU0EiLCAidXNlIjogInNpZyIsICJuIjogIndhRFhHSnd1OXBWM2dN
-  WTdydHBxM09ZU0FHMUhaeTdxaWxHQzNVTE14SnhqaFNRQ0o3TTlQQkM0dW9GX2Y1MTc4Rm
-  VicEtCSW9UM19ZenFFVHQ5UnlfNk5BX21HQnE2eHRqRWdubU52Nmt0UWo4aEtJMHRZaGVX
-  UkhNSkl0MmF5OEl3blYtM0xEMFFfTm43RTNZZ0dhSlVCbHpEZ0p4UVFjUlZHRkVPY0ZMLT
-  dUaUt0VmRQbVBER2NTRjdGaXZhR0pPLU1WcW1Ea0NzWlZNVFpvcW1LZXVhcWJzaHNEanh5
-  OUdhaUltUUxlOHR5emtoeEVvRzdxdm92bEdvVjRBRThXcm9NaW54MHFXdmdsUjhuMDQxcV
-  FoclVNdG9RTURDSTUzdUx5NlpTUjBqYk5ORXd2REJiaXFENEhtM3BpQXdUVXJHS1dZTHhi
-  ZWljS183QTZnRjJTdyJ9LCAidG9zX3VyaSI6ICJodHRwczovL2V4YW1wbGUuY29tL3Rvcy
-  5odG1sIiwgImV4cCI6IDE0NjI0Mzg4MjB9.ZVnHkrdGqQTP36UXwZhb9hhcIc1hgkYNd8d
-  GsyS-uHojrr4lYqkAyDjCr39fJnGvRnJvm_-LQDBfaKFHyGjSCi97uQAN72lWC-FRs-wuE
-  D0abhgSEyrpDBSG0enNvIyOP_BEbo5xx950MJrlcmOT9s2MCI2KPKV4Rt8ZIJUdLO5kWPl
-  fzaHkRZenCnob7sKYY4mbFosrslT0ny51yFSbZLtvnc04dmR0Q8ccAYJkMfL4t-IIGrrKR
-  bDB6x52_gqJ8REgbhfiN6StM6jwiv_UydOjLXvFpsl5_5AZWWubNaIzj-4eCIpPFYjxBaO
-  Gcs0FsmD1irBDIAIQodidYoI6aA"
-    ]
-  }
+     },
+     "metadata_statements": [
+       "eyJraWQiOiJ1WlgwLVAxLVRNc1pScUsxU2VYcGRMZ3NMb2VVTnNrTjJXX3
+   J3Qk5LQXRjIiwiYWxnIjoiUlMyNTYifQ.eyJwb2xpY3lfdXJpIjogImh0dHBzOi
+   8vZXhhbXBsZS5jb20vcG9saWN5Lmh0bWwiLCAidG9rZW5fZW5kcG9pbnRfYXV0a
+   F9tZXRob2QiOiAicHJpdmF0ZV9rZXlfand0IiwgImNvbnRhY3RzIjogWyJkZXZf
+   YWRtaW5AZXhhbXBsZS5jb20iXSwgImxvZ29fdXJpIjogImh0dHBzOi8vZXhhbXB
+   sZS5jb20vbG9nby5qcGciLCAic2NvcGVzIjogWyJvcGVuaWQiLCAiZW1haWwiLC
+   AicGhvbmUiXSwgImlhdCI6IDE0NjI0Mzg4MjAsICJpc3MiOiAiaHR0cHM6Ly9zd
+   2FtaWQuc3VuZXQuc2UvIiwgImtpZCI6ICJ1WlgwLVAxLVRNc1pScUsxU2VYcGRM
+   Z3NMb2VVTnNrTjJXX3J3Qk5LQXRjIiwgImp0aSI6ICJlOTIwMzk2ZmMyY2I0YWM
+   wYWFlYjIyOTY3NGZkMjg2YSIsICJyZXNwb25zZV90eXBlcyI6IFsiY29kZSIsIC
+   Jjb2RlIGlkX3Rva2VuIiwgInRva2VuIl0sICJzaWduaW5nX2tleSI6IHsiZSI6I
+   CJBUUFCIiwgImtpZCI6ICJ6NDE0aFZ4dDItbmticWdHM1ZGWU9aR0IzTWl3dWhl
+   NzVTZldUMUJRUVRjIiwgImt0eSI6ICJSU0EiLCAidXNlIjogInNpZyIsICJuIjo
+   gIndhRFhHSnd1OXBWM2dNWTdydHBxM09ZU0FHMUhaeTdxaWxHQzNVTE14SnhqaF
+   NRQ0o3TTlQQkM0dW9GX2Y1MTc4RmVicEtCSW9UM19ZenFFVHQ5UnlfNk5BX21HQ
+   nE2eHRqRWdubU52Nmt0UWo4aEtJMHRZaGVXUkhNSkl0MmF5OEl3blYtM0xEMFFf
+   Tm43RTNZZ0dhSlVCbHpEZ0p4UVFjUlZHRkVPY0ZMLTdUaUt0VmRQbVBER2NTRjd
+   GaXZhR0pPLU1WcW1Ea0NzWlZNVFpvcW1LZXVhcWJzaHNEanh5OUdhaUltUUxlOH
+   R5emtoeEVvRzdxdm92bEdvVjRBRThXcm9NaW54MHFXdmdsUjhuMDQxcVFoclVNd
+   G9RTURDSTUzdUx5NlpTUjBqYk5ORXd2REJiaXFENEhtM3BpQXdUVXJHS1dZTHhi
+   ZWljS183QTZnRjJTdyJ9LCAidG9zX3VyaSI6ICJodHRwczovL2V4YW1wbGUuY29
+   tL3Rvcy5odG1sIiwgImV4cCI6IDE0NjI0Mzg4MjB9.ZVnHkrdGqQTP36UXwZhb9
+   hhcIc1hgkYNd8dGsyS-uHojrr4lYqkAyDjCr39fJnGvRnJvm_-LQDBfaKFHyGjS
+   Ci97uQAN72lWC-FRs-wuED0abhgSEyrpDBSG0enNvIyOP_BEbo5xx950MJrlcmO
+   T9s2MCI2KPKV4Rt8ZIJUdLO5kWPlfzaHkRZenCnob7sKYY4mbFosrslT0ny51yF
+   SbZLtvnc04dmR0Q8ccAYJkMfL4t-IIGrrKRbDB6x52_gqJ8REgbhfiN6StM6jwi
+   v_UydOjLXvFpsl5_5AZWWubNaIzj-4eCIpPFYjxBaOGcs0FsmD1irBDIAIQodid
+   YoI6aA"
+     ]
+   }
 
    and signs it.  We now have the signed metadata statement aka the
    metadata that the RP will present to the OP
@@ -1158,6 +1329,22 @@ Hedberg, et al.         Expires January 24, 2017               [Page 20]
 A.1.7.  Step 7 - RP sends a client registration request to an OP
 
    The RP sends a client registration request to the OP
+
+
+
+
+
+
+
+
+
+
+
+
+Hedberg, et al.        Expires September 26, 2017              [Page 24]
+
+                        OpenID Connect Federation             March 2017
+
 
    {
      "redirect_uris": [
@@ -1169,30 +1356,22 @@ A.1.7.  Step 7 - RP sends a client registration request to an OP
      }
    }
 
-
-
-
-
-Hedberg, et al.         Expires January 24, 2017               [Page 21]
-
-                        OpenID Connect Federation              July 2016
-
-
 A.1.8.  Step 8 - OP handles metadata statement
 
    The OP fetches the metadata statement from the URI
    'https://dev.example.com/rp1/idfed/swamid.jws' and then goes about
    unpacking the metadata.  At this point in time the OP doesn't have
-   the necessary key to verify the signature of the metadata.  Therefor
-   it has to unpack the JWT without verifying the signature.  It will
-   then get a JSON document looking like whats listed in step 6 above.
-   From this document it can extract the metadata statement which should
-   be signed by a key belonging to the FO.  The OP should have the
-   fetched the public version of that key from the FO at some time prior
-   to this.  It can now verify the signature of the metadata statement
-   and unpack the JWT.  The JSON document it then gets is the one listed
-   in step 3.  The signing key specified in that document can now be
-   extracted and used to verify the signature of the metadata.
+   the necessary key to verify all the signatures of the metadata.
+   Therefor it has to unpack the JWT without verifying the signatures.
+   It will then get a JSON document looking like whats listed in
+   Appendix A.1.6.  From this document it can extract the metadata
+   statement which should be signed by a key belonging to the FO.  The
+   OP should have the fetched the public version of that key from the FO
+   at some time prior to this.  It can now verify the signature of the
+   metadata statement and unpack the JWT.  The JSON document it then
+   gets is the one listed in Appendix A.1.3.  The signing key specified
+   in that document can now be extracted and used to verify the
+   signature of the next part of the metadata.
 
    What's remaining now for the OP is to put all the pieces of the
    client registration request together.  It will have one piece from
@@ -1215,6 +1394,14 @@ Appendix B.  Notices
 
    The technology described in this specification was made available
    from contributions from various sources, including members of the
+
+
+
+Hedberg, et al.        Expires September 26, 2017              [Page 25]
+
+                        OpenID Connect Federation             March 2017
+
+
    OpenID Foundation and others.  Although the OpenID Foundation has
    taken steps to help ensure that the technology is available for
    distribution, it takes no position regarding the validity or scope of
@@ -1226,14 +1413,6 @@ Appendix B.  Notices
    The OpenID Foundation and the contributors to this specification make
    no (and hereby expressly disclaim any) warranties (express, implied,
    or otherwise), including implied warranties of merchantability, non-
-
-
-
-Hedberg, et al.         Expires January 24, 2017               [Page 22]
-
-                        OpenID Connect Federation              July 2016
-
-
    infringement, fitness for a particular purpose, or title, related to
    this specification, and the entire risk as to implementing this
    specification is assumed by the implementer.  The OpenID Intellectual
@@ -1247,6 +1426,12 @@ Hedberg, et al.         Expires January 24, 2017               [Page 22]
 Appendix C.  Document History
 
    [[ To be removed from the approved specification ]]
+
+   -02
+
+   o  Added federation_usage parameter
+
+   o  Symbolic representation of signed metadata statements
 
    -01
 
@@ -1265,10 +1450,18 @@ Authors' Addresses
    Email: roland@catalogix.se
 
 
-   Rebecka Gulliksson
-   Umea University
 
-   Email: rebecka.gulliksson@umu.se
+
+
+Hedberg, et al.        Expires September 26, 2017              [Page 26]
+
+                        OpenID Connect Federation             March 2017
+
+
+   Samuel Gulliksson
+   Schibsted Media Group
+
+   Email: samuel.gulliksson@gmail.com
 
 
    Michael B. Jones
@@ -1276,18 +1469,6 @@ Authors' Addresses
 
    Email: mbj@microsoft.com
    URI:   http://self-issued.info/
-
-
-
-
-
-
-
-
-
-Hedberg, et al.         Expires January 24, 2017               [Page 23]
-
-                        OpenID Connect Federation              July 2016
 
 
    John Bradley
@@ -1328,17 +1509,4 @@ Hedberg, et al.         Expires January 24, 2017               [Page 23]
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-Hedberg, et al.         Expires January 24, 2017               [Page 24]
+Hedberg, et al.        Expires September 26, 2017              [Page 27]
