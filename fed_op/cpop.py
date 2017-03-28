@@ -188,7 +188,7 @@ class Provider(Root):
                     resp = self.op.registration_endpoint(kwargs)
             except Exception as err:
                 logger.error(err)
-                raise cherrypy.HTTPError(message=err)
+                raise cherrypy.HTTPError(message=str(err))
 
             return conv_response(resp)
 
@@ -231,7 +231,7 @@ class Provider(Root):
             try:
                 resp = self.op.authorization_endpoint(kwargs, **args)
             except Exception as err:
-                raise cherrypy.HTTPError(message=err)
+                raise cherrypy.HTTPError(message=str(err))
             else:
                 return conv_response(resp)
 
