@@ -23,7 +23,7 @@ PASSWD = {
 }
 
 JWKS_FILE_NAME = "static/jwks.json"
-MAKO_ROOT = '.'
+MAKO_ROOT = './'
 
 COOKIENAME = 'pyoic'
 COOKIETTL = 4 * 60  # 4 hours
