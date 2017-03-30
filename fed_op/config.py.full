@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 keys = [
-    {"type": "RSA", "key": "cp_keys/key.pem", "use": ["enc", "sig"]},
+    {"type": "RSA", "key": "keys/enc_key.pem", "use": ["enc"]},
+    {"type": "RSA", "key": "keys/sig_key.pem", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["enc"]}
 ]
@@ -25,6 +26,9 @@ AUTHENTICATION = {
     "JavascriptPass": {"ACR": "JAVASCRIPT_PASS", "WEIGHT": 5,
                        "END_POINTS": JAVASCRIPT_END_POINTS},
 }
+
+JWKS_FILE_NAME = "static/jwks.json"
+MAKO_ROOT = './'
 
 COOKIENAME= 'pyoic'
 COOKIETTL = 4*60 # 4 hours
