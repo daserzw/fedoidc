@@ -72,7 +72,7 @@ class WebSigningService(SigningService):
 
 
 class Signer(object):
-    def __init__(self, signing_service, ms_dir=None):
+    def __init__(self, signing_service, ms_dir=None, def_context=''):
         self.metadata_statements = {}
 
         if ms_dir:
@@ -81,8 +81,9 @@ class Signer(object):
                     _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
 
         self.signing_service = signing_service
+        self.def_context = def_context
 
-    def create_signed_metadata_statement(self, req, context, fos=None):
+    def create_signed_metadata_statement(self, req, context='', fos=None):
         """
 
         :param req: The metadata statement to be signed
@@ -93,6 +94,8 @@ class Signer(object):
         :return: signed Metadata Statement
         """
 
+        if not context:
+            context = self.def_context
 
         try:
             cms = self.metadata_statements[context]

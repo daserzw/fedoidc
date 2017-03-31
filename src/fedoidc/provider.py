@@ -8,7 +8,8 @@ from oic.oic.message import DiscoveryResponse
 from oic.oic.message import OpenIDSchema
 from oic.oic.message import RegistrationRequest
 from oic.oic.provider import SWD_ISSUER
-from oic.utils.http_util import Created, BadRequest
+from oic.utils.http_util import BadRequest
+from oic.utils.http_util import Created
 from oic.utils.http_util import Response
 from oic.utils.sanitize import sanitize
 
@@ -33,11 +34,12 @@ class Provider(provider.Provider):
         self.federation_entity = federation_entity
         self.fo_priority = fo_priority
 
-    def create_signed_metadata_statement(self, fos=None, setup=None):
+    def create_signed_metadata_statement(self, context, fos=None, setup=None):
         """
 
-        :param signer:
-        :param fos:
+        :param context: In which context the metadata statement is supposed
+            to be used.
+        :param fos: List of federation operators
         :param setup:
         :return:
         """
@@ -48,7 +50,8 @@ class Provider(provider.Provider):
             fos = list(_fe.signer.metadata_statements.keys())
 
         _req = _fe.create_metadata_statement_request(pcr)
-        return _fe.signer.create_signed_metadata_statement(_req, fos)
+        return _fe.signer.create_signed_metadata_statement(
+            _req, context, fos=fos)
 
     def create_fed_providerinfo(self, fos=None, setup=None):
         """
@@ -58,7 +61,7 @@ class Provider(provider.Provider):
         :return:
         """
 
-        _ms = self.create_signed_metadata_statement(fos, setup)
+        _ms = self.create_signed_metadata_statement('discovery', fos, setup)
 
         pcr = self.create_providerinfo(setup=setup)
         pcr['metadata_statements'] = [_ms]
@@ -113,8 +116,11 @@ class Provider(provider.Provider):
 
         request = RegistrationRequest(**_dict)
         result = self.client_registration_setup(request)
+
         if isinstance(result, Response):
             return result
+
+        # TODO This is where the OP should sign the response
 
         return Created(result.to_json(), content="application/json",
                        headers=[("Cache-Control", "no-store")])

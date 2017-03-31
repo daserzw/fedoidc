@@ -222,13 +222,14 @@ class Client(oic.Client):
         _fe = self.federation_entity
         if self.federation:
             _cms = _fe.create_metadata_statement_request(req)
-            sms = _fe.signer.create_signed_metadata_statement(_cms,
-                                                              [self.federation])
+            sms = _fe.signer.create_signed_metadata_statement(
+                _cms, 'registration', fos=[self.federation])
             req['metadata_statements'] = [sms]
         else:
             _fos = list(self.provider_federations.keys())
             _cms = _fe.create_metadata_statement_request(copy.copy(req))
-            sms = _fe.signer.create_signed_metadata_statement(_cms, _fos)
+            sms = _fe.signer.create_signed_metadata_statement(
+                _cms, 'registration', _fos)
             req['metadata_statements'] = [sms]
 
         return req
