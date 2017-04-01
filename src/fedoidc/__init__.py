@@ -8,8 +8,8 @@ from six import string_types
 
 from oic.utils.keyio import KeyJar
 
-from oic.oauth2 import SINGLE_OPTIONAL_STRING
-from oic.oauth2 import VerificationError
+from oic.oauth2.message import SINGLE_OPTIONAL_STRING
+from oic.oauth2.exception import VerificationError
 from oic.oauth2.message import OPTIONAL_LIST_OF_STRINGS
 
 from oic.oic import message
