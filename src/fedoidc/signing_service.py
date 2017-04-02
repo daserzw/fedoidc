@@ -1,11 +1,15 @@
 import copy
+import os
 from urllib.parse import quote_plus
 from urllib.parse import unquote_plus
 
+import logging
 import requests
 
 from fedoidc.file_system import FileSystem
 from oic.utils.jwt import JWT
+
+logger = logging.getLogger(__name__)
 
 
 class ServiceError(Exception):
@@ -22,10 +26,12 @@ class SigningService(object):
 
 
 class InternalSigningService(SigningService):
-    def __init__(self, iss, signing_keys, add_ons=None, alg='RS256'):
+    def __init__(self, iss, signing_keys, add_ons=None, alg='RS256',
+                 lifetime=3600):
         SigningService.__init__(self, add_ons=add_ons, alg=alg)
         self.signing_keys = signing_keys
         self.iss = iss
+        self.lifetime = lifetime
 
     def __call__(self, req, **kwargs):
         """
@@ -44,7 +50,8 @@ class InternalSigningService(SigningService):
         # Own copy
         _metadata = copy.deepcopy(req)
         _metadata.update(self.add_ons)
-        _jwt = JWT(keyjar, iss=iss, msgtype=_metadata.__class__)
+        _jwt = JWT(keyjar, iss=iss, msgtype=_metadata.__class__,
+                   lifetime=self.lifetime)
         _jwt.sign_alg = self.alg
 
         if iss in keyjar.issuer_keys:
@@ -75,13 +82,31 @@ class Signer(object):
     def __init__(self, signing_service, ms_dir=None, def_context=''):
         self.metadata_statements = {}
 
-        if ms_dir:
+        if isinstance(ms_dir, dict):
             for key, _dir in ms_dir.items():
                 self.metadata_statements[key] = FileSystem(
                     _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
+        elif ms_dir:
+            for item in os.listdir(ms_dir):
+                _dir = os.path.join(ms_dir, item)
+                if os.path.isdir(_dir):
+                    self.metadata_statements[item] = FileSystem(
+                        _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
+        else:
+            self.metadata_statements = {'register': {}, 'discovery': {},
+                                        'response': {}}
 
         self.signing_service = signing_service
         self.def_context = def_context
+
+    def metadata_statement_fos(self, context=''):
+        if not context:
+            context = self.def_context
+
+        try:
+            return list(self.metadata_statements[context].keys())
+        except KeyError:
+            return 0
 
     def create_signed_metadata_statement(self, req, context='', fos=None):
         """
@@ -97,26 +122,29 @@ class Signer(object):
         if not context:
             context = self.def_context
 
-        try:
-            cms = self.metadata_statements[context]
-        except KeyError:
-            pass
-        else:
-            if fos is None:
-                fos = list(cms.keys())
+        if self.metadata_statements:
+            try:
+                cms = self.metadata_statements[context]
+            except KeyError:
+                logger.error(
+                    'No metadata statements for this context: {}'.format(
+                        context))
+                raise
+            else:
+                if fos is None:
+                    fos = list(cms.keys())
 
-            _msl = []
-            for f in fos:
-                try:
-                    _msl.append(cms[f])
-                except KeyError:
-                    pass
+                _msl = []
+                for f in fos:
+                    try:
+                        _msl.append(cms[f])
+                    except KeyError:
+                        pass
 
-            if fos and not _msl:
-                raise KeyError('No metadata statements matched')
+                if fos and not _msl:
+                    raise KeyError('No metadata statements matched')
 
-            if _msl:
-                req['metadata_statements'] = _msl
+                if _msl:
+                    req['metadata_statements'] = _msl
 
         return self.signing_service(req)
-

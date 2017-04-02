@@ -193,11 +193,13 @@ def setup(keydefs, tool_iss, liss, csms_def, oa, ms_path):
     signers = {}
     for iss, sms_def in csms_def.items():
         ms_dir = os.path.join(ms_path, quote_plus(iss))
-        metadata_statements = FileSystem(
-            ms_dir, key_conv={'to': quote_plus, 'from': unquote_plus})
-        for name, spec in sms_def.items():
-            res = make_signed_metadata_statement(spec, operator)
-            metadata_statements[name] = res['ms']
+        for context, spec in sms_def.items():
+            _dir = os.path.join(ms_dir, context)
+            metadata_statements = FileSystem(
+                _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
+            for fo, _desc in spec.items():
+                res = make_signed_metadata_statement(_desc, operator)
+                metadata_statements[fo] = res['ms']
         signers[iss] = Signer(
             InternalSigningService(iss, operator[iss].keyjar), ms_dir)
 

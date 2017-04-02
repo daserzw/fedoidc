@@ -1,3 +1,6 @@
+import os
+import shutil
+
 from oic.utils.keyio import build_keyjar, KeyJar
 
 from fedoidc.test_utils import make_jwks_bundle, make_fs_jwks_bundle
@@ -34,6 +37,9 @@ def test_make_fs_jwks_bundle():
     testing on disc JWKS bundle
     """
     liss = ['https://foo.example.com', 'https://bar.example.com']
+    if os.path.isdir('./fo_jwks'):
+        shutil.rmtree('./fo_jwks')
+
     jb = make_fs_jwks_bundle(TEST_ISS, liss, SIGN_KEYJAR, KEYDEFS)
     assert set(jb.keys()) == set(liss)
     for iss in liss:

@@ -2,10 +2,7 @@ import json
 import os
 
 from jwkest import jws
-from jwkest.jws import JWSException
-from jwkest.jws import NoSuitableSigningKeys
-
-from oic.oauth2 import MissingSigningKey
+from oic.oauth2.message import MissingSigningKey
 from oic.utils.keyio import build_keyjar
 from oic.utils.keyio import KeyJar
 
@@ -95,9 +92,9 @@ def test_pack_and_unpack_ms_lev0():
                                    'kid', 'scope', 'contacts', 'jti'}
 
     # Unpack what you have packed
-    _cms = FOP.unpack_metadata_statement(jwt_ms=_jwt)
+    pr = FOP.unpack_metadata_statement(jwt_ms=_jwt)
 
-    assert _cms
+    assert pr.result
 
 
 def test_pack_ms_wrong_fo():
@@ -108,15 +105,18 @@ def test_pack_ms_wrong_fo():
 
     _jwt = FOP.pack_metadata_statement(cms, alg='RS256', scope=['openid'])
 
-    try:
-        member = fo_member(FO1P)
-        _ = member.unpack_metadata_statement(jwt_ms=_jwt)
-    except JWSException as err:
-        assert isinstance(err, NoSuitableSigningKeys)
-    except MissingSigningKey:
-        assert True
-    else:
-        assert False
+    member = fo_member(FO1P)
+    pr = member.unpack_metadata_statement(jwt_ms=_jwt)
+    assert pr.result is None
+    assert isinstance(pr.error[_jwt], MissingSigningKey)
+
+    # try:
+    # except JWSException as err:
+    #     assert isinstance(err, NoSuitableSigningKeys)
+    # except MissingSigningKey:
+    #     assert True
+    # else:
+    #     assert False
 
 
 def test_pack_and_unpack_ms_lev1():
@@ -140,9 +140,8 @@ def test_pack_and_unpack_ms_lev1():
                                           metadata_statements=[ms_org])
 
     receiver = fo_member(FOP)
-    _cms = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
-
-    assert _cms
+    ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
+    assert ri.result
 
 
 def test_pack_and_unpack_ms_lev2():
@@ -173,9 +172,9 @@ def test_pack_and_unpack_ms_lev2():
                                             metadata_statements=[ms_inter])
 
     receiver = fo_member(FOP)
-    _cms = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
+    ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
-    assert _cms
+    assert ri.result
 
 
 def test_multiple_fo_one_working():
@@ -203,10 +202,10 @@ def test_multiple_fo_one_working():
 
     # only knows about one FO
     receiver = fo_member(FOP)
-    _cms = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
+    ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
-    assert len(_cms['metadata_statements']) == 1
-    _ms = json.loads(_cms['metadata_statements'][0])
+    assert len(ri.result['metadata_statements']) == 1
+    _ms = json.loads(ri.result['metadata_statements'][0])
     assert _ms['iss'] == ISSUER['fo']
 
 
@@ -235,10 +234,10 @@ def test_multiple_fo_all_working():
 
     # knows all FO's
     receiver = fo_member(FOP, FO1P)
-    _cms = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
+    ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
-    assert len(_cms['metadata_statements']) == 2
-    _iss = [json.loads(x)['iss'] for x in _cms['metadata_statements']]
+    assert len(ri.result['metadata_statements']) == 2
+    _iss = [json.loads(x)['iss'] for x in ri.result['metadata_statements']]
     assert set(_iss) == {ISSUER['fo'], ISSUER['fo1']}
 
 
@@ -284,9 +283,9 @@ def test_evaluate_metadata_statement_1():
                                             metadata_statements=[ms_inter])
 
     receiver = fo_member(FOP)
-    _cms = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
+    ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
-    res = receiver.evaluate_metadata_statement(_cms)
+    res = receiver.evaluate_metadata_statement(ri.result)
     assert list(res.keys()) == [ISSUER['fo']]
     assert sorted(list(res[ISSUER['fo']].keys())) == sorted(
         ['contacts', 'tos_uri', 'redirect_uris', 'scope'])
@@ -322,9 +321,9 @@ def test_evaluate_metadata_statement_2():
                                             metadata_statements=[ms_inter])
 
     receiver = fo_member(FOP)
-    _cms = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
+    ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
-    res = receiver.evaluate_metadata_statement(_cms)
+    res = receiver.evaluate_metadata_statement(ri.result)
     assert list(res.keys()) == [ISSUER['fo']]
     assert sorted(list(res[ISSUER['fo']].keys())) == sorted(
         ['contacts', 'tos_uri', 'redirect_uris', 'scope'])
@@ -370,9 +369,9 @@ def test_evaluate_metadata_statement_3():
 
     # knows all FO's
     receiver = fo_member(FOP, FO1P)
-    _cms = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
+    ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
-    res = receiver.evaluate_metadata_statement(_cms)
+    res = receiver.evaluate_metadata_statement(ri.result)
     assert set(res.keys()) == {ISSUER['fo'], ISSUER['fo1']}
     assert sorted(list(res[ISSUER['fo']].keys())) == sorted(
         ['claims', 'contacts', 'tos_uri', 'redirect_uris', 'scope'])
@@ -422,9 +421,9 @@ def test_evaluate_metadata_statement_4():
 
     # knows both FO's
     receiver = fo_member(FOP, LIGOOP)
-    _cms = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
+    ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
-    res = receiver.evaluate_metadata_statement(_cms)
+    res = receiver.evaluate_metadata_statement(ri.result)
     assert set(res.keys()) == {ISSUER['fo'], ISSUER['ligo']}
     assert sorted(list(res[ISSUER['fo']].keys())) == sorted(
         ['claims', 'contacts', 'redirect_uris', 'scope', 'tos_uri'])
@@ -461,10 +460,10 @@ def test_unpack_discovery_info():
     )
 
     receiver = fo_member(FOP)
-    _cms = receiver.unpack_metadata_statement(json_ms=pcr,
+    ri = receiver.unpack_metadata_statement(json_ms=pcr,
                                               cls=ProviderConfigurationResponse)
 
-    pcr_ms = receiver.evaluate_metadata_statement(_cms)
+    pcr_ms = receiver.evaluate_metadata_statement(ri.result)
 
     assert len(pcr_ms)
     assert list(pcr_ms.keys()) == [ISSUER['fo']]
@@ -493,5 +492,5 @@ def test_create_verify_fo_keys_bundle():
     kj.issuer_keys[ORGOP.iss] = kj.issuer_keys['']
 
     _jwt = verify_signed_bundle(sb, kj)
-    bundle = json.loads(_jwt["bundle"])
+    bundle = _jwt["bundle"]
     assert set(bundle.keys()) == {FOP.iss, FO1P.iss}

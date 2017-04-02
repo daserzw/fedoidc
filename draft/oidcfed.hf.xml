@@ -881,8 +881,7 @@ def verify(ms, sign_keys):
                     federations. It does not matter which it chooses, but the
                     end
                     result MUST be that there is one signed RP registration
-                    request per
-                    signing key.
+                    request per signing key.
                     This is then published using
                     <spanx style="verb">metadata_statement_uris</spanx>
                     or

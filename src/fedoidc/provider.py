@@ -1,5 +1,7 @@
 import logging
 
+import copy
+
 from fedoidc import ClientMetadataStatement
 from oic.oauth2 import error
 from oic.oic import provider
@@ -22,7 +24,8 @@ class Provider(provider.Provider):
                  hostname="", template_lookup=None, template=None,
                  verify_ssl=True, capabilities=None, schema=OpenIDSchema,
                  jwks_uri='', jwks_name='', baseurl=None, client_cert=None,
-                 federation_entity=None, fo_priority=None):
+                 federation_entity=None, fo_priority=None,
+                 response_metadata_statements=None):
         provider.Provider.__init__(
             self, name, sdb, cdb, authn_broker, userinfo, authz,
             client_authn, symkey, urlmap=urlmap, ca_certs=ca_certs,
@@ -33,6 +36,7 @@ class Provider(provider.Provider):
 
         self.federation_entity = federation_entity
         self.fo_priority = fo_priority
+        self.response_metadata_statements = response_metadata_statements
 
     def create_signed_metadata_statement(self, context, fos=None, setup=None):
         """
@@ -47,7 +51,7 @@ class Provider(provider.Provider):
         _fe = self.federation_entity
 
         if fos is None:
-            fos = list(_fe.signer.metadata_statements.keys())
+            fos = _fe.signer.metadata_statement_fos(context)
 
         _req = _fe.create_metadata_statement_request(pcr)
         return _fe.signer.create_signed_metadata_statement(
@@ -121,6 +125,15 @@ class Provider(provider.Provider):
             return result
 
         # TODO This is where the OP should sign the response
+        if fo:
+            try:
+                ms = self.response_metadata_statements[fo]
+            except KeyError:
+                logger.error('No response metadata found for: {}'.format(fo))
+                raise
+            result['metadata_statements'] = [ms]
+            sms = self.federation_entity.pack_metadata_statement(result)
+            result['metadata_statements'] = [sms]
 
         return Created(result.to_json(), content="application/json",
                        headers=[("Cache-Control", "no-store")])

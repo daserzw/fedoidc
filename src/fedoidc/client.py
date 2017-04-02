@@ -10,8 +10,8 @@ from oic.exception import ParameterError
 from oic.exception import ParseError
 from oic.exception import RegistrationError
 from oic.oauth2 import ErrorResponse
-from oic.oauth2 import MissingRequiredAttribute
 from oic.oauth2 import sanitize
+from oic.oauth2.message import MissingRequiredAttribute
 from oic.oic import RegistrationResponse
 
 
@@ -50,7 +50,7 @@ class Client(oic.Client):
         :param resp: A MetadataStatement instance
         """
         resp = self.federation_entity.get_metadata_statement(
-            resp, cls=RegistrationResponse)
+            resp, cls=ProviderConfigurationResponse)
 
         if not resp:  # No metadata statement that I can use
             raise ParameterError('No trusted metadata')
@@ -70,7 +70,8 @@ class Client(oic.Client):
     def parse_federation_registration(self, resp, issuer):
         """
 
-        :param resp: A MetadataStatement instance
+        :param resp: A MetadataStatement instance or a dictionary
+        :param issuer: who is supposed to be issuing this response
         """
         resp = self.federation_entity.get_metadata_statement(
             resp, cls=ClientMetadataStatement)

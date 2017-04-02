@@ -1,3 +1,5 @@
+import json
+
 from oic.utils.http_util import Created
 
 from fedoidc.bundle import JWKSBundle
@@ -6,7 +8,7 @@ from fedoidc.client import Client
 
 from fedoidc.entity import FederationEntity
 from fedoidc.provider import Provider
-from fedoidc import test_utils, ProviderConfigurationResponse, MetadataStatement
+from fedoidc import test_utils
 
 from oic import rndstr
 from oic.utils.keyio import build_keyjar
@@ -33,20 +35,57 @@ BASE = {'sunet.op': EO['sunet.op']}
 
 SMS_DEF = {
     OA['sunet']: {
-        FO['swamid']: [
-            {'request': {}, 'requester': OA['sunet'],
-             'signer_add': {}, 'signer': FO['swamid']},
-        ],
-        FO['feide']: [
-            {'request': {}, 'requester': OA['sunet'],
-             'signer_add': {}, 'signer': FO['feide']},
-        ],
+        "discovery": {
+            FO['swamid']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': 'discovery'},
+                 'signer': FO['swamid']},
+            ],
+            FO['feide']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': 'discovery'},
+                 'signer': FO['feide']},
+            ]
+        },
+        "registration": {
+            FO['swamid']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': 'registration'},
+                 'signer': FO['swamid']},
+            ],
+            FO['feide']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': 'registration'},
+                 'signer': FO['feide']},
+            ]
+        },
     },
     OA['uninett']: {
-        FO['feide']: [
-            {'request': {}, 'requester': OA['uninett'],
-             'signer_add': {}, 'signer': FO['feide']},
-        ]
+        "registration": {
+            FO['feide']: [
+                {'request': {}, 'requester': OA['uninett'],
+                 'signer_add': {'federation_usage': 'registration'},
+                 'signer': FO['feide']},
+            ]
+        }
+    },
+    EO['sunet.op']: {
+        "response": {
+            FO['swamid']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage':'response'},
+                 'signer': FO['swamid']},
+                {'request': {}, 'requester': EO['sunet.op'],
+                 'signer_add': {}, 'signer': OA['sunet']}
+            ],
+            FO['feide']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': "response"},
+                 'signer': FO['feide']},
+                {'request': {}, 'requester': EO['sunet.op'],
+                 'signer_add': {}, 'signer': OA['sunet']}
+            ]
+        }
     }
 }
 liss = list(FO.values())
@@ -62,18 +101,23 @@ for iss in FO.values():
 
 
 def test_parse_pi():
-    sunet_op = 'https://www.sunet.se/op'
+    # Sunet OP
+    sunet_op = 'https://sunet.se/op'
 
-    _kj = build_keyjar(KEYDEFS)[1]
+    # _kj = build_keyjar(KEYDEFS)[1]
+    _kj = signer[EO['sunet.op']].signing_service.signing_keys
     op_fed_ent = FederationEntity(None, keyjar=_kj, iss=sunet_op,
                                   signer=signer['https://sunet.se'],
                                   fo_bundle=fo_keybundle)
 
     op = Provider(sunet_op, None, {},
                   None, {}, None, client_authn=None, symkey=SYMKEY,
-                  federation_entity=op_fed_ent)
+                  federation_entity=op_fed_ent,
+                  response_metadata_statements=signer[
+                      EO['sunet.op']].metadata_statements['response'])
     op.baseurl = op.name
 
+    # UNINETT RP
     uninett_op = 'https://foodle.uninett.no'
 
     _kj = build_keyjar(KEYDEFS)[1]
@@ -104,3 +148,7 @@ def test_parse_pi():
     resp = op.registration_endpoint(req.to_dict())
 
     assert isinstance(resp, Created)
+
+    rp.parse_federation_registration(json.loads(resp.message), sunet_op)
+    assert rp.federation == FO['feide']
+    assert rp.registration_response

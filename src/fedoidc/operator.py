@@ -2,7 +2,6 @@ import copy
 import json
 import logging
 
-from fedoidc.signing_service import InternalSigningService
 from jwkest import BadSignature
 from jwkest.jws import JWSException
 import time
@@ -21,6 +20,16 @@ from oic.utils.jwt import JWT
 __author__ = 'roland'
 
 logger = logging.getLogger(__name__)
+
+
+class ParseInfo(object):
+    def __init__(self):
+        self.input = None
+        self.parsed_statement = []
+        self.policy_breaches = []
+        self.error = {}
+        self.result = None
+        self.branch = {}
 
 
 class Operator(object):
@@ -47,6 +56,60 @@ class Operator(object):
                   self.keyjar.get_signing_key(owner=self.iss)]
         return {'keys': _l}
 
+    def _ums(self, pr, meta_s, keyjar):
+        try:
+            _pi = self.unpack_metadata_statement(
+                jwt_ms=meta_s, keyjar=keyjar)
+        except (JWSException, BadSignature,
+                MissingSigningKey) as err:
+            logger.error('Encountered: {}'.format(err))
+            pr.error[meta_s] = err
+        else:
+            pr.branch[meta_s] = _pi
+            pr.parsed_statement.append(_pi.result)
+        return pr
+
+    def _unpack(self, json_ms, keyjar, cls, jwt_ms=None):
+        _pr = ParseInfo()
+        _pr.input = json_ms
+        if 'metadata_statements' in json_ms:
+            for meta_s in json_ms['metadata_statements']:
+                _pr = self._ums(_pr, meta_s, keyjar)
+
+            for _ms in _pr.parsed_statement:
+                if _ms:  # can be None
+                    try:
+                        keyjar.import_jwks(_ms['signing_keys'], '')
+                    except KeyError:
+                        pass
+
+        if 'metadata_statement_uris' in json_ms:
+            if self.httpcli:
+                for iss, url in json_ms['metadata_statement_uris'].items():
+                    if iss not in keyjar:  # FO I don't know about
+                        continue
+                    else:
+                        _jwt = self.httpcli.http_request(url)
+                        _pr = self._ums(_pr, _jwt, keyjar)
+
+                for _ms in _pr.parsed_statement:
+                    if _ms:  # can be None
+                        keyjar.import_jwks(_ms['signing_keys'], '')
+
+        if jwt_ms:
+            try:
+                _pr.result = cls().from_jwt(jwt_ms, keyjar=keyjar)
+            except MissingSigningKey as err:
+                logger.error('Encountered: {}'.format(err))
+                _pr.error[jwt_ms] = err
+        else:
+            _pr.result = json_ms
+
+        if _pr.parsed_statement:
+            _pr.result['metadata_statements'] = [
+                x.to_json() for x in _pr.parsed_statement if x]
+        return _pr
+
     def unpack_metadata_statement(self, json_ms=None, jwt_ms='', keyjar=None,
                                   cls=ClientMetadataStatement):
         """
@@ -56,7 +119,7 @@ class Operator(object):
         :param keyjar: Keys that should be used to verify the signature of the
             document
         :param cls: What type (Class) of metadata statement this is
-        :return: Unpacked and verified metadata statement
+        :return: ParseInfo instance
         """
 
         if not keyjar:
@@ -67,74 +130,9 @@ class Operator(object):
                 json_ms = unfurl(jwt_ms)
             except JWSException:
                 raise
-            else:
-                msl = []
-                if 'metadata_statements' in json_ms:
-                    msl = []
-                    for meta_s in json_ms['metadata_statements']:
-                        try:
-                            _ms = self.unpack_metadata_statement(
-                                jwt_ms=meta_s, keyjar=keyjar, cls=cls)
-                        except (
-                                JWSException, BadSignature,
-                                MissingSigningKey) as err:
-                            logger.error('Encountered: {}'.format(err))
-                        else:
-                            msl.append(_ms)
-
-                    for _ms in msl:
-                        keyjar.import_jwks(_ms['signing_keys'], '')
-
-                elif 'metadata_statement_uris' in json_ms:
-                    pass
-
-                try:
-                    _ms = cls().from_jwt(jwt_ms, keyjar=keyjar)
-                except MissingSigningKey as err:
-                    logger.error('Encountered: {}'.format(err))
-                    raise
-
-                if msl:
-                    _ms['metadata_statements'] = [x.to_json() for x in msl]
-                return _ms
 
         if json_ms:
-            msl = []
-            ms_flag = False
-            if 'metadata_statements' in json_ms:
-                ms_flag = True
-                for ms in json_ms['metadata_statements']:
-                    try:
-                        res = self.unpack_metadata_statement(
-                            jwt_ms=ms, keyjar=keyjar, cls=cls)
-                    except (JWSException,
-                            BadSignature, MissingSigningKey) as err:
-                        logger.error('Encountered: {}'.format(err))
-                        pass
-                    else:
-                        msl.append(res)
-
-            if 'metadata_statement_uris' in json_ms:
-                ms_flag = True
-                if self.httpcli:
-                    for iss, url in json_ms['metadata_statement_uris'].items():
-                        if iss not in keyjar:  # FO I don't know about
-                            continue
-                        else:
-                            _jwt = self.httpcli.http_request(url)
-                            try:
-                                _res = self.unpack_metadata_statement(
-                                    jwt_ms=_jwt, keyjar=keyjar, cls=cls)
-                            except JWSException as err:
-                                logger.error(err)
-                            else:
-                                msl.append(_res)
-            if msl:
-                json_ms['metadata_statements'] = [x.to_json() for x in msl]
-            elif ms_flag:
-                return {}
-
-            return json_ms
+            return self._unpack(json_ms, keyjar, cls, jwt_ms)
         else:
             raise AttributeError('Need one of json_ms or jwt_ms')
 
@@ -142,11 +140,12 @@ class Operator(object):
                                 jwt_args=None, **kwargs):
         """
 
-        :param metas: Original metadata statement as a MetadataStatement
-        instance
+        :param metadata: Original metadata statement as a MetadataStatement
+            instance
         :param keyjar: KeyJar in which the necessary keys should reside
         :param iss: Issuer ID
         :param alg: Which signing algorithm to use
+        :param jwt_args: Additional JWT attribute values
         :param kwargs: Additional metadata statement attribute values
         :return: A JWT
         """
@@ -226,7 +225,7 @@ class Operator(object):
                         k not in DoNotCompare])
             return {_iss: res}
 
-    def weed_wrong_usage(self, metadata, federation_usage):
+    def correct_usage(self, metadata, federation_usage):
         """
         Remove MS paths that are marked to be used for another usage
 
@@ -238,8 +237,8 @@ class Operator(object):
         if 'metadata_statements' in metadata:
             _msl = []
             for ms in metadata['metadata_statements']:
-                if self.weed_wrong_usage(json.loads(ms),
-                                         federation_usage=federation_usage):
+                if self.correct_usage(json.loads(ms),
+                                      federation_usage=federation_usage):
                     _msl.append(ms)
             if _msl:
                 metadata['metadata_statements'] = _msl
