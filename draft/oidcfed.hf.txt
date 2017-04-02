@@ -10,7 +10,7 @@
                                                                Microsoft
                                                               J. Bradley
                                                            Ping Identity
-                                                          March 25, 2017
+                                                           April 2, 2017
 
 
                 OpenID Connect Federation 1.0 - draft 02
@@ -53,9 +53,9 @@ Table of Contents
 
 
 
-Hedberg, et al.        Expires September 26, 2017               [Page 1]
+Hedberg, et al.          Expires October 4, 2017                [Page 1]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
      4.4.  Verifying the Metadata Statement  . . . . . . . . . . . .  11
@@ -109,9 +109,9 @@ Hedberg, et al.        Expires September 26, 2017               [Page 1]
 
 
 
-Hedberg, et al.        Expires September 26, 2017               [Page 2]
+Hedberg, et al.          Expires October 4, 2017                [Page 2]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    We are extending Signed Metadata, as introduced by OAuth 2.0
@@ -165,9 +165,9 @@ Hedberg, et al.        Expires September 26, 2017               [Page 2]
 
 
 
-Hedberg, et al.        Expires September 26, 2017               [Page 3]
+Hedberg, et al.          Expires October 4, 2017                [Page 3]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
       OPTIONAL.  JSON object where the names are the federation
@@ -221,9 +221,9 @@ Hedberg, et al.        Expires September 26, 2017               [Page 3]
 
 
 
-Hedberg, et al.        Expires September 26, 2017               [Page 4]
+Hedberg, et al.          Expires October 4, 2017                [Page 4]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
 3.2.  Specific Client Metadata
@@ -277,9 +277,9 @@ Hedberg, et al.        Expires September 26, 2017               [Page 4]
 
 
 
-Hedberg, et al.        Expires September 26, 2017               [Page 5]
+Hedberg, et al.          Expires October 4, 2017                [Page 5]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    B(ms_C + SK[C) + A(ms_B + SK[B])
@@ -333,9 +333,9 @@ Hedberg, et al.        Expires September 26, 2017               [Page 5]
 
 
 
-Hedberg, et al.        Expires September 26, 2017               [Page 6]
+Hedberg, et al.          Expires October 4, 2017                [Page 6]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    Booleans
@@ -389,9 +389,9 @@ Hedberg, et al.        Expires September 26, 2017               [Page 6]
 
 
 
-Hedberg, et al.        Expires September 26, 2017               [Page 7]
+Hedberg, et al.          Expires October 4, 2017                [Page 7]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    sum(ms_0...2)
@@ -445,9 +445,9 @@ Hedberg, et al.        Expires September 26, 2017               [Page 7]
 
 
 
-Hedberg, et al.        Expires September 26, 2017               [Page 8]
+Hedberg, et al.          Expires October 4, 2017                [Page 8]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    together with the differences in the roles between an OP and an RP,
@@ -501,9 +501,9 @@ Hedberg, et al.        Expires September 26, 2017               [Page 8]
 
 
 
-Hedberg, et al.        Expires September 26, 2017               [Page 9]
+Hedberg, et al.          Expires October 4, 2017                [Page 9]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
 4.3.  Constructing a Signed Metadata Statement
@@ -557,9 +557,9 @@ Hedberg, et al.        Expires September 26, 2017               [Page 9]
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 10]
+Hedberg, et al.          Expires October 4, 2017               [Page 10]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    L1Req <- L0Req(ms_L1Req + SK[L1Req] + FO(ms_L0Req+SK[L0Req])) - L0Req
@@ -613,9 +613,9 @@ Hedberg, et al.        Expires September 26, 2017              [Page 10]
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 11]
+Hedberg, et al.          Expires October 4, 2017               [Page 11]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
 4.5.  Flattening the compounded metadata statement
@@ -669,9 +669,9 @@ Hedberg, et al.        Expires September 26, 2017              [Page 11]
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 12]
+Hedberg, et al.          Expires October 4, 2017               [Page 12]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
 5.3.  Client Registration response
@@ -725,9 +725,9 @@ Hedberg, et al.        Expires September 26, 2017              [Page 12]
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 13]
+Hedberg, et al.          Expires October 4, 2017               [Page 13]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    registration request per signing key.  This is then published using
@@ -781,9 +781,9 @@ Hedberg, et al.        Expires September 26, 2017              [Page 13]
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 14]
+Hedberg, et al.          Expires October 4, 2017               [Page 14]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    The following is a non-normative example of an OPs response to a
@@ -837,9 +837,9 @@ Hedberg, et al.        Expires September 26, 2017              [Page 14]
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 15]
+Hedberg, et al.          Expires October 4, 2017               [Page 15]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
 9.  IANA Considerations
@@ -893,9 +893,9 @@ Hedberg, et al.        Expires September 26, 2017              [Page 15]
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 16]
+Hedberg, et al.          Expires October 4, 2017               [Page 16]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    [RFC7515]  Jones, M., Bradley, J., and N. Sakimura, "JSON Web
@@ -949,9 +949,9 @@ Appendix A.  Example
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 17]
+Hedberg, et al.          Expires October 4, 2017               [Page 17]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    {
@@ -1005,9 +1005,9 @@ A.1.1.  Step 1 - FMR creates its signing key pair.
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 18]
+Hedberg, et al.          Expires October 4, 2017               [Page 18]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    {
@@ -1061,9 +1061,9 @@ A.1.2.  Step 2 - The FMR submits registration data to FO
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 19]
+Hedberg, et al.          Expires October 4, 2017               [Page 19]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    {
@@ -1117,9 +1117,9 @@ A.1.3.  Step 3 - FO returns a signed metadata statement
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 20]
+Hedberg, et al.          Expires October 4, 2017               [Page 20]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    {
@@ -1173,9 +1173,9 @@ A.1.4.  Step 4 - The RP gets a signing key
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 21]
+Hedberg, et al.          Expires October 4, 2017               [Page 21]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    {
@@ -1229,9 +1229,9 @@ A.1.5.  Step 5 - RP produces a client registration request
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 22]
+Hedberg, et al.          Expires October 4, 2017               [Page 22]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    {
@@ -1285,9 +1285,9 @@ A.1.6.  Step 6 - Developer produces metadata statement for RP
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 23]
+Hedberg, et al.          Expires October 4, 2017               [Page 23]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
      },
@@ -1341,9 +1341,9 @@ A.1.7.  Step 7 - RP sends a client registration request to an OP
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 24]
+Hedberg, et al.          Expires October 4, 2017               [Page 24]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    {
@@ -1397,9 +1397,9 @@ Appendix B.  Notices
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 25]
+Hedberg, et al.          Expires October 4, 2017               [Page 25]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    OpenID Foundation and others.  Although the OpenID Foundation has
@@ -1453,9 +1453,9 @@ Authors' Addresses
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 26]
+Hedberg, et al.          Expires October 4, 2017               [Page 26]
 
-                        OpenID Connect Federation             March 2017
+                        OpenID Connect Federation             April 2017
 
 
    Samuel Gulliksson
@@ -1509,4 +1509,4 @@ Hedberg, et al.        Expires September 26, 2017              [Page 26]
 
 
 
-Hedberg, et al.        Expires September 26, 2017              [Page 27]
+Hedberg, et al.          Expires October 4, 2017               [Page 27]
