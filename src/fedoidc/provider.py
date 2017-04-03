@@ -109,27 +109,28 @@ class Provider(provider.Provider):
         logger.info(
             "registration_request:{}".format(sanitize(request.to_dict())))
 
-        res = self.federation_entity.get_metadata_statement(request)
+        ms_list = self.federation_entity.get_metadata_statement(request)
 
-        if res:
-            fo, _dict = self.federation_entity.pick_by_priority(res)
-            self.federation = fo
+        if ms_list:
+            ms = self.federation_entity.pick_by_priority(ms_list)
+            self.federation = ms.iss
         else:  # Nothing I can use
             return error(error='invalid_request',
                          descr='No signed metadata statement I could use')
 
-        request = RegistrationRequest(**_dict)
+        request = RegistrationRequest(**ms.le)
         result = self.client_registration_setup(request)
 
         if isinstance(result, Response):
             return result
 
         # TODO This is where the OP should sign the response
-        if fo:
+        if ms.iss:
             try:
-                ms = self.response_metadata_statements[fo]
+                ms = self.response_metadata_statements[ms.iss]
             except KeyError:
-                logger.error('No response metadata found for: {}'.format(fo))
+                logger.error(
+                    'No response metadata found for: {}'.format(ms.iss))
                 raise
             result['metadata_statements'] = [ms]
             sms = self.federation_entity.pack_metadata_statement(result)

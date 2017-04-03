@@ -14,6 +14,7 @@ from oic.oauth2 import sanitize
 from oic.oauth2.message import MissingRequiredAttribute
 from oic.oic import RegistrationResponse
 
+from fedoidc.operator import le_dict
 
 try:
     from json import JSONDecodeError
@@ -49,23 +50,22 @@ class Client(oic.Client):
 
         :param resp: A MetadataStatement instance
         """
-        resp = self.federation_entity.get_metadata_statement(
+        ms_list = self.federation_entity.get_metadata_statement(
             resp, cls=ProviderConfigurationResponse)
 
-        if not resp:  # No metadata statement that I can use
+        if not ms_list:  # No metadata statement that I can use
             raise ParameterError('No trusted metadata')
 
-        # response is a dictionary with the FO ID as keys and the
-        # registration info as values
+        # response is a list of metadata statements
 
         # At this point in time I may not know within which
         # federation I'll be working.
         if len(resp) == 1:
-            fo = list(resp.keys())[0]
-            self.handle_provider_config(resp[fo], issuer)
-            self.federation = fo
+            ms = ms_list[0]
+            self.handle_provider_config(ms, issuer)
+            self.federation = ms.iss
         else:
-            self.provider_federations = resp
+            self.provider_federations = ms_list
 
     def parse_federation_registration(self, resp, issuer):
         """
@@ -73,23 +73,22 @@ class Client(oic.Client):
         :param resp: A MetadataStatement instance or a dictionary
         :param issuer: who is supposed to be issuing this response
         """
-        resp = self.federation_entity.get_metadata_statement(
+        ms_list = self.federation_entity.get_metadata_statement(
             resp, cls=ClientMetadataStatement)
 
-        if not resp:  # No metadata statement that I can use
+        if not ms_list:  # No metadata statement that I can use
             raise RegistrationError('No trusted metadata')
 
-        # response is a dictionary with the FO ID as keys and the
-        # registration info as values
+        # response is a list of registration infos
 
         # At this point in time I may not know within which
         # federation I'll be working.
-        if len(resp) == 1:
-            fo = list(resp.keys())[0]
-            self.store_registration_info(resp[fo])
-            self.federation = fo
+        if len(ms_list) == 1:
+            ms = ms_list[0]
+            self.store_registration_info(ms)
+            self.federation = ms.iss
         else:
-            self.registration_federations = resp
+            self.registration_federations = ms_list
 
     def handle_response(self, response, issuer, func, response_cls):
         err_msg = 'Got error response: {}'
@@ -127,33 +126,30 @@ class Client(oic.Client):
                 logger.error(unk_msg.format(sanitize(response.text)))
                 raise RegistrationError(response.text)
 
-    def chose_federation(self, federations):
+    def chose_federation(self, ms_list):
         """
         Given the set of possible provider info responses I got chose
         one. This simple one uses federation_priority if present.
+        
+        :param ms_list: List of metadata statements 
         :return: A ProviderConfigurationResponse instance
         """
         for fo in self.fo_priority:
-            try:
-                _pcr = federations[fo]
-            except KeyError:
-                continue
-            else:
-                return fo
+            for ms in ms_list:
+                if ms.iss == fo:
+                    return ms
 
-        return list(federations.keys())[0]
+        return ms_list[0]
 
     def chose_provider_federation(self, issuer):
-        fo = self.chose_federation(self.provider_federations)
-        _pcr = self.provider_federations[fo]
-        self.federation = fo
+        _pcr = self.chose_federation(self.provider_federations)
+        self.federation = _pcr.iss
         self.handle_provider_config(_pcr, issuer)
         return _pcr
 
     def chose_registration_federation(self):
-        fo = self.chose_federation(self.registration_federations)
-        _pcr = self.registration_federations[fo]
-        self.federation = fo
+        _pcr = self.chose_federation(self.registration_federations)
+        self.federation = _pcr.iss
         self.store_registration_info(_pcr)
         return _pcr
 
@@ -227,7 +223,7 @@ class Client(oic.Client):
                 _cms, 'registration', fos=[self.federation])
             req['metadata_statements'] = [sms]
         else:
-            _fos = list(self.provider_federations.keys())
+            _fos = list([r.iss for r in self.provider_federations])
             _cms = _fe.create_metadata_statement_request(copy.copy(req))
             sms = _fe.signer.create_signed_metadata_statement(
                 _cms, 'registration', _fos)

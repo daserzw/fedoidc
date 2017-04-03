@@ -39,17 +39,16 @@ class FederationEntity(Operator):
         self.signer = signer
 
     @staticmethod
-    def pick_by_priority(req, priority=None):
+    def pick_by_priority(ms_list, priority=None):
         if not priority:
-            _key = list(req.keys())[0]  # Just return any
-            return _key, req[_key]
+            return ms_list[0]  # Just return any
 
         for iss in priority:
-            try:
-                return iss, req[iss]
-            except KeyError:
-                pass
-        return '', None
+            for ms in ms_list:
+                if ms.iss == iss:
+                    return ms
+
+        return None
 
     def pick_signed_metadata_statements_regex(self, pattern, context):
         """
@@ -86,7 +85,7 @@ class FederationEntity(Operator):
         :param json_ms: The metadata statement as a JSON document
         :param cls: The class the response should be typed into
         :param context: In which context the metadata statement should be used.
-        :return: A dictionary with metadata statements per FO
+        :return: A list of metadata statements 
         """
         _pi = self.unpack_metadata_statement(json_ms=json_ms, cls=cls)
         if not _pi.result:
@@ -98,10 +97,9 @@ class FederationEntity(Operator):
             _cms = _pi.result
 
         if _cms:
-            ms_per_fo = self.evaluate_metadata_statement(_cms)
-            return ms_per_fo
+            return self.evaluate_metadata_statement(_cms)
         else:
-            return {}
+            return []
 
     def create_metadata_statement_request(self, statement):
         """

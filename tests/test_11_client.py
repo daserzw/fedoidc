@@ -73,7 +73,7 @@ SMS_DEF = {
         "response": {
             FO['swamid']: [
                 {'request': {}, 'requester': OA['sunet'],
-                 'signer_add': {'federation_usage':'response'},
+                 'signer_add': {'federation_usage': 'response'},
                  'signer': FO['swamid']},
                 {'request': {}, 'requester': EO['sunet.op'],
                  'signer_add': {}, 'signer': OA['sunet']}
@@ -134,8 +134,8 @@ def test_parse_pi():
     rp.parse_federation_provider_info(pi, sunet_op)
 
     assert len(rp.provider_federations) == 2
-    assert set(rp.provider_federations.keys()) == {'https://swamid.sunet.se',
-                                                   'https://www.feide.no'}
+    assert set([r.iss for r in rp.provider_federations]) == {
+        'https://swamid.sunet.se', 'https://www.feide.no'}
 
     # Got two alternative FOs one I can use the other I can't
     req = rp.federated_client_registration_request(

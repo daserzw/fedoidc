@@ -13,7 +13,7 @@ from fedoidc import unfurl
 from fedoidc import MetadataStatement
 from fedoidc.bundle import JWKSBundle
 from fedoidc.bundle import verify_signed_bundle
-from fedoidc.operator import Operator
+from fedoidc.operator import Operator, le_dict
 
 BASE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "data/keys"))
@@ -286,8 +286,9 @@ def test_evaluate_metadata_statement_1():
     ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
     res = receiver.evaluate_metadata_statement(ri.result)
-    assert list(res.keys()) == [ISSUER['fo']]
-    assert sorted(list(res[ISSUER['fo']].keys())) == sorted(
+    assert len(res) == 1
+    assert res[0].iss == ISSUER['fo']
+    assert sorted(list(res[0].keys())) == sorted(
         ['contacts', 'tos_uri', 'redirect_uris', 'scope'])
 
 
@@ -324,11 +325,12 @@ def test_evaluate_metadata_statement_2():
     ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
     res = receiver.evaluate_metadata_statement(ri.result)
-    assert list(res.keys()) == [ISSUER['fo']]
-    assert sorted(list(res[ISSUER['fo']].keys())) == sorted(
+    assert len(res) == 1
+    assert res[0].iss == ISSUER['fo']
+    assert sorted(list(res[0].keys())) == sorted(
         ['contacts', 'tos_uri', 'redirect_uris', 'scope'])
 
-    assert res[ISSUER['fo']]['scope'] == ['openid', 'email', 'address']
+    assert res[0]['scope'] == ['openid', 'email', 'address']
 
 
 def test_evaluate_metadata_statement_3():
@@ -372,14 +374,15 @@ def test_evaluate_metadata_statement_3():
     ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
     res = receiver.evaluate_metadata_statement(ri.result)
-    assert set(res.keys()) == {ISSUER['fo'], ISSUER['fo1']}
-    assert sorted(list(res[ISSUER['fo']].keys())) == sorted(
+    assert len(res) == 2
+    assert set([r.iss for r in res]) == {ISSUER['fo'], ISSUER['fo1']}
+    assert sorted(list(res[0].keys())) == sorted(
         ['claims', 'contacts', 'tos_uri', 'redirect_uris', 'scope'])
 
-    assert res[ISSUER['fo']]['scope'] == ['openid', 'email', 'phone']
-    assert res[ISSUER['fo1']]['scope'] == ['openid', 'email', 'address']
-    assert 'claims' in res[ISSUER['fo']]
-    assert 'claims' not in res[ISSUER['fo1']]
+    assert res[0]['scope'] == ['openid', 'email', 'phone']
+    assert res[1]['scope'] == ['openid', 'email', 'address']
+    assert 'claims' in res[0]
+    assert 'claims' not in res[1]
 
 
 def test_evaluate_metadata_statement_4():
@@ -423,7 +426,7 @@ def test_evaluate_metadata_statement_4():
     receiver = fo_member(FOP, LIGOOP)
     ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
-    res = receiver.evaluate_metadata_statement(ri.result)
+    res = le_dict(receiver.evaluate_metadata_statement(ri.result))
     assert set(res.keys()) == {ISSUER['fo'], ISSUER['ligo']}
     assert sorted(list(res[ISSUER['fo']].keys())) == sorted(
         ['claims', 'contacts', 'redirect_uris', 'scope', 'tos_uri'])
@@ -465,9 +468,12 @@ def test_unpack_discovery_info():
 
     pcr_ms = receiver.evaluate_metadata_statement(ri.result)
 
-    assert len(pcr_ms)
-    assert list(pcr_ms.keys()) == [ISSUER['fo']]
-    assert pcr_ms[ISSUER['fo']]['issuer'] == 'https://example.org/op'
+    assert len(pcr_ms) == 1
+    assert pcr_ms[0].iss == ISSUER['fo']
+    assert pcr_ms[0]['issuer'] == 'https://example.org/op'
+
+    _ms = pcr_ms[0]
+    assert _ms.unprotected_claims() == {}
 
 
 def test_create_fo_keys_bundle():

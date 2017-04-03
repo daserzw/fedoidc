@@ -26,10 +26,82 @@ class ParseInfo(object):
     def __init__(self):
         self.input = None
         self.parsed_statement = []
-        self.policy_breaches = []
         self.error = {}
         self.result = None
         self.branch = {}
+
+
+class LessOrEqual(object):
+    def __init__(self, iss='', sup=None):
+        if sup:
+            self.iss = sup.iss
+        else:
+            self.iss = iss
+        self.sup = sup
+        self.err = {}
+        self.le = {}
+
+    def __setitem__(self, key, value):
+        self.le[key] = value
+
+    def keys(self):
+        return self.le.keys()
+
+    def items(self):
+        return self.le.items()
+
+    def __getitem__(self, item):
+        return self.le[item]
+
+    def __contains__(self, item):
+        return item in self.le
+
+    def sup_items(self):
+        if self.sup:
+            return self.sup.le.items()
+        else:
+            return {}
+
+    def eval(self, orig):
+        _le = {}
+        _err = []
+        for k, v in self.sup_items():
+            if k in DoNotCompare:
+                continue
+            if k in orig:
+                if is_lesser(orig[k], v):
+                    _le[k] = v
+                else:
+                    _err.append((k, orig[k], v))
+            else:
+                _le[k] = v
+
+        for k, v in orig.items():
+            if k in DoNotCompare:
+                continue
+            if k not in _le:
+                _le[k] = v
+
+        self.le = _le
+        self.err = _err
+
+    def protected_claims(self):
+        if self.sup:
+            return self.sup.le
+
+    def unprotected_claims(self):
+        if self.sup:
+            res = {}
+            for k,v in self.le.items():
+                if k not in self.sup.le:
+                    res[k] = v
+            return res
+        else:
+            return self.le
+
+
+def le_dict(les):
+    return dict([(l.iss, l) for l in les])
 
 
 class Operator(object):
@@ -178,7 +250,7 @@ class Operator(object):
         If something goes wrong during the evaluation an exception is raised
 
         :param metadata: The compounded metadata statement
-        :return: The resulting metadata statement
+        :return: A Flatten instance
         """
 
         # start from the innermost metadata statement and work outwards
@@ -186,44 +258,17 @@ class Operator(object):
         res = dict([(k, v) for k, v in metadata.items() if k not in IgnoreKeys])
 
         if 'metadata_statements' in metadata:
-            cres = {}
+            les = []
             for ms in metadata['metadata_statements']:
-                _msd = self.evaluate_metadata_statement(json.loads(ms))
-                for _iss, kw in _msd.items():
-                    _break = False
-                    _ci = {}
-                    for k, v in kw.items():
-                        if k in res:
-                            if is_lesser(res[k], v):
-                                _ci[k] = v
-                            else:
-                                self.failed['iss'] = (
-                                    'Value of {}: {} not <= {}'.format(k,
-                                                                       res[k],
-                                                                       v))
-                                _break = True
-                                break
-                        else:
-                            _ci[k] = v
-                        if _break:
-                            break
-
-                    if _break:
-                        continue
-
-                    for k, v in res.items():
-                        if k not in _ci:
-                            _ci[k] = v
-
-                    _ci = dict([(k, v) for k, v in _ci.items() if
-                                k not in DoNotCompare])
-                    cres[_iss] = _ci
-            return cres
+                for _le in self.evaluate_metadata_statement(json.loads(ms)):
+                    le = LessOrEqual(sup=_le)
+                    le.eval(res)
+                    les.append(le)
+            return les
         else:  # this is the innermost
-            _iss = metadata['iss']  # The issuer == FO is interesting
-            res = dict([(k, v) for k, v in res.items() if
-                        k not in DoNotCompare])
-            return {_iss: res}
+            le = LessOrEqual(iss=metadata['iss'])
+            le.eval(res)
+            return [le]
 
     def correct_usage(self, metadata, federation_usage):
         """
