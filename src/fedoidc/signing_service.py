@@ -126,6 +126,10 @@ class Signer(object):
             try:
                 cms = self.metadata_statements[context]
             except KeyError:
+                try:
+                    logger.error('Signer: {}'.format(self.signing_service.iss))
+                except AttributeError:
+                    pass
                 logger.error(
                     'No metadata statements for this context: {}'.format(
                         context))

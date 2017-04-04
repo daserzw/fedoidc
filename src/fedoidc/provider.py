@@ -53,6 +53,9 @@ class Provider(provider.Provider):
         if fos is None:
             fos = _fe.signer.metadata_statement_fos(context)
 
+        logger.info(
+            'provider:{}, fos:{}, context:{}'.format(self.name, fos, context))
+
         _req = _fe.create_metadata_statement_request(pcr)
         return _fe.signer.create_signed_metadata_statement(
             _req, context, fos=fos)
