@@ -24,6 +24,9 @@ class SigningService(object):
     def __call__(self, req, **kwargs):
         raise NotImplemented()
 
+    def name(self):
+        raise NotImplemented()
+
 
 class InternalSigningService(SigningService):
     def __init__(self, iss, signing_keys, add_ons=None, alg='RS256',
@@ -64,6 +67,9 @@ class InternalSigningService(SigningService):
         else:
             return _jwt.pack(cls_instance=_metadata, owner=owner)
 
+    def name(self):
+        return self.iss
+
 
 class WebSigningService(SigningService):
     def __init__(self, url, add_ons=None, alg='RS256'):
@@ -76,6 +82,9 @@ class WebSigningService(SigningService):
             return r.text
         else:
             raise ServiceError("{}: {}".format(r.status_code, r.text))
+
+    def name(self):
+        return self.url
 
 
 class Signer(object):
@@ -102,7 +111,7 @@ class Signer(object):
     def items(self):
         res = {}
         for key, fs in self.metadata_statements.items():
-            res[key] = fs.keys()
+            res[key] = list(fs.keys())
         return res
 
     def metadata_statement_fos(self, context=''):
