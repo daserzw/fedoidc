@@ -152,9 +152,9 @@
                             The keys that can be found here or at
                             <spanx style="verb">signing_keys_uri</spanx>
                             must not be confused with the
-                            keys that an OIDC entity are using for
+                            keys that an OIDC entity is using for
                             Authorization/AccessToken/RefreshToken/UserInfo
-                            requests and responses those keys are found at
+                            requests and responses. Those keys are found at
                             <spanx style="verb">jwks_uri</spanx> or in the
                             case of client registration
                             also possibly at <spanx style="verb">jwks</spanx>.
@@ -205,14 +205,14 @@
                             The key used to sign the JWKS can be found in
                             <spanx style="verb">signing_keys</spanx>
                             or
-                            <spanx style="verb">signing_keys_uri</spanx>
+                            <spanx style="verb">signing_keys_uri</spanx>.
                         </t>
                         <t hangText="federation_usage">
                             <vspace/>
                             OPTIONAL.
                             A metadata statement can be used in several
                             different
-                            context. This parameter can be used to limit the
+                            contexts. This parameter can be used to limit the
                             usage
                             to a specific context. The values specified in this
                             document are 'discovery', 'registration' and
@@ -275,7 +275,7 @@
                 <t>
                     An OP MUST sign it's JWKs and therefore publish a
                     signed_jwks_uri. Unless an RP is not able to handle secrets
-                    is MUST also sign it's JWKS and publish a signed_jwks_uri.
+                    it MUST also sign it's JWKS and publish a signed_jwks_uri.
                 </t>
             </section>
             <section title="Specific Client Metadata">
@@ -364,7 +364,7 @@
                         SK[C] would be the signing keys that the RP used to
                         sign the JWKS placed at signed_jwks_uri. The statement
                         signed by A (ms_b + SK[B]) would contain metadata
-                        common to all RPs owned by the member (ms_b) and the
+                        common to all RPs owned by the member (ms_B) and the
                         signing key (SK[B]) that the member uses to sign
                         requests from the member's RPs.
                     </t>
@@ -583,7 +583,7 @@
                     requests on behalf of the member to the federation. Below
                     such a representative is called a Level 0 Requester (L0Req).
                     Within each member unless all entities belonging to the
-                    member is handled directly by the L0Req there may exists
+                    member are handled directly by the L0Req there may exists
                     parties that are responsible for single
                     or groups of entities. Within these parties we may have
                     further subdivisions such that we end up with Level 0, 1,
@@ -611,7 +611,7 @@
             </section>
             <section title="Constructing a Signed Metadata Statement">
                 <t>
-                    These are the steps that is preformed to construct a signed
+                    These are the steps that are preformed to construct a signed
                     metadata statement.
                     A metadata signing request may be about one specific entity
                     or a group of similar entities.
@@ -622,8 +622,8 @@
                             The
                             <spanx style="verb">requester</spanx>
                             constructs a signing request by collecting the
-                            necessary client or provider metadata as describe in
-                            <xref target='entity_metadata'/>.
+                            necessary client or provider metadata as described
+                            in <xref target='entity_metadata'/>.
                         </t>
                         <t>
                             If this is about the top most metadata statement
@@ -638,7 +638,7 @@
                         <t>
                             The metadata statement is transported to the signing
                             party.
-                            In the case or ms_0 this MUST be the FO. If it is
+                            In the case of ms_0 this MUST be the FO. If it is
                             ms_1 it is the <spanx style="verb">LOReq</spanx>.
                             If it is ms_2 it is the L1Req and so on.
                         </t>
@@ -841,18 +841,18 @@ def verify(ms, sign_keys):
                 <t>
                     <list style="number">
                         <t>The client asks for the provider information</t>
-                        <t>The OP, using some rule, may publish one or a several
+                        <t>The OP, using some rule, may publish one or several
                             <spanx style="verb">metadata_statements</spanx>.
                             If it publishes more than one
                             <spanx style="verb">metadata_statements</spanx>,
-                            then they should be rooted in different federations.
+                            then they SHOULD be rooted in different federations.
                         </t>
                         <t>Based on what the OP published, the RP publishes
                             a number of <spanx style="verb">
                                 metadata_statements</spanx>,
                             all rooted in federations that the OP belongs to.
                         </t>
-                        <t>If the RP published more then one
+                        <t>If the RP published more than one
                             <spanx style="verb">metadata_statements</spanx>,
                             then the OP should/must choose one and make that
                             known
@@ -866,7 +866,7 @@ def verify(ms, sign_keys):
             </section>
             <section title="Relying Party">
                 <t>
-                    An organization may be a member of more the one federation.
+                    An organization may be a member of more than one federation.
                     The
                     RPs it is responsible for may be members of one or more of
                     these.
