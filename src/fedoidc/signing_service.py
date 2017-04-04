@@ -99,6 +99,12 @@ class Signer(object):
         self.signing_service = signing_service
         self.def_context = def_context
 
+    def items(self):
+        res = {}
+        for key, fs in self.metadata_statements.items():
+            res[key] = fs.keys()
+        return res
+
     def metadata_statement_fos(self, context=''):
         if not context:
             context = self.def_context
@@ -127,7 +133,9 @@ class Signer(object):
                 cms = self.metadata_statements[context]
             except KeyError:
                 try:
-                    logger.error('Signer: {}'.format(self.signing_service.iss))
+                    logger.error(
+                        'Signer: {}, items: {}'.format(self.signing_service.iss,
+                                                       self.items()))
                 except AttributeError:
                     pass
                 logger.error(
