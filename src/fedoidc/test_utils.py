@@ -75,28 +75,34 @@ def make_jwks_bundle(iss, fo_liss, sign_keyjar, keydefs, base_path=''):
     return jb
 
 
-def make_ms(desc, ms, root, leaf, operator):
+def make_ms(desc, ms, leaf, operator):
     """
     Construct a signed metadata statement
 
     :param desc: A description of who wants who to signed what.
         represented as a dictionary containing: 'request', 'requester',
         'signer' and 'signer_add'.
-    :param ms: Metadata statements to be added
-    :param root: if this is the metadata statement signed by a FO
+    :param ms: Metadata statements to be added, dict
     :param leaf: if the requester is the entity operator/agent
     :param operator: A dictionary containing Operator instance as values.
-    :return: A tuple with the signed metadata statement and the FO ID.
-        The FO ID is '' if this is not the root MS.
+    :return: A dictionary with the FO ID as key and the signed metadata 
+        statement as value.
     """
     req = MetadataStatement(**desc['request'])
     _requester = operator[desc['requester']]
     req['signing_keys'] = _requester.signing_keys_as_jwks()
+
+    _signer = operator[desc['signer']]
+
     if ms:
-        if isinstance(ms, list):
-            req['metadata_statements'] = ms[:]
+        req['metadata_statements'] = list(ms.values())
+        if len(ms):
+            _fo = list(ms.keys())[0]
         else:
-            req['metadata_statements'] = [ms[:]]
+            _fo = ''
+    else:
+        _fo = _signer.iss
+
     req.update(desc['signer_add'])
 
     if leaf:
@@ -104,46 +110,29 @@ def make_ms(desc, ms, root, leaf, operator):
     else:
         jwt_args = {}
 
-    _signer = operator[desc['signer']]
     ms = _signer.pack_metadata_statement(req, jwt_args=jwt_args)
-    if root is True:
-        _fo = _signer.iss
-    else:
-        _fo = ''
 
-    return ms, _fo
+    return {_fo: ms}
 
 
 def make_signed_metadata_statement(ms_chain, operator):
-    _ms = []
+    _ms = None
     depth = len(ms_chain)
     i = 1
-    _fo = []
-    _root_fo = []
-    root = True
     leaf = False
     for desc in ms_chain:
         if i == depth:
             leaf = True
         if isinstance(desc, dict):
-            _ms, _fo = make_ms(desc, _ms, root, leaf, operator)
+            _ms = make_ms(desc, _ms, leaf, operator)
         else:
-            _mss = []
-            _fos = []
+            _ms = {}
             for d in desc:
-                _m, _f = make_ms(d, _ms, root, leaf, operator)
-                _mss.append(_m)
-                if _f:
-                    _fos.append(_f)
-            _ms = _mss
-            if _fos:
-                _fo = _fos
-        if root:
-            _root_fo = _fo
-        root = False
+                _m = make_ms(d, _ms, leaf, operator)
+                _ms.update(_m)
         i += 1
 
-    return {'fo': _root_fo, 'ms': _ms}
+    return _ms
 
 
 def make_signed_metadata_statements(smsdef, operator):

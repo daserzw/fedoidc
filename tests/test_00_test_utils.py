@@ -3,7 +3,10 @@ import shutil
 
 from oic.utils.keyio import build_keyjar, KeyJar
 
-from fedoidc.test_utils import make_jwks_bundle, make_fs_jwks_bundle
+from fedoidc.operator import Operator
+from fedoidc.test_utils import make_fs_jwks_bundle
+from fedoidc.test_utils import make_jwks_bundle
+from fedoidc.test_utils import make_signed_metadata_statement
 
 TEST_ISS = "https://test.example.com"
 KEYDEFS = [
@@ -13,6 +16,33 @@ KEYDEFS = [
 
 SIGN_KEYJAR = build_keyjar(KEYDEFS)[1]
 
+FO = {'swamid': 'https://swamid.sunet.se', 'feide': 'https://www.feide.no',
+      'edugain': 'https://edugain.com'}
+OA = {'sunet': 'https://sunet.se', 'uninett': 'https://uninett.no'}
+
+SMS_DEF = {
+    OA['sunet']: {
+        "discovery": {
+            FO['swamid']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': 'discovery'},
+                 'signer': FO['swamid']}
+            ],
+            FO['feide']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': 'discovery'},
+                 'signer': FO['feide']}
+            ],
+            FO['edugain']: [
+                {'request': {}, 'requester': FO['swamid'],
+                 'signer_add': {'federation_usage': 'discovery'},
+                 'signer': FO['edugain']},
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {}, 'signer': FO['swamid']}
+            ]
+        }
+    }
+}
 
 def test_make_jwks_bundle():
     """
@@ -51,3 +81,23 @@ def test_make_fs_jwks_bundle():
         assert len(_keys) == 2
         assert _kj.keys_by_alg_and_usage(iss, 'RS256', 'sig')
         assert _kj.keys_by_alg_and_usage(iss, 'ES256', 'sig')
+
+
+def test_make_signed_metadata_statements():
+    liss = list(FO.values())
+    liss.extend(list(OA.values()))
+
+    key_bundle = make_fs_jwks_bundle(TEST_ISS, liss, SIGN_KEYJAR, KEYDEFS, './')
+
+    operator = {}
+
+    for entity, _keyjar in key_bundle.items():
+        operator[entity] = Operator(iss=entity, keyjar=_keyjar)
+
+    _spec = SMS_DEF[OA['sunet']]["discovery"][FO['swamid']]
+    ms = make_signed_metadata_statement(_spec, operator)
+    assert ms
+
+    _spec = SMS_DEF[OA['sunet']]["discovery"][FO['edugain']]
+    ms = make_signed_metadata_statement(_spec, operator)
+    assert list(ms.keys()) == FO['edugain']
