@@ -188,7 +188,7 @@ def setup(keydefs, tool_iss, liss, csms_def, oa, ms_path):
                 _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
             for fo, _desc in spec.items():
                 res = make_signed_metadata_statement(_desc, operator)
-                metadata_statements[fo] = res['ms']
+                metadata_statements[fo] = res[fo]
         signers[iss] = Signer(
             InternalSigningService(iss, operator[iss].keyjar), ms_dir)
 

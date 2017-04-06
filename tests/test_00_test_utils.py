@@ -100,4 +100,4 @@ def test_make_signed_metadata_statements():
 
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['edugain']]
     ms = make_signed_metadata_statement(_spec, operator)
-    assert list(ms.keys()) == FO['edugain']
+    assert list(ms.keys()) == [FO['edugain']]
