@@ -105,7 +105,8 @@ def le_dict(les):
 
 
 class Operator(object):
-    def __init__(self, keyjar=None, jwks_bundle=None, httpcli=None, iss=None):
+    def __init__(self, keyjar=None, jwks_bundle=None, httpcli=None, iss=None,
+                 lifetime=0):
         """
 
         :param keyjar: Contains the operators signing keys
@@ -114,12 +115,14 @@ class Operator(object):
         :param httpcli: A http client to use when information has to be
             fetched from somewhere else
         :param iss: Issuer ID
+        :param lifetime: Default lifetime of the signed statements
         """
         self.keyjar = keyjar
         self.jwks_bundle = jwks_bundle
         self.httpcli = httpcli
         self.iss = iss
         self.failed = {}
+        self.lifetime = lifetime
 
     def signing_keys_as_jwks(self):
         _l = [x.serialize() for x in self.keyjar.get_signing_key()]
@@ -209,7 +212,7 @@ class Operator(object):
             raise AttributeError('Need one of json_ms or jwt_ms')
 
     def pack_metadata_statement(self, metadata, keyjar=None, iss=None, alg='',
-                                jwt_args=None, **kwargs):
+                                jwt_args=None, lifetime=-1, **kwargs):
         """
 
         :param metadata: Original metadata statement as a MetadataStatement
@@ -218,6 +221,7 @@ class Operator(object):
         :param iss: Issuer ID
         :param alg: Which signing algorithm to use
         :param jwt_args: Additional JWT attribute values
+        :param lifetime: Lifetime of the signed JWT
         :param kwargs: Additional metadata statement attribute values
         :return: A JWT
         """
@@ -226,10 +230,14 @@ class Operator(object):
         if keyjar is None:
             keyjar = self.keyjar
 
+        if lifetime == -1:
+            lifetime = self.lifetime
+
         # Own copy
         _metadata = copy.deepcopy(metadata)
         _metadata.update(kwargs)
-        _jwt = JWT(keyjar, iss=iss, msgtype=_metadata.__class__)
+        _jwt = JWT(keyjar, iss=iss, msgtype=_metadata.__class__,
+                   lifetime=lifetime)
         if alg:
             _jwt.sign_alg = alg
 
