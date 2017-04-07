@@ -3,9 +3,9 @@
 import json
 from jwkest.jws import factory
 
-from oic.federation import MetadataStatement
-from oic.federation.bundle import JWKSBundle
-from oic.federation.operator import Operator
+from fedoidc import MetadataStatement
+from fedoidc.bundle import JWKSBundle
+from fedoidc.operator import Operator
 from oic.oauth2 import Message
 from oic.oic.message import RegistrationRequest
 
@@ -14,104 +14,141 @@ from oic.utils.keyio import build_keyjar
 __author__ = 'roland'
 
 
-def print_lines(lines, maxlen=70):
+def paragraph(*lines):
+    print("<t>")
+    print("\n".join(lines))
+    print("</t>")
+
+
+def print_figure(text, preamble=None):
+    print("<figure>")
+    if preamble:
+        print("<preamble>{}</preamble>".format(preamble))
+    print("<artwork> <![CDATA[")
+    print("\n".join(text))
+    print("]]></artwork ></figure>")
+
+
+def format_lines(lines, maxlen=68):
+    res = []
     for line in lines.split('\n'):
         if len(line) <= maxlen:
-            print(line)
+            res.append(line)
         else:
             n = maxlen
             for l in [line[i:i + n] for i in range(0, len(line), n)]:
-                print(l)
+                res.append(l)
+    return res
 
 
-def print_private_key(keyjar, headline):
+def print_private_key(keyjar, headline=''):
     _jwks = keyjar.issuer_keys[''][0].jwks(private=True)  # Only one bundle
-
-    print(70 * ".")
-    print(headline)
-    print(70 * ".")
-    print_lines(json.dumps(json.loads(_jwks), sort_keys=True, indent=2,
-                           separators=(',', ': ')))
+    text = format_lines(json.dumps(json.loads(_jwks), sort_keys=True, indent=2,
+                                   separators=(',', ': ')))
+    print_figure(text, headline)
 
 
-def print_metadata_statement(txt, sms):
+def print_metadata_statement(sms, txt=''):
     _jwt = factory(sms)
     _sos = json.loads(_jwt.jwt.part[1].decode('utf8'))
-
-    print(70 * "=")
-    print(txt)
-    print(70 * "=")
-    print_lines(
-        json.dumps(_sos, sort_keys=True, indent=2, separators=(',', ': ')))
+    text = format_lines(json.dumps(_sos, sort_keys=True, indent=2,
+                                   separators=(',', ': ')))
+    print_figure(text, txt)
 
 
 def print_request(txt, req):
-    print(70 * "-")
-    print(txt)
-    print(70 * "-")
-    print_lines(json.dumps(req.to_dict(), sort_keys=True, indent=2,
-                           separators=(',', ': ')))
+    text = format_lines(json.dumps(req.to_dict(), sort_keys=True, indent=2,
+                                   separators=(',', ': ')))
+    print_figure(text, txt)
 
 
-def paragraph(*lines):
-    print("\n".join(lines))
-    print("")
+def close_section():
+    print('</section>')
+
+
+def sub_section(title, anchor=''):
+    if anchor:
+        print('<section anchor="{}" title="{}">'.format(anchor, title))
+    elif title:
+        print('<section title="{}">'.format(title))
+
+
+def section(title, anchor=''):
+    close_section()
+    if anchor:
+        print('<section anchor="{}" title="{}">'.format(anchor, title))
+    elif title:
+        print('<section title="{}">'.format(title))
 
 
 key_conf = [
     {"type": "RSA", "use": ["sig"]},
 ]
 
-paragraph(
-    "The story is that UNINETT has applied and been accepted as a member",
-    "of two federations: Feide and SWAMID.",
-    "Now UNINETT is running a service (Foodle) that needs signed metadata",
-    "statements to prove that it belongs to the federation",
-    "that the OP belongs to when a user of the Foodle service wants to log",
-    "in using an OP that belongs to either or both of the federations.")
+sub_section(anchor="app-additional", title="Example")  # A
 
-paragraph("X.1.0 At the beginning of times this happens:")
+paragraph(
+    "The story is that the organisation UNINETT has applied and been accepted",
+    "as a member of two federations: Feide and SWAMID."
+)
+
+paragraph(
+    "Now UNINETT is running a service",
+    "(Foodle) that needs signed metadata statements to prove that it belongs",
+    "to the federation that the OP belongs to when a user of the Foodle",
+    "service wants to log in using an OP that belongs to either or both of",
+    "the federations."
+)
+
+sub_section(title="At the beginning of time") # A.1
 
 # -----------------------------------------------------------------------------
 # FO get's its key pair
 # -----------------------------------------------------------------------------
 
+# A.1.1
+sub_section("SWAMID gets a  key pair for signing Metadata Statements")
 swamid = Operator(iss='https://swamid.sunet.se/',
-                  keyjar=build_keyjar(key_conf)[1])
+                  keyjar=build_keyjar(key_conf)[1], lifetime=30 * 86400)
+print_private_key(swamid.keyjar)
 
-print_private_key(swamid.keyjar,
-                  "SWAMID gets a  key pair for signing Metadata Statements")
-
+# A.1.2
+section("Feide gets a key pair for signing Metadata Statements")
 feide = Operator(iss='https://www.feide.no',
-                 keyjar=build_keyjar(key_conf)[1])
-
-print_private_key(feide.keyjar,
-                  "Feide gets a key pair for signing Metadata Statements")
+                 keyjar=build_keyjar(key_conf)[1], lifetime=30 * 86400)
+print_private_key(feide.keyjar)
 
 # -----------------------------------------------------------------------------
 # Create initial Organisation key pair (OA)
 # -----------------------------------------------------------------------------
 
-paragraph("", "X.2.0", "@ UNINETT")
+# A.1.3
+section("UNINETT gets a key pair for signing Metadata Statements")
 uninett = Operator(iss='https://www.uninett.no',
-                   keyjar=build_keyjar(key_conf)[1])
-
-print_private_key(feide.keyjar,
-                  "UNINETT gets a key pair for signing Metadata Statements")
+                   keyjar=build_keyjar(key_conf)[1], lifetime=86400)
+print_private_key(feide.keyjar)
 
 # -----------------------------------------------------------------------------
 # -- construct JSON document to be signed by Feide
 # -----------------------------------------------------------------------------
-paragraph("", "Now is the time to construct the signed metadata statements",
+close_section()
+close_section()
+
+# A.2
+sub_section('A while ago')
+paragraph("Now is the time to construct the signed metadata statements",
           "and get them signed by the federations.",
           "We'll start with Feide and UNINETT")
-paragraph("X.2.1", "UNINETT constructs a signing request containing only the",
-          "public parts of the UNINETT signing keys")
+
+# A.2.1
+sub_section(
+    title="UNINETT constructs a signing request containing only the public "
+          "parts of the UNINETT signing keys")
 
 uninett_feide_msreq = MetadataStatement(
+    federation_usage="registration",
     signing_keys=uninett.signing_keys_as_jwks()
 )
-
 print_request('UNINETT Metadata Statement request', uninett_feide_msreq)
 
 # -----------------------------------------------------------------------------
@@ -129,25 +166,24 @@ uninett_feide_msreq.update({
 
 uninett_feide_ms = feide.pack_metadata_statement(uninett_feide_msreq)
 
-print_metadata_statement('X.2.2 Signed Metadata statement created by Feide',
-                         uninett_feide_ms)
+# A.2.1.1
+sub_section(title="Signed Metadata statement created by Feide")
+print_metadata_statement(uninett_feide_ms)
+close_section()
 
 # -----------------------------------------------------------------------------
-# -- JSON document to be signed by InCommon, same as for SWAMID
 # -----------------------------------------------------------------------------
 
-paragraph("", "The same process is repeated for UNINETT/SWAMID")
+# A.2.2
+sub_section("The same process is repeated for UNINETT/SWAMID")
+
+paragraph("SUNET gets the same signing request as Feide got but adds ",
+          "a different set of policy claims")
 
 uninett_sunet_msreq = MetadataStatement(
+    federation_usage="registration",
     signing_keys=uninett.signing_keys_as_jwks()
 )
-
-# -----------------------------------------------------------------------------
-# The InCommon FO constructs Software statement
-# -----------------------------------------------------------------------------
-
-paragraph("X.3.1", "SUNET gets the same signing request as Feide got but adds",
-          "a different set of policy claims")
 
 uninett_sunet_msreq.update({
     "response_types": ["code", "token"],
@@ -157,18 +193,27 @@ uninett_sunet_msreq.update({
 
 uninett_swamid_ms = swamid.pack_metadata_statement(uninett_sunet_msreq)
 
-print_metadata_statement("X.3.2 The by SWAMID signed metadata statement",
-                         uninett_swamid_ms)
+# A.2.2.1
+sub_section(title="The by SWAMID signed metadata statement")
+print_metadata_statement(uninett_swamid_ms)
+close_section()
+close_section()
 
+# A.2.3
+section('@UNINETT')
 paragraph("",
-          "Now UNINETT sits with two signed metadata statements one for each of",
-          "the federations it belongs to")
+          "Now UNINETT sits with two signed metadata statements one for each "
+          "of the federations it belongs to")
 
-paragraph("X.4.0","Time to create the Foodle (RP) metadata statement",
-          "We take a road similar to the request/request_uri path. That is we",
-          "include all the information about the client that needs to be",
-          "protect from tampering by a MITM and places it in the ",
-          "metadata statement signing request.")
+close_section()
+# A.3
+section('Recent')
+paragraph("Time to create the Foodle (RP) metadata statement")
+paragraph(
+    "We take a road similar to the request/request_uri path. That is we",
+    "include all the information about the client that needs to be",
+    "protect from tampering by a MITM and places it in the ",
+    "metadata statement signing request.")
 
 # -----------------------------------------------------------------------------
 # The RP as federation entity
@@ -182,7 +227,7 @@ paragraph("But first Foodle needs it's own signing keys. Not for signing",
           "depend on the correctness of the keys found at the jwks_uri.")
 
 foodle_rp = Operator(iss='https://foodle.uninett.no',
-                     keyjar=build_keyjar(key_conf)[1])
+                     keyjar=build_keyjar(key_conf)[1], lifetime=14400)
 
 print_private_key(foodle_rp.keyjar,
                   "Foodle gets a key pair for signing the JWKS documents")
@@ -191,13 +236,10 @@ print_private_key(foodle_rp.keyjar,
 # -- construct Registration Request to be signed by organisation
 # -----------------------------------------------------------------------------
 
-paragraph("", "X.4.1", "And now for the registration request")
+# A.4
+section(title="And now for the registration request")
 
-rreq = RegistrationRequest(
-
-
-)
-
+rreq = RegistrationRequest()
 print_request('Client Registration request', rreq)
 
 # -----------------------------------------------------------------------------
@@ -218,15 +260,19 @@ jwt_args = {"sub": foodle_rp.iss}
 
 foodle_uninett = uninett.pack_metadata_statement(rreq, jwt_args=jwt_args)
 
-print_metadata_statement(
-    'X.4.2 Metadata statement about Foodle signed by UNINETT', foodle_uninett)
+# A.4.1
+sub_section('Metadata statement about Foodle signed by UNINETT')
 
+print_metadata_statement(foodle_uninett)
+
+close_section()
 # ----------------------------------------------------------------------------
 # The RP publishes Registration Request
 # ----------------------------------------------------------------------------
 
-paragraph("",'X.5.0',
-          'Now, when Foodle wants to register as a client with an OP it adds',
+# A.5
+section('Foodle client registration')
+paragraph('Now, when Foodle wants to register as a client with an OP it adds',
           "the signed Metadata statement it received from UNINETT to",
           "the client registration request.",
           "Note that 'redirect_uri' MUST be in the registration request as",
@@ -246,10 +292,10 @@ print_request('Registration Request published by RP', rere)
 # #   On the OP
 # ### ======================================================================
 
-paragraph(
-    "", "X.6.0",
-    "The OP that has the public part of the signing keys for both",
-    "SWAMID and Feide can now verify the signature chains all the",
+# A.6
+section('Unpacking the client registration request')
+paragraph("An OP that has the public part of the signing keys for both the",
+    "SWAMID and Feide federations can now verify the signature chains all the",
     "way from the Metadata statement signed by UNINETT up to the FOs.",
     "If that works it can then flatten the compounded metadata statements.")
 
@@ -257,21 +303,27 @@ _jb = JWKSBundle('https://foodle.uninett.no')
 _jb[swamid.iss] = swamid.signing_keys_as_jwks()
 _jb[feide.iss] = feide.signing_keys_as_jwks()
 
-op = Operator(iss='https://foodle.uninett.no', jwks_bundle=_jb)
-
-print('Unpack the client registration request')
+uninett_op = Operator(iss='https://op.uninett.no', jwks_bundle=_jb)
 
 # -----------------------------------------------------------------------------
 # Unpacking the russian doll (= the metadata_statements)
 # -----------------------------------------------------------------------------
 
-_cms = op.unpack_metadata_statement(json_ms=rere)
-res = op.evaluate_metadata_statement(_cms)
+_cms = uninett_op.unpack_metadata_statement(json_ms=rere)
+res = uninett_op.evaluate_metadata_statement(_cms.result)
 
-print(70 * ":")
-print('Unpacked and flattened metadata statement per FO')
-print(70 * ":")
-for fo, ms in res.items():
-    print("*** {} ***".format(fo))
-    print_lines(json.dumps(ms, sort_keys=True, indent=2,
-                           separators=(',', ': ')))
+# A.7
+section('Unpacked and flattened metadata statement per FO')
+i = 0
+for fms in res:
+    if i == 0:
+        sub_section("*** {} ***".format(fms.iss))
+    else:
+        section("*** {} ***".format(fms.iss))
+    print_figure(format_lines(json.dumps(fms.le, sort_keys=True, indent=2,
+                                         separators=(',', ': '))))
+    i += 1
+
+close_section()
+close_section()
+close_section()
