@@ -62,7 +62,7 @@ class LessOrEqual(object):
         else:
             return {}
 
-    def eval(self, orig):
+    def eval(self, orig, signer):
         _le = {}
         _err = []
         for k, v in self.sup_items():
@@ -72,7 +72,8 @@ class LessOrEqual(object):
                 if is_lesser(orig[k], v):
                     _le[k] = v
                 else:
-                    _err.append((k, orig[k], v))
+                    _err.append({'claim': k, 'policy': orig[k], 'err': v,
+                                 'signer': signer})
             else:
                 _le[k] = v
 
@@ -92,7 +93,7 @@ class LessOrEqual(object):
     def unprotected_claims(self):
         if self.sup:
             res = {}
-            for k,v in self.le.items():
+            for k, v in self.le.items():
                 if k not in self.sup.le:
                     res[k] = v
             return res
@@ -141,13 +142,16 @@ class Operator(object):
             pr.error[meta_s] = err
         else:
             pr.branch[meta_s] = _pi
-            pr.parsed_statement.append(_pi.result)
+            if _pi.result:
+                pr.parsed_statement.append(_pi.result)
         return pr
 
     def _unpack(self, json_ms, keyjar, cls, jwt_ms=None):
         _pr = ParseInfo()
         _pr.input = json_ms
+        ms_flag = False
         if 'metadata_statements' in json_ms:
+            ms_flag = True
             for meta_s in json_ms['metadata_statements']:
                 _pr = self._ums(_pr, meta_s, keyjar)
 
@@ -159,6 +163,7 @@ class Operator(object):
                         pass
 
         if 'metadata_statement_uris' in json_ms:
+            ms_flag = True
             if self.httpcli:
                 for iss, url in json_ms['metadata_statement_uris'].items():
                     if iss not in keyjar:  # FO I don't know about
@@ -171,16 +176,19 @@ class Operator(object):
                     if _ms:  # can be None
                         keyjar.import_jwks(_ms['signing_keys'], '')
 
+        if ms_flag is True and not _pr.parsed_statement:
+            return _pr
+
         if jwt_ms:
             try:
                 _pr.result = cls().from_jwt(jwt_ms, keyjar=keyjar)
-            except MissingSigningKey as err:
+            except (JWSException, BadSignature, MissingSigningKey) as err:
                 logger.error('Encountered: {}'.format(err))
                 _pr.error[jwt_ms] = err
         else:
             _pr.result = json_ms
 
-        if _pr.parsed_statement:
+        if _pr.result and _pr.parsed_statement:
             _pr.result['metadata_statements'] = [
                 x.to_json() for x in _pr.parsed_statement if x]
         return _pr

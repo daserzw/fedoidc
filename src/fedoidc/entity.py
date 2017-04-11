@@ -89,7 +89,7 @@ class FederationEntity(Operator):
         """
         _pi = self.unpack_metadata_statement(json_ms=json_ms, cls=cls)
         if not _pi.result:
-            return {}
+            return []
 
         if context:
             _cms = self.correct_usage(_pi.result, context)
