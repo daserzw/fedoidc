@@ -12,6 +12,8 @@ from jwkest import as_unicode
 
 from oic.oauth2 import ErrorResponse
 from oic.oauth2 import Message
+from oic.oic import RegistrationResponse
+from oic.utils.client_management import unpack_redirect_uri
 from oic.utils.http_util import Response
 
 logger = logging.getLogger(__name__)
@@ -166,13 +168,23 @@ class Provider(Root):
 
     @cherrypy.expose
     @cherrypy_cors.tools.expose_public()
-    @cherrypy.tools.allow(methods=["POST", "OPTIONS"])
+    @cherrypy.tools.allow(methods=["POST", "OPTIONS", "GET"])
     def registration(self, **kwargs):
         logger.debug('Request headers: {}'.format(cherrypy.request.headers))
         if cherrypy.request.method == "OPTIONS":
             cherrypy_cors.preflight(
-                allowed_methods=["POST"], origins='*',
+                allowed_methods=["POST", "GET"], origins='*',
                 allowed_headers=['Authorization', 'content-type'])
+        elif cherrypy.request.method == "GET":
+            _cinfo = self.op.cdb[kwargs['client_id']]
+            for attr in ['redirect_uris', 'post_logout_redirect_uris']:
+                try:
+                    _cinfo[attr] = unpack_redirect_uri(_cinfo[attr])
+                except KeyError:
+                    pass
+            rr = RegistrationResponse(**_cinfo)
+            cherrypy.response.headers['Content-Type'] = 'application/json'
+            return as_bytes(json.dumps(rr.to_dict()))
         else:
             logger.debug('ClientRegistration kwargs: {}'.format(kwargs))
             _request = None

@@ -22,6 +22,10 @@ __author__ = 'roland'
 logger = logging.getLogger(__name__)
 
 
+class ParseError(Exception):
+    pass
+
+
 class ParseInfo(object):
     def __init__(self):
         self.input = None
@@ -278,12 +282,12 @@ class Operator(object):
             for ms in metadata['metadata_statements']:
                 for _le in self.evaluate_metadata_statement(json.loads(ms)):
                     le = LessOrEqual(sup=_le)
-                    le.eval(res)
+                    le.eval(res, metadata['iss'])
                     les.append(le)
             return les
         else:  # this is the innermost
             le = LessOrEqual(iss=metadata['iss'])
-            le.eval(res)
+            le.eval(res, metadata['iss'])
             return [le]
 
     def correct_usage(self, metadata, federation_usage):
