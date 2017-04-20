@@ -70,7 +70,7 @@ setup(
          "requests",
          'future',
          "six",
-         'oic >= 0.9.5.0',
+         'oic >= 0.10.0',
          "Cherrypy",
          'cherrypy-cors >= 1.5'],
     zip_safe=False,
