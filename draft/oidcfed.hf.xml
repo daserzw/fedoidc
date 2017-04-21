@@ -437,7 +437,7 @@
                             If the claim appears in ms_i then replace the value
                             of the claim in ms_i with the value of the claim in
                             ms_j if and only if the value in ms_j is a subset
-                            of the value in ms_i.
+                            of the value in ms_i else an error MUST be generated.
                         </spanx>
                         <vspace blankLines="1"/>
                         A subset is defined as:
