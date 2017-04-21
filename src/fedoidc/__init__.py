@@ -20,7 +20,7 @@ from oic.oic.message import RegistrationRequest
 logger = logging.getLogger(__name__)
 
 __author__ = 'roland'
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 
 class MetadataStatement(JasonWebToken):
