@@ -8,7 +8,7 @@ from oic.utils.keyio import build_keyjar, KeyJar
 
 from fedoidc.operator import Operator
 from fedoidc.test_utils import make_fs_jwks_bundle, MetaDataStore, make_ms, \
-    make_signed_metadata_statement_uri
+    make_signed_metadata_statement_uri, unpack_using_metadata_store
 from fedoidc.test_utils import make_jwks_bundle
 from fedoidc.test_utils import make_signed_metadata_statement
 
@@ -153,22 +153,7 @@ def test_make_signed_metadata_statement_uris():
 
     # Now parse the result
 
-    _url0 = ms[FO['edugain']]
-
-    p = urlparse(_url0)
-    _jws0 = mds[p.path.split('/')[-1]]
-    _md0 = unfurl(_jws0)
-
-    _mds = []
-    for _fo, _url in _md0['metadata_statement_uris'].items():
-        p = urlparse(_url)
-        _jws = mds[p.path.split('/')[-1]]
-        _mds.append(json.dumps(unfurl(_jws)))
-
-    _md0['metadata_statements'] = _mds
-    del _md0['metadata_statement_uris']
-
-    assert True
+    _md0 = unpack_using_metadata_store(ms[FO['edugain']], mds)
 
     op = Operator()
     _res = op.evaluate_metadata_statement(_md0)
