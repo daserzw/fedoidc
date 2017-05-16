@@ -1,8 +1,11 @@
 import copy
+import hashlib
 import os
 
 from urllib.parse import quote_plus
 from urllib.parse import unquote_plus
+
+from jwkest import as_bytes
 
 from fedoidc.entity import FederationEntity
 
@@ -75,16 +78,20 @@ def make_jwks_bundle(iss, fo_liss, sign_keyjar, keydefs, base_path=''):
     return jb
 
 
-def make_ms(desc, ms, leaf, operator):
+def make_ms(desc, leaf, operator, ms=None, ms_uris=None):
     """
     Construct a signed metadata statement
 
     :param desc: A description of who wants who to signed what.
         represented as a dictionary containing: 'request', 'requester',
         'signer' and 'signer_add'.
-    :param ms: Metadata statements to be added, dict
     :param leaf: if the requester is the entity operator/agent
     :param operator: A dictionary containing Operator instance as values.
+    :param ms: Metadata statements to be added, dict. The values are
+        signed MetadataStatements.
+    :param ms_uris: Metadata Statement URIs to be added. 
+        Note that ms and ms_uris can not be present at the same time.
+        It can be one of them or none.
     :return: A dictionary with the FO ID as key and the signed metadata 
         statement as value.
     """
@@ -98,6 +105,12 @@ def make_ms(desc, ms, leaf, operator):
         req['metadata_statements'] = list(ms.values())
         if len(ms):
             _fo = list(ms.keys())[0]
+        else:
+            _fo = ''
+    elif ms_uris:
+        req['metadata_statement_uris'] = dict(ms_uris.items())
+        if len(ms_uris):
+            _fo = list(ms_uris.keys())[0]
         else:
             _fo = ''
     else:
@@ -116,6 +129,14 @@ def make_ms(desc, ms, leaf, operator):
 
 
 def make_signed_metadata_statement(ms_chain, operator):
+    """
+    Based on a set of metadata statement descriptions build a compounded
+    metadata statement. This is not using metadata_statement_uris.
+    
+    :param ms_chain: 
+    :param operator: 
+    :return: 
+    """
     _ms = None
     depth = len(ms_chain)
     i = 1
@@ -124,30 +145,75 @@ def make_signed_metadata_statement(ms_chain, operator):
         if i == depth:
             leaf = True
         if isinstance(desc, dict):
-            _ms = make_ms(desc, _ms, leaf, operator)
+            _ms = make_ms(desc, leaf, operator, _ms)
         else:
             _ms = {}
             for d in desc:
-                _m = make_ms(d, _ms, leaf, operator)
+                _m = make_ms(d, leaf, operator, _ms)
                 _ms.update(_m)
         i += 1
 
     return _ms
 
 
-def make_signed_metadata_statements(smsdef, operator):
+def make_signed_metadata_statement_uri(ms_chain, operator, mds=None,
+                                       base_uri=''):
+    """
+    Based on a set of metadata statement descriptions build a compounded
+    metadata statement. This is using metadata_statement_uris.
+
+    :param ms_chain: 
+    :param operator: 
+    :param mds:
+    :param base_uri;
+    :return: 
+    """
+    _ms = {}
+    depth = len(ms_chain)
+    i = 1
+    leaf = False
+    for desc in ms_chain:
+        if i == depth:
+            leaf = True
+        if isinstance(desc, dict):
+            _x = make_ms(desc, leaf, operator, ms_uris=_ms)
+            _ms = {}
+            for k,v in _x.items():
+                _ms[k] = '{}/{}'.format(base_uri, mds.add(v))
+        else:
+            _ms = {}
+            for d in desc:
+                _x = make_ms(d, leaf, operator, ms_uris=_ms)
+                _m = {}
+                for k, v in _x.items():
+                    _m[k] = '{}/{}'.format(base_uri, mds.add(v))
+                _ms.update(_m)
+        i += 1
+
+    return _ms
+
+
+def make_signed_metadata_statements(smsdef, operator, mds_dir='', base_uri=''):
     """
     Create a compounded metadata statement.
 
     :param smsdef: A list of descriptions of how to sign metadata statements
     :param operator: A dictionary with operator ID as keys and Operator
         instances as values
+    :param mds_dir:
+    :param base_uri:
     :return: A compounded metadata statement
     """
     res = []
 
-    for ms_chain in smsdef:
-        res.append(make_signed_metadata_statement(ms_chain, operator))
+    if mds_dir:
+        mds = MetaDataStore(mds_dir)
+        for ms_chain in smsdef:
+            res.append(make_signed_metadata_statement_uri(ms_chain, operator,
+                                                          mds, base_uri))
+    else:
+        for ms_chain in smsdef:
+            res.append(make_signed_metadata_statement(ms_chain, operator))
 
     return res
 
@@ -213,3 +279,16 @@ def create_federation_entity(iss, conf, fos, sup, entity=''):
     _keys = build_keyjar(conf.SIG_DEF_KEYS)[1]
     return FederationEntity(entity, iss=iss, keyjar=_keys, signer=signer,
                             fo_bundle=jb)
+
+
+class MetaDataStore(FileSystem):
+    @staticmethod
+    def hash(value):
+        _hash = hashlib.sha256()
+        _hash.update(as_bytes(value))
+        return _hash.hexdigest()
+
+    def add(self, value):
+        _key = self.hash(value)
+        self[_key] = value
+        return _key

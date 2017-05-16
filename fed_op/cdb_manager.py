@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import time
+from urllib.parse import splitquery
 
 from jwkest import as_bytes
 from oic import rndstr
@@ -61,22 +62,30 @@ if __name__ == '__main__':
         print_client(cdb, args.print)
 
     if args.new:
-        client_id = rndstr(12)
-        while client_id in cdb:
-            client_id = rndstr(12)
-
-        seed = as_bytes(rndstr())
-        client_secret = secret(seed, as_bytes(client_id))
-
         _info = json.loads(args.new)
         # MUST contain redirect_uris
         assert 'redirect_uris' in _info
 
-        _info.update({
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "client_id_issued_at": utc_time_sans_frac(),
-        })
+        _info['redirect_uris'] = [splitquery(uri) for uri in
+                                  _info['redirect_uris']]
+
+        new = {"client_id_issued_at": utc_time_sans_frac(),
+               "client_salt": rndstr(8)}
+        try:
+            client_id = _info['client_id']
+        except KeyError:
+            client_id = rndstr(12)
+            while client_id in cdb:
+                client_id = rndstr(12)
+            new['client_id'] = client_id
+
+        try:
+            client_secret = _info['client_secret']
+        except KeyError:
+            seed = as_bytes(rndstr())
+            client_secret = secret(seed, as_bytes(client_id))
+            new['client_secret'] = client_secret
+
+        _info.update(new)
 
         cdb[client_id] = _info
-

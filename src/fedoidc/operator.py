@@ -116,7 +116,8 @@ class Operator(object):
 
         :param keyjar: Contains the operators signing keys
         :param jwks_bundle: Contains the federation operators signing keys
-            for all the federations this instance wants to talk to
+            for all the federations this instance wants to talk to.
+            If present it MUST be a JWKSBundle instance.
         :param httpcli: A http client to use when information has to be
             fetched from somewhere else
         :param iss: Issuer ID
@@ -229,7 +230,7 @@ class Operator(object):
 
         :param metadata: Original metadata statement as a MetadataStatement
             instance
-        :param keyjar: KeyJar in which the necessary keys should reside
+        :param keyjar: KeyJar in which the necessary signing keys should reside
         :param iss: Issuer ID
         :param alg: Which signing algorithm to use
         :param jwt_args: Additional JWT attribute values
@@ -282,7 +283,11 @@ class Operator(object):
             for ms in metadata['metadata_statements']:
                 for _le in self.evaluate_metadata_statement(json.loads(ms)):
                     le = LessOrEqual(sup=_le)
-                    le.eval(res, metadata['iss'])
+                    try:
+                        _sign = metadata['iss']
+                    except KeyError:
+                        _sign = ''
+                    le.eval(res, _sign)
                     les.append(le)
             return les
         else:  # this is the innermost
@@ -322,7 +327,8 @@ class Operator(object):
 
 class FederationOperator(Operator):
     def __init__(self, keyjar=None, jwks_bundle=None, httpcli=None,
-                 iss=None, keyconf=None, bundle_sign_alg='RS256'):
+                 iss=None, keyconf=None, bundle_sign_alg='RS256',
+                 remove_after=86400):
 
         Operator.__init__(self, keyjar=keyjar, jwks_bundle=jwks_bundle,
                           httpcli=httpcli, iss=iss)
@@ -330,22 +336,28 @@ class FederationOperator(Operator):
         self.keyconf = keyconf
         self.jb = jwks_bundle
         self.bundle_sign_alg = bundle_sign_alg
+        self.remove_after = remove_after  # After this time inactive keys are
+                                          # removed from the keyjar
 
     def public_keys(self):
         return self.keyjar.export_jwks()
 
     def rotate_keys(self, keyconf=None):
-        _old = [k.kid for k in self.keyjar.get_issuers_keys('') if k.kid]
+        _old = [k.kid for k in self.keyjar.get_issuer_keys('') if k.kid]
 
         if keyconf:
             self.keyjar = build_keyjar(keyconf, keyjar=self.keyjar)[1]
         else:
             self.keyjar = build_keyjar(self.keyconf, keyjar=self.keyjar)[1]
 
-        for k in self.keyjar.get_issuers_keys(''):
+        self.keyjar.remove_after = self.remove_after
+        self.keyjar.remove_outdated()
+
+        _now = time.time()
+        for k in self.keyjar.get_issuer_keys(''):
             if k.kid in _old:
                 if not k.inactive_since:
-                    k.inactive_since = time.time()
+                    k.inactive_since = _now
 
     def export_jwks(self):
         return self.keyjar.export_jwks()

@@ -52,8 +52,8 @@ class FileSystem(object):
             fp.write(value)
         fp.close()
 
-        self.db[key] = value
-        self.fmtime[key] = self.get_mtime(fname)
+        self.db[_key] = value
+        self.fmtime[_key] = self.get_mtime(fname)
 
     def keys(self):
         self.sync()
@@ -116,6 +116,8 @@ class FileSystem(object):
             raise ValueError('No such directory: {}'.format(self.fdir))
         for f in os.listdir(self.fdir):
             fname = os.path.join(self.fdir, f)
+            if not os.path.isfile(fname):
+                continue
             if f in self.fmtime:
                 if self.is_changed(f):
                     self.db[f] = self._read_info(fname)
@@ -131,3 +133,16 @@ class FileSystem(object):
                 yield self.key_conv['from'](k), v
             except KeyError:
                 yield k, v
+
+    def reset(self):
+        if not os.path.isdir(self.fdir):
+            os.makedirs(self.fdir, exist_ok=True)
+            return
+
+        for f in os.listdir(self.fdir):
+            fname = os.path.join(self.fdir, f)
+            os.unlink(fname)
+            try:
+                del self.db[f]
+            except KeyError:
+                pass

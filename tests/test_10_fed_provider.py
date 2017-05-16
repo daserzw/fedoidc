@@ -63,10 +63,11 @@ if os.path.isdir(MS_ROOT):
 os.makedirs(MS_ROOT)
 
 for spec in SMS:
-    fname = os.path.join(MS_ROOT, spec['fo'])
-    fp = open(fname, 'w')
-    fp.write(spec['ms'])
-    fp.close()
+    for key, val in spec.items():
+        fname = os.path.join(MS_ROOT, key)
+        fp = open(fname, 'w')
+        fp.write(val)
+        fp.close()
 
 
 class DummyAuthn(UserAuthnMethod):
