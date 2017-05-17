@@ -179,7 +179,7 @@ def make_signed_metadata_statement_uri(ms_chain, operator, mds=None,
         if isinstance(desc, dict):
             _x = make_ms(desc, leaf, operator, ms_uris=_ms)
             _ms = {}
-            for k,v in _x.items():
+            for k, v in _x.items():
                 _ms[k] = '{}/{}'.format(base_uri, mds.add(v))
         else:
             _ms = {}
@@ -219,17 +219,7 @@ def make_signed_metadata_statements(smsdef, operator, mds_dir='', base_uri=''):
     return res
 
 
-def setup(keydefs, tool_iss, liss, csms_def, oa, ms_path):
-    """
-
-    :param keydefs: Definition of which signing keys to create/load
-    :param tool_iss: An identifier for the JWKSBundle instance
-    :param liss: List of federation entity IDs
-    :param csms_def: Definition of which signed metadata statements to build
-    :param oa: Dictionary with Organization agents
-    :param ms_path: Where to store the signed metadata statements
-    :return: A tuple of (Signer dictionary and FSJWKSBundle instance)
-    """
+def init(keydefs, tool_iss, liss):
     sig_keys = build_keyjar(keydefs)[1]
     key_bundle = make_fs_jwks_bundle(tool_iss, liss, sig_keys, keydefs, './')
 
@@ -246,7 +236,18 @@ def setup(keydefs, tool_iss, liss, csms_def, oa, ms_path):
     for entity, _keyjar in key_bundle.items():
         operator[entity] = Operator(iss=entity, keyjar=_keyjar)
 
-    signers = {}
+    return {'jb': jb, 'operator': operator, 'key_bundle': key_bundle}
+
+
+def setup_ms(csms_def, ms_path, operators):
+    """
+
+    :param csms_def: Definition of which signed metadata statements to build
+    :param ms_path: Where to store the signed metadata statements and uris
+    :param operators: Dictionary with federation Operators
+    :return: Dictionary with Signers 
+    """
+
     for iss, sms_def in csms_def.items():
         ms_dir = os.path.join(ms_path, quote_plus(iss))
         for context, spec in sms_def.items():
@@ -254,12 +255,81 @@ def setup(keydefs, tool_iss, liss, csms_def, oa, ms_path):
             metadata_statements = FileSystem(
                 _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
             for fo, _desc in spec.items():
-                res = make_signed_metadata_statement(_desc, operator)
+                res = make_signed_metadata_statement(_desc, operators)
                 metadata_statements[fo] = res[fo]
-        signers[iss] = Signer(
-            InternalSigningService(iss, operator[iss].keyjar), ms_dir)
 
-    return signers, key_bundle
+    signers = {}
+    for iss, sms_def in csms_def.items():
+        ms_dir = os.path.join(ms_path, quote_plus(iss))
+        signers[iss] = Signer(
+            InternalSigningService(iss, operators[iss].keyjar), ms_dir)
+
+    return signers
+
+
+def setup_msu(csmsu_def, ms_path, mds_dir, base_url, operators):
+    """
+
+    :param csmsu_def: Definition of which signed metadata statements to build
+    :param ms_path: Where to store the signed metadata statements and uris
+    :param mds_dir: Directory where the URL to singed metadata statements are
+        kept
+    :param base_url: Common base URL to all metadata_statement_uris
+    :param operators: Dictionary with federation Operators
+    :return: A tuple of (Signer dictionary and FSJWKSBundle instance)
+    """
+
+    mds = MetaDataStore(mds_dir)
+
+    for iss, sms_def in csmsu_def.items():
+        ms_dir = os.path.join(ms_path, quote_plus(iss))
+        for context, spec in sms_def.items():
+            _dir = os.path.join(ms_dir, context)
+            metadata_statements = FileSystem(
+                _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
+            for fo, _desc in spec.items():
+                res = make_signed_metadata_statement_uri(
+                    _desc, operators, mds, base_url)
+                metadata_statements[fo] = res[fo]
+
+    signers = {}
+    for iss, sms_def in csmsu_def.items():
+        ms_dir = os.path.join(ms_path, quote_plus(iss))
+        signers[iss] = Signer(
+            InternalSigningService(iss, operators[iss].keyjar), ms_dir)
+
+    return signers
+
+
+def setup(keydefs, tool_iss, liss, ms_path, csms_def=None, csmsu_def=None,
+          mds_dir='', base_url=''):
+    """
+
+    :param keydefs: Definition of which signing keys to create/load
+    :param tool_iss: An identifier for the JWKSBundle instance
+    :param liss: List of federation entity IDs
+    :param csms_def: Definition of which signed metadata statements to build
+    :param csmsu_def: Definition of which signed metadata statements to build,
+        these are referenced using URLs 
+    :param ms_path: Where to store the signed metadata statements and uris
+    :param mds_dir: Where to store the uri -> metadata statement mapping
+    :param base_url: Common base URL to all metadata_statement_uris
+    :return: A tuple of (Signer dictionary and FSJWKSBundle instance)
+    """
+
+    _init = init(keydefs, tool_iss, liss)
+
+    if csms_def:
+        signers = setup_ms(csms_def, ms_path, _init['operator'])
+    else:
+        signers = {}
+
+    if csmsu_def and mds_dir and base_url:
+        _signers = setup_msu(csmsu_def, ms_path, mds_dir,
+                             base_url, _init['operator'])
+        signers.update(_signers)
+
+    return signers, _init['key_bundle']
 
 
 def create_federation_entity(iss, conf, fos, sup, entity=''):

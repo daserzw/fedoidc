@@ -156,16 +156,24 @@ class Signer(object):
                     fos = list(cms.keys())
 
                 _msl = []
+                _msu = {}
                 for f in fos:
                     try:
-                        _msl.append(cms[f])
+                        val = cms[f]
                     except KeyError:
-                        pass
+                        continue
 
-                if fos and not _msl:
+                    if val.startswith('http'):
+                        _msu[f] = val
+                    else:
+                        _msl.append(val)
+
+                if fos and not _msl and not _msu:
                     raise KeyError('No metadata statements matched')
 
                 if _msl:
                     req['metadata_statements'] = _msl
+                if _msu:
+                    req['metadata_statement_uris'] = _msu
 
         return self.signing_service(req)

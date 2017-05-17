@@ -92,8 +92,8 @@ liss = list(FO.values())
 liss.extend(list(OA.values()))
 liss.extend(list(EO.values()))
 
-signer, keybundle = test_utils.setup(KEYDEFS, TOOL_ISS, liss, SMS_DEF, OA,
-                                     'ms_dir')
+signer, keybundle = test_utils.setup(KEYDEFS, TOOL_ISS, liss, csms_def=SMS_DEF,
+                                     ms_path='ms_dir')
 
 fo_keybundle = JWKSBundle('https://example.com')
 for iss in FO.values():

@@ -1,14 +1,16 @@
-import json
 import os
 import shutil
-from urllib.parse import urlparse
 
-from fedoidc import unfurl
-from oic.utils.keyio import build_keyjar, KeyJar
+from oic.utils.keyio import build_keyjar
+from oic.utils.keyio import KeyJar
 
+from fedoidc import test_utils
 from fedoidc.operator import Operator
-from fedoidc.test_utils import make_fs_jwks_bundle, MetaDataStore, make_ms, \
-    make_signed_metadata_statement_uri, unpack_using_metadata_store
+from fedoidc.test_utils import make_fs_jwks_bundle
+from fedoidc.test_utils import MetaDataStore
+from fedoidc.test_utils import make_ms
+from fedoidc.test_utils import make_signed_metadata_statement_uri
+from fedoidc.test_utils import unpack_using_metadata_store
 from fedoidc.test_utils import make_jwks_bundle
 from fedoidc.test_utils import make_signed_metadata_statement
 
@@ -122,9 +124,9 @@ def test_metadatastore():
 
     _x = make_ms(desc, False, operator)
     _jws = list(_x.values())[0]
-    mds[_jws] = _jws
+    mds[mds.hash(_jws)] = _jws
 
-    assert mds.key_conv['to'](_jws) in list(mds.keys())
+    assert mds.hash(_jws) in list(mds.keys())
 
 
 def test_make_signed_metadata_statement_uris():
@@ -158,3 +160,17 @@ def test_make_signed_metadata_statement_uris():
     op = Operator()
     _res = op.evaluate_metadata_statement(_md0)
     assert _res[0].le == {'federation_usage': 'discovery'}
+
+
+def test_setup_msuri():
+    liss = list(FO.values())
+    liss.extend(list(OA.values()))
+    for path in ['ms_dir', 'mds']:
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+
+    # keydefs, tool_iss, liss, ms_path
+    res = test_utils.setup(KEYDEFS, 'iss', liss, 'ms_dir', csmsu_def=SMS_DEF,
+                mds_dir='mds', base_url='http://example.org')
+
+    assert res
