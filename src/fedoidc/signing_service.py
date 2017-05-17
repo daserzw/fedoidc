@@ -127,10 +127,10 @@ class Signer(object):
         """
 
         :param req: The metadata statement to be signed
-        :param fos: Signed metadata statements from these Federation Operators
-            should be added.
         :param context: The context in which this Signed metadata
             statement should be used
+        :param fos: Signed metadata statements from these Federation Operators
+            should be added.
         :return: signed Metadata Statement
         """
 

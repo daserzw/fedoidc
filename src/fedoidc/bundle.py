@@ -126,7 +126,10 @@ class JWKSBundle(object):
     def as_keyjar(self):
         kj = KeyJar()
         for iss, k in self.bundle.items():
-            kj.issuer_keys[iss] = k.issuer_keys[iss]
+            try:
+                kj.issuer_keys[iss] = k.issuer_keys[iss]
+            except KeyError:
+                kj.issuer_keys[iss] = k.issuer_keys['']
         return kj
 
 

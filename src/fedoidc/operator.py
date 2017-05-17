@@ -33,14 +33,17 @@ class ParseInfo(object):
         self.error = {}
         self.result = None
         self.branch = {}
+        self.expires = 0
 
 
 class LessOrEqual(object):
     def __init__(self, iss='', sup=None):
         if sup:
-            self.iss = sup.iss
+            self.fo = sup.fo
         else:
-            self.iss = iss
+            self.fo = iss
+
+        self.iss = iss
         self.sup = sup
         self.err = {}
         self.le = {}
@@ -160,26 +163,23 @@ class Operator(object):
             for meta_s in json_ms['metadata_statements']:
                 _pr = self._ums(_pr, meta_s, keyjar)
 
-            for _ms in _pr.parsed_statement:
-                if _ms:  # can be None
-                    try:
-                        keyjar.import_jwks(_ms['signing_keys'], '')
-                    except KeyError:
-                        pass
-
         if 'metadata_statement_uris' in json_ms:
             ms_flag = True
             if self.httpcli:
                 for iss, url in json_ms['metadata_statement_uris'].items():
-                    if iss not in keyjar:  # FO I don't know about
-                        continue
+                    rsp = self.httpcli.http_request(url)
+                    if rsp.status_code == 200:
+                        _pr = self._ums(_pr, rsp.text, keyjar)
                     else:
-                        _jwt = self.httpcli.http_request(url)
-                        _pr = self._ums(_pr, _jwt, keyjar)
+                        raise ParseError(
+                            'Could not fetch jws from {}'.format(url))
 
-                for _ms in _pr.parsed_statement:
-                    if _ms:  # can be None
-                        keyjar.import_jwks(_ms['signing_keys'], '')
+        for _ms in _pr.parsed_statement:
+            if _ms:  # can be None
+                try:
+                    keyjar.import_jwks(_ms['signing_keys'], '')
+                except KeyError:
+                    pass
 
         if ms_flag is True and not _pr.parsed_statement:
             return _pr
@@ -190,10 +190,27 @@ class Operator(object):
             except (JWSException, BadSignature, MissingSigningKey) as err:
                 logger.error('Encountered: {}'.format(err))
                 _pr.error[jwt_ms] = err
+            else:
+                try:
+                    _pr.expires = _pr.result['exp']
+                except KeyError:
+                    pass
         else:
             _pr.result = json_ms
 
         if _pr.result and _pr.parsed_statement:
+            for x in _pr.parsed_statement:
+                if x:
+                    try:
+                        _exp = x['exp']
+                    except KeyError:
+                        continue
+                    else:
+                        if _pr.expires == 0:
+                            _pr.expires = _exp
+                        elif _exp < _pr.expires:
+                            _pr.expires = _exp
+
             _pr.result['metadata_statements'] = [
                 x.to_json() for x in _pr.parsed_statement if x]
         return _pr
@@ -282,11 +299,11 @@ class Operator(object):
             les = []
             for ms in metadata['metadata_statements']:
                 for _le in self.evaluate_metadata_statement(json.loads(ms)):
-                    le = LessOrEqual(sup=_le)
                     try:
                         _sign = metadata['iss']
                     except KeyError:
                         _sign = ''
+                    le = LessOrEqual(sup=_le, iss=_sign)
                     le.eval(res, _sign)
                     les.append(le)
             return les
@@ -337,7 +354,7 @@ class FederationOperator(Operator):
         self.jb = jwks_bundle
         self.bundle_sign_alg = bundle_sign_alg
         self.remove_after = remove_after  # After this time inactive keys are
-                                          # removed from the keyjar
+        # removed from the keyjar
 
     def public_keys(self):
         return self.keyjar.export_jwks()
