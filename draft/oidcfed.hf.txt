@@ -360,7 +360,8 @@ Hedberg, et al.          Expires October 9, 2017                [Page 6]
    j=1,..,n) For every claim in ms_j: If the claim does not appear in
    ms_i add it to ms_i.  If the claim appears in ms_i then replace the
    value of the claim in ms_i with the value of the claim in ms_j if and
-   only if the value in ms_j is a subset of the value in ms_i.  *
+   only if the value in ms_j is a subset of the value in ms_i else an
+   error MUST be generated.  *
 
    A subset is defined as:
 
@@ -384,7 +385,6 @@ Hedberg, et al.          Expires October 9, 2017                [Page 6]
 
    The following is a non-normative example of a set of client-specific
    metadata statements who together form the metadata for an entity:
-
 
 
 
