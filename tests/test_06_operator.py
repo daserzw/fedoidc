@@ -127,6 +127,6 @@ def test_unpack_metadata_statement():
     assert len(res.parsed_statement) == 3
     loel = op.evaluate_metadata_statement(res.result)
     assert len(loel) == 3
-    assert set([l.iss for l in loel]) == {'https://swamid.sunet.se',
+    assert set([l.fo for l in loel]) == {'https://swamid.sunet.se',
                                           'https://www.feide.no',
-                                          'hhtps://edugain.com'}
+                                          'https://edugain.com'}

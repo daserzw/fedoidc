@@ -181,8 +181,10 @@
                         <t hangText="metadata_statements">
                             <vspace/>
                             OPTIONAL.
-                            JSON array containing a array of metadata statements.
-                            Each metadata statement is a signed JSON document.
+                            JSON object where the names are federation
+                            identifiers and the values a signed JSON documents
+                            containing compounded metadata statements rooted in
+                            that federation. There is one value per name.
                         </t>
                         <t hangText="metadata_statement_uris">
                             <vspace/>
@@ -1190,6 +1192,7 @@ def unpack(ms, sign_keys):
             </reference>
         </references>
 
+
 <section anchor="app-additional" title="Example">
 <t>
 The story is that the organisation UNINETT has applied and been accepted
@@ -1209,27 +1212,27 @@ the federations.
 {
   "keys": [
     {
-      "d": "AxSRj35tfb367NLWIr4dpsVIcJoTp5DMDa9FmIzKax4xGg5dYe41YP_-
-uV0rqLPLHVNs4XHCAgRGGvL4yGXMoRhNixPnO_a1h6uxf9TVKv-rM6OO4KH1Zk4CDt-8
-Q-ocJjm_VWBT1rS4AxH7VhCmXiLVafJeKiIBcH5PgqIPzEKP1iq7hgHCBcuDqQVAcLT-
-69Sy-VVqq4kw250tUxcgendDf6wm6CdyzslNWhgTwRQ_vHm1KQ4wqcyReeKRpwPtsAgP
-GhH7T9dDMTN-zhzbiDNp0ak2MhmDQem5oM0JzOtCqJl59NA8zuW_1E6DNhxmquuDSqr6
-qr9eUlERU9LkyQ",
+      "d": "Ifr1DlW8kDIZxEvGgDQ7ei1mv0HWtF6K65krP3lj0N05aCM-zYZ5hcXp
+3B1MVfOfzAXu7YRB-XPadw_21OVDFokxAhoCT41h9h93grrlpWKn-ZhteQ6Z_bzmqD2o
+OyXwwMTd3nUXHTycllgE0nP4Z9gbZfw4cJ5yAr180PkM1any5HSSMnOZWdrXCr-NmE7V
+9uVPnTkZaaNxZX1A3e-ZPbfnfQPKrPDOUIOupFC3dANVakbSWi8Is2fLcIztHF-wKG7t
+AFNeh9nh-xLqWL6QCs11YRKwoHTtR_aVB0T7AtEMIv2QRiL6KmEVSqsxE4tWUz1RlY7m
+WQD624Ji6lkVUQ",
       "e": "AQAB",
-      "kid": "UFP_IHND_nD-ZzScunT-QnCcomMZ2eFboHHZN8_BZsI",
+      "kid": "65MJrFqCx0FR96K3qXrMgFV1918__TW7vuI2_LR_Ggo",
       "kty": "RSA",
-      "n": "wXYJlUeCbwEFt5HWb6-hB7Y1NT2Egx22w9oK_v2pYHDnppHVI9cbKPBa
-nTrDATcIAJ-DlizCvDxhczNUmzC0SlFcNtFXbUeiYLbPrSkXof_NyH806j-MRQmIvdVY
-2Hi3lnvIV0DxKnS1AB8C1S_Sj8_OJP2yWpFf7E_6V_fDumv-oCXLqK9t-2gCjT-W9KuI
-9R3OgCZXq3yBy4x2G-L1Pw_jUqYbXjSSLnecOe8C64O6h8scPlS84WH-hLz6hWSJcipV
-VwlWmrB34y_uYpsEILpMIFeolsBxz6iXWtrJ-H1gbS2BzzPXw5GEEwImxevimZbC365E
-lzYyQG8WVIko6w",
-      "p": "zgJbo-RWrPy_SHmyB6KxRBQtyShfC5hIGP47edEwd1PpZnUHsDPFtNFv
-bprVTU10E3zDWA-0VwoFkgS68-ppnr-o5VaHOaIcrOfGvZ1_lDGly0zxd_uzT1VI_hDQ
-f9W1Vxha59nUAM2lC7gYan3CDtxdYHuJmONDDkFlShj4LwM",
-      "q": "8GgrIs07bg-T4owH3ZcNnlfkamj6cnsDP0RKvqYYCngIMsrQcjSG6o2z
-38FXUvUHerTPrO8fi_4Q6vpqZ13forQKLN99ueblO9eMBowHSOmS16da8J8MT6L6wkCt
-SQrY0ojr-qtcQKn7AvOrLB8LF70uDB0tTDbyQ9fvgybIJfk",
+      "n": "uFkG2IVbTtS7MaXFu7RRZ9or3rhrUZknEzTwTisOkb8Fi0I05mavWvKg
+J_3uyX_m5tLuAIB-wxjRpZhWxtUSG_ffuzvLqynZMsH4PMlDxX8RN91EtUu8C7ILX0-G
+t100NGYX8VsRMtlI1E942ZHlXmoJkel-L_b8V9Qfu810NBdNpDitHQf0ef38vutgPJrp
+Ad5RNTkqnh-xqC8jFAUfo41p4F42_XBG04E-79qHsqgzvOWealPJRuyM93ll2JVo2Vbh
+h5xHaCsvMnamFkaOmU1F2TN2dk3auRgaU2E8mwYP0UXqr1-elO-SoVQF7Q4CDpEihQtK
+8ilFpMGOGDLQhQ",
+      "p": "12ytR2nfGJmBWq5tVUxWIGUus7k-zB-b5ieeH7hHQ6fGSMmWc7zCaLk1
+ej8Aq1YvN3ERF7dz6wCBUyDi0CtKyrypUT6ZMo2PUtDbWM84bRWEVbmLlzizYj2xJgtx
+1A25yKNROMdArj7jdsI--QRUIyWXFe9mYIwNK533Q-Ck0rU",
+      "q": "2xHkocW04vzXrKcvFK8w0hckJcxy2eYF5RJCzERJ3lmqChT3wfcz875A
+ETa7ZxpoLp5giVONPUMxSToETl8SevlH6gQJPEFMyFnPcg1eRYL4Ec_2lYRnSFTrzKEb
+-_x-knDTuHIFHET2KqhnJZeiBF1Xl7nbD-uwgRIrk7BMmJE",
       "use": "sig"
     }
   ]
@@ -1242,27 +1245,27 @@ SQrY0ojr-qtcQKn7AvOrLB8LF70uDB0tTDbyQ9fvgybIJfk",
 {
   "keys": [
     {
-      "d": "DWHEdq0Ox3lJKFglkkOjF3eBkJ0XRrXj9IAleLL-tZ5FPqEoMcJ6BOUE
-i2FhkaP7xZNzq3jngGdPSpbPTBZFNbAkhZmuH1COsRFQqBeZ8yRUlo9NMDabBoDAghDK
-QPpj7u8OeSjBAghu-kodRv4xHoyMkrmACfLuImuQeOHoihFKEcoCwyl8u5xHBdln4mdM
-ZeE1jTuYir2-yba_H9g2VX7rFQ5aHn0L94JP5XLxficpsfNK29RRgl7UTiVLfvq5Kd9b
-SodEr0fICbb3RTnt2QSdun58djlwyL89RYUS6oxp6hyPt14TbgEsvN7JNMue_m_GMwF0
-Nko1SemezgbQwQ",
+      "d": "FtiLOllu5-TRzhBZ6yI1fzIIGr6fE6kENP326-y5CccDPmo65qfy0s4L
+ggA37JHyYOdVKkvsSUYPC2Mjkhx-bO3wQH40pM4FDabIQSbPjSYhigmXTaC1CiV79BPB
+Ow3gKox0TvEXnZYTJiA33e6Ilm7YEGUEOyBB36751NLbhHfzU6NAjzLn6ATFK5LYVdAq
+ElViM1kOdG9pPlBV4kWlE5XWudr4cWWzXZ96yh5NnjBsbI0UXRIDRI4c10hfcxRCI1DK
+9DGOKE6AA5y8TkrK3W-7AAnu8tisqvPCplt_BwvVE7tIjxdst1CCcu2ahPuMOj5A2IV2
+IUnbxPr9mfuO4Q",
       "e": "AQAB",
-      "kid": "VXiuYUzeyjQFzVM22s_ky01oVXyEk7H-xgnqttRZ1Tk",
+      "kid": "IQ7LXNwXDGZwfAgjPGrKZRLuUzADOg4ll-LhVYCZhSw",
       "kty": "RSA",
-      "n": "xu-k-PmNOikXhpgUWSYktL9XX2re6vWdeoD4lk-x_XGa8_lPz9dWoeZ5
-kBhxwnpvSz4A7LmlqVlhZ-vmu9SF5_rJMkVgilyBW302DrTjrRfDiwqVRNRf4RgSDI9z
-V4Tx_rjNHU8wCk3QXedpUMXoaJ9Kx9JmzzDP97yTLKYLq64Jq2ABe37WQcKXZb7INgue
--rsI86jXM_ourFa0x3Z9LZz7GZpGmpiIcmqgzxuCTl4JxSYP4DY4D9NFXdXeQx6T-D7g
-eLDLYh1-ygFBAthgksMyJ3HlFXo0m2-oAnCi8Gecu8u0k_NLt06VHVEO8yu5-oVywXT4
-Pdobspf1hzCqZQ",
-      "p": "1If8HqTzkuv-KfQLRyzz0imMZNy4xaQf3shKdZ-QSH8aMmAzSStNzf0z
-xMhFxAVUOh_XWEc-xsLYD3AwLqFdrzB8r1tIU9lLt23y84iHI-Hmarhu1RWoPD5vaNIJ
-60ZmXzAxFYUGh-vxh9PQxkEtXFA2I2fjsANlqyJlnV20QmE",
-      "q": "75_UKSZ9zAZ4_MCuFwpcIWoLVq-nAERCKv1sGZvJZJO54zwIpUtWUNrg
-xthcCGBm_h-4EQv2lLZUOKFHolFmwuQf2UMe8Dq3vryJ0VBSRyzuKBWLEGwvDihUl4bn
-qi9QRnyQuv5x9ZWdLP2S3J96u_eOTsC_lH0YKZhcWFtU7oU",
+      "n": "nxvB3L9cz1EtLS8VYBwXkesTCzUh0N72phLkHop0pwJR2yMp2BLPr2PN
+DCVnayJWWzHf0hvOHM4i3-In2P2dIx-7Zvzhy-9tvYWJdILmPj-i21a-XlvRv6KVN7oe
+zcNhi8lCymzRrr7mRuQYTC7jJF0UZylEAg25f4zpi0xg9x3DD6JgW6Z4m6mif7LA3wej
+JdF2nJy1qIj9vzpqDOxCbE59nI6hoSRAd36lfsv4v5zs5WLxu7fWnKed91slrUf9le4q
+W_KiaI8wvjQuzpnFQlnmJtYmD_45MAPi3f6-UkGFJAiLk3EHc7xgfe1Lv5bUMLMO9oyA
+kM7N4AaYulANpQ",
+      "p": "xiupwierbdWasr8Zat-OXufPsRlZ0CJESIUl4YJ3X6hS_E0J370eY0IG
+NuePjn_A4-jMnRrX7jT37wiUWZtuATlg5DiH3DDjetSjpBd-fiH5e1Or5tqadmq0WgSk
+nZdhxtXzeVfM4d5uS2WMOi-h-9L4_4qOXjxhTNxDPK-rMeE",
+      "q": "zYn03zyH0mbFLGwfRbm1RNq4DbT066xDUM127tqErpvG1Des5yaU0OIe
+1HfvUXWs6f6pVc0JmlqTtpf2KRN1LI8SgAXYflxg9vK7hSvu3oT4Ed9xXAfhVfocCmuX
+jve_YyC3S-_WLk8vtxQeyVwMc-7pCHF5C9Fz3IVgy7yXHEU",
       "use": "sig"
     }
   ]
@@ -1275,27 +1278,27 @@ qi9QRnyQuv5x9ZWdLP2S3J96u_eOTsC_lH0YKZhcWFtU7oU",
 {
   "keys": [
     {
-      "d": "DWHEdq0Ox3lJKFglkkOjF3eBkJ0XRrXj9IAleLL-tZ5FPqEoMcJ6BOUE
-i2FhkaP7xZNzq3jngGdPSpbPTBZFNbAkhZmuH1COsRFQqBeZ8yRUlo9NMDabBoDAghDK
-QPpj7u8OeSjBAghu-kodRv4xHoyMkrmACfLuImuQeOHoihFKEcoCwyl8u5xHBdln4mdM
-ZeE1jTuYir2-yba_H9g2VX7rFQ5aHn0L94JP5XLxficpsfNK29RRgl7UTiVLfvq5Kd9b
-SodEr0fICbb3RTnt2QSdun58djlwyL89RYUS6oxp6hyPt14TbgEsvN7JNMue_m_GMwF0
-Nko1SemezgbQwQ",
+      "d": "FtiLOllu5-TRzhBZ6yI1fzIIGr6fE6kENP326-y5CccDPmo65qfy0s4L
+ggA37JHyYOdVKkvsSUYPC2Mjkhx-bO3wQH40pM4FDabIQSbPjSYhigmXTaC1CiV79BPB
+Ow3gKox0TvEXnZYTJiA33e6Ilm7YEGUEOyBB36751NLbhHfzU6NAjzLn6ATFK5LYVdAq
+ElViM1kOdG9pPlBV4kWlE5XWudr4cWWzXZ96yh5NnjBsbI0UXRIDRI4c10hfcxRCI1DK
+9DGOKE6AA5y8TkrK3W-7AAnu8tisqvPCplt_BwvVE7tIjxdst1CCcu2ahPuMOj5A2IV2
+IUnbxPr9mfuO4Q",
       "e": "AQAB",
-      "kid": "VXiuYUzeyjQFzVM22s_ky01oVXyEk7H-xgnqttRZ1Tk",
+      "kid": "IQ7LXNwXDGZwfAgjPGrKZRLuUzADOg4ll-LhVYCZhSw",
       "kty": "RSA",
-      "n": "xu-k-PmNOikXhpgUWSYktL9XX2re6vWdeoD4lk-x_XGa8_lPz9dWoeZ5
-kBhxwnpvSz4A7LmlqVlhZ-vmu9SF5_rJMkVgilyBW302DrTjrRfDiwqVRNRf4RgSDI9z
-V4Tx_rjNHU8wCk3QXedpUMXoaJ9Kx9JmzzDP97yTLKYLq64Jq2ABe37WQcKXZb7INgue
--rsI86jXM_ourFa0x3Z9LZz7GZpGmpiIcmqgzxuCTl4JxSYP4DY4D9NFXdXeQx6T-D7g
-eLDLYh1-ygFBAthgksMyJ3HlFXo0m2-oAnCi8Gecu8u0k_NLt06VHVEO8yu5-oVywXT4
-Pdobspf1hzCqZQ",
-      "p": "1If8HqTzkuv-KfQLRyzz0imMZNy4xaQf3shKdZ-QSH8aMmAzSStNzf0z
-xMhFxAVUOh_XWEc-xsLYD3AwLqFdrzB8r1tIU9lLt23y84iHI-Hmarhu1RWoPD5vaNIJ
-60ZmXzAxFYUGh-vxh9PQxkEtXFA2I2fjsANlqyJlnV20QmE",
-      "q": "75_UKSZ9zAZ4_MCuFwpcIWoLVq-nAERCKv1sGZvJZJO54zwIpUtWUNrg
-xthcCGBm_h-4EQv2lLZUOKFHolFmwuQf2UMe8Dq3vryJ0VBSRyzuKBWLEGwvDihUl4bn
-qi9QRnyQuv5x9ZWdLP2S3J96u_eOTsC_lH0YKZhcWFtU7oU",
+      "n": "nxvB3L9cz1EtLS8VYBwXkesTCzUh0N72phLkHop0pwJR2yMp2BLPr2PN
+DCVnayJWWzHf0hvOHM4i3-In2P2dIx-7Zvzhy-9tvYWJdILmPj-i21a-XlvRv6KVN7oe
+zcNhi8lCymzRrr7mRuQYTC7jJF0UZylEAg25f4zpi0xg9x3DD6JgW6Z4m6mif7LA3wej
+JdF2nJy1qIj9vzpqDOxCbE59nI6hoSRAd36lfsv4v5zs5WLxu7fWnKed91slrUf9le4q
+W_KiaI8wvjQuzpnFQlnmJtYmD_45MAPi3f6-UkGFJAiLk3EHc7xgfe1Lv5bUMLMO9oyA
+kM7N4AaYulANpQ",
+      "p": "xiupwierbdWasr8Zat-OXufPsRlZ0CJESIUl4YJ3X6hS_E0J370eY0IG
+NuePjn_A4-jMnRrX7jT37wiUWZtuATlg5DiH3DDjetSjpBd-fiH5e1Or5tqadmq0WgSk
+nZdhxtXzeVfM4d5uS2WMOi-h-9L4_4qOXjxhTNxDPK-rMeE",
+      "q": "zYn03zyH0mbFLGwfRbm1RNq4DbT066xDUM127tqErpvG1Des5yaU0OIe
+1HfvUXWs6f6pVc0JmlqTtpf2KRN1LI8SgAXYflxg9vK7hSvu3oT4Ed9xXAfhVfocCmuX
+jve_YyC3S-_WLk8vtxQeyVwMc-7pCHF5C9Fz3IVgy7yXHEU",
       "use": "sig"
     }
   ]
@@ -1319,14 +1322,14 @@ We'll start with Feide and UNINETT
     "keys": [
       {
         "e": "AQAB",
-        "kid": "dif1npSsQnZDxpF8v9v5kDF7wt9z4m8s3C7hulDn8H4",
+        "kid": "5jl-7XNA-LaMiorIlf3qDdk35hbRaxnesdqzg1Q5rcg",
         "kty": "RSA",
-        "n": "3bzJyaeHgzt-PYKcRc-lZ6i0v5HjMjmmffmtZlmp9KsD6nRGaArENj
-r2hp2rq2xWQO_dHTpx9VK1OaiSFeyHc7Yykboc1wCE9ktFdfozY_G0-wYLcgXPLt9gLb
-58ZcQ0RWF6OzgyKFpV-mrVKjcT9mugehBjdU8OBJ833YEyVNDvXyXM186tgo201psVf8
-lYhQ3oS-3xFfieRm__cZQt8_AFoDCueEc-G2eY8VWLPrndaOBS4vovhNf6djr8rR0pPI
-uH4zyu6GKQEyTXiSBwI4VYGHhTGUNZTk8ImpzNTj2jhER7ncAGtiOBYLRi4BrSEODQqv
-HLvY4eu0ke2zRm1Q",
+        "n": "2NdTmzMa8pqiseO0tSHMmRiMUmeaFd1UC_-U0Irb-7DRPYLOv8DvUd
+IE069vnyDLZSi3Uio3H2E25W5sQpR7ieeGxr5l3XYWJgkiqmDikHnQwjtpFIO3Y_5gyH
+pBdqKHzYrqOh6aMdryFjZHjD_Pp5dh_-dnVR1jlwA3L3H_uXovC00beC30FPY88PrDYv
+_XCbmJiHmgAELyfgSvwIGqEzkn5Tw42O4EY_hPzVnMbGRLIzs-uyIjI2JLjhzgVP2AfP
+dT_s6GABKfVPkX6oCOtzzjmV_ca3_eOPfv1YICLeJry3JSVtHlqRzCCKl2dWPd-WcOL7
+IMUiAwxRWXd71omQ",
         "use": "sig"
       }
     ]
@@ -1334,7 +1337,7 @@ HLvY4eu0ke2zRm1Q",
 }
 ]]></artwork ></figure>
 <t>
-UNINETT sends the Metadata statement signing request to Feide and
+UNINETT sends the Metadata statement signing request to Feide and 
 Feide adds claims representing the Feide federation policiy.
 </t>
 <section title="Signed Metadata statement created by Feide">
@@ -1347,28 +1350,28 @@ Feide adds claims representing the Feide federation policiy.
     "email",
     "picture"
   ],
-  "exp": 1494156899,
+  "exp": 1498636497,
   "federation_usage": "registration",
-  "iat": 1491564899,
+  "iat": 1496044497,
   "id_token_signing_alg_values_supported": [
     "RS256",
     "RS512"
   ],
   "iss": "https://www.feide.no",
-  "jti": "1e03cf86dadd4227bcecf363c42a3b71",
-  "kid": "VXiuYUzeyjQFzVM22s_ky01oVXyEk7H-xgnqttRZ1Tk",
+  "jti": "357f54b78cd74df7aace917275dd3977",
+  "kid": "IQ7LXNwXDGZwfAgjPGrKZRLuUzADOg4ll-LhVYCZhSw",
   "signing_keys": {
     "keys": [
       {
         "e": "AQAB",
-        "kid": "dif1npSsQnZDxpF8v9v5kDF7wt9z4m8s3C7hulDn8H4",
+        "kid": "5jl-7XNA-LaMiorIlf3qDdk35hbRaxnesdqzg1Q5rcg",
         "kty": "RSA",
-        "n": "3bzJyaeHgzt-PYKcRc-lZ6i0v5HjMjmmffmtZlmp9KsD6nRGaArENj
-r2hp2rq2xWQO_dHTpx9VK1OaiSFeyHc7Yykboc1wCE9ktFdfozY_G0-wYLcgXPLt9gLb
-58ZcQ0RWF6OzgyKFpV-mrVKjcT9mugehBjdU8OBJ833YEyVNDvXyXM186tgo201psVf8
-lYhQ3oS-3xFfieRm__cZQt8_AFoDCueEc-G2eY8VWLPrndaOBS4vovhNf6djr8rR0pPI
-uH4zyu6GKQEyTXiSBwI4VYGHhTGUNZTk8ImpzNTj2jhER7ncAGtiOBYLRi4BrSEODQqv
-HLvY4eu0ke2zRm1Q",
+        "n": "2NdTmzMa8pqiseO0tSHMmRiMUmeaFd1UC_-U0Irb-7DRPYLOv8DvUd
+IE069vnyDLZSi3Uio3H2E25W5sQpR7ieeGxr5l3XYWJgkiqmDikHnQwjtpFIO3Y_5gyH
+pBdqKHzYrqOh6aMdryFjZHjD_Pp5dh_-dnVR1jlwA3L3H_uXovC00beC30FPY88PrDYv
+_XCbmJiHmgAELyfgSvwIGqEzkn5Tw42O4EY_hPzVnMbGRLIzs-uyIjI2JLjhzgVP2AfP
+dT_s6GABKfVPkX6oCOtzzjmV_ca3_eOPfv1YICLeJry3JSVtHlqRzCCKl2dWPd-WcOL7
+IMUiAwxRWXd71omQ",
         "use": "sig"
       }
     ]
@@ -1378,19 +1381,19 @@ HLvY4eu0ke2zRm1Q",
 </section>
 <section title="The same process is repeated for UNINETT/SWAMID">
 <t>
-SUNET gets the same signing request as Feide got but adds
+SUNET gets the same signing request as Feide got but adds 
 a different set of policy claims
 </t>
 <section title="The by SWAMID signed metadata statement">
 <figure>
 <artwork> <![CDATA[
 {
-  "exp": 1494156899,
+  "exp": 1498636497,
   "federation_usage": "registration",
-  "iat": 1491564899,
+  "iat": 1496044497,
   "iss": "https://swamid.sunet.se/",
-  "jti": "64c3b83e19e44754b86ca37b73b72f15",
-  "kid": "UFP_IHND_nD-ZzScunT-QnCcomMZ2eFboHHZN8_BZsI",
+  "jti": "1c39646c40a145d4adab00ce6d42dabc",
+  "kid": "65MJrFqCx0FR96K3qXrMgFV1918__TW7vuI2_LR_Ggo",
   "response_types": [
     "code",
     "token"
@@ -1403,14 +1406,14 @@ a different set of policy claims
     "keys": [
       {
         "e": "AQAB",
-        "kid": "dif1npSsQnZDxpF8v9v5kDF7wt9z4m8s3C7hulDn8H4",
+        "kid": "5jl-7XNA-LaMiorIlf3qDdk35hbRaxnesdqzg1Q5rcg",
         "kty": "RSA",
-        "n": "3bzJyaeHgzt-PYKcRc-lZ6i0v5HjMjmmffmtZlmp9KsD6nRGaArENj
-r2hp2rq2xWQO_dHTpx9VK1OaiSFeyHc7Yykboc1wCE9ktFdfozY_G0-wYLcgXPLt9gLb
-58ZcQ0RWF6OzgyKFpV-mrVKjcT9mugehBjdU8OBJ833YEyVNDvXyXM186tgo201psVf8
-lYhQ3oS-3xFfieRm__cZQt8_AFoDCueEc-G2eY8VWLPrndaOBS4vovhNf6djr8rR0pPI
-uH4zyu6GKQEyTXiSBwI4VYGHhTGUNZTk8ImpzNTj2jhER7ncAGtiOBYLRi4BrSEODQqv
-HLvY4eu0ke2zRm1Q",
+        "n": "2NdTmzMa8pqiseO0tSHMmRiMUmeaFd1UC_-U0Irb-7DRPYLOv8DvUd
+IE069vnyDLZSi3Uio3H2E25W5sQpR7ieeGxr5l3XYWJgkiqmDikHnQwjtpFIO3Y_5gyH
+pBdqKHzYrqOh6aMdryFjZHjD_Pp5dh_-dnVR1jlwA3L3H_uXovC00beC30FPY88PrDYv
+_XCbmJiHmgAELyfgSvwIGqEzkn5Tw42O4EY_hPzVnMbGRLIzs-uyIjI2JLjhzgVP2AfP
+dT_s6GABKfVPkX6oCOtzzjmV_ca3_eOPfv1YICLeJry3JSVtHlqRzCCKl2dWPd-WcOL7
+IMUiAwxRWXd71omQ",
         "use": "sig"
       }
     ]
@@ -1435,7 +1438,7 @@ Time to create the Foodle (RP) metadata statement
 <t>
 We take a road similar to the request/request_uri path. That is we
 include all the information about the client that needs to be
-protect from tampering by a MITM and places it in the
+protect from tampering by a MITM and places it in the 
 metadata statement signing request.
 </t>
 <t>
@@ -1452,27 +1455,27 @@ depend on the correctness of the keys found at the jwks_uri.
 {
   "keys": [
     {
-      "d": "BUvo18TnwNf1OF7QBw_9GigYfofShIriVAJ2e8WizFG3SDD-ryf3xYTJ
-d1Ti9zISOwf4euWW7n5eXJ5WpnJ3yvJOsmHdORNZg6MW0aZYty2f7UUJK2WQVKBwM-Ua
-VYWBG6EJzy0WYCNe1iP-LY65jZ_Q8JZVzk7ApjWdOUk2VHwU9dU-eku-3xuQEAPGobK8
-slTyZiLY4Ju9ONMlgvjl8tJrXxnfi4wD6nmstSlEh1IO5SRrElrWpsR666f621d81Jgp
-gQJCFarM7e9MZV13_29HiPRUT77UdHUxkb7g1hx9li8gnlG3eFfcc4hfcf5CykPt32-H
-3P6mgSrFwO08oQ",
+      "d": "WJp8QwwkLbf23G-8lkJMtimq2r9h7jom9Bjd3Rwonno39Wpi6DBPXSfY
+bPPKtzYl7GdlSMYV4ZPLOo3-wkUOT_mW7nm4oSLkR7TB9zJvSEdT1StMHi__Gu230Xhs
+La2ljZ8pxPeRfzwl2siKedwp1tKpSha-u49Z7Zw3pYq0KycWjJQ2v_1KOBqzRWK87Ytb
+_Wuo_TdFqo3H2EXvX0xDuJTRKBDQ7MRsM0vWNNAJHQDpOEIAZqeWYIoU2kmEioRpP15s
+OgL5N_tvkhG-e_W4jmh7SdJ89T2l8Ty54MY5an7mA6hBc_XDn7A6WI8nJnZVmpS3i0Is
+Uw85IAn6TspmIQ",
       "e": "AQAB",
-      "kid": "cd2b2P06oG6Grt1aLG6U_Mf-Bbg28IwTdnvzaSz868U",
+      "kid": "MaBYxrj19OHpCjFAagAu0ltB8TmLsKqLBeqU1hsEeos",
       "kty": "RSA",
-      "n": "zQgJBilcDKh1Y6cl716IHJvYejnryvxZ9FM9lA2x9-mPfC-c1Bii7XxL
-BL2p0n24fiPqDewDpEKpgWQkaM6XH1DYCI15QxKwKJ2hdCesKEYGydxhcfkAyOyehPXn
-S7tyCH1rixkvNj8NFNdfWJhJPSUhx_E9o9iHBoq50rPiA7LHCQfIW4JSouvLhFVu5FZl
-dxHCoReOBF38KIWYA66arAm_dQB38WmK3gD7oqyaKY68zSJJyaZIygaVPOi-NN2fbZXe
-ctW_gJ-GPUXFlE16t5qOo_rk_HdRgF89r75q9mwfyunS5DeTnJ4BTxk_V4f5rHK7dBXM
-FMQYP2igcdjxjQ",
-      "p": "1v8oVkwy8OdYspm3pIP5GuPTJ2VXUY3BGJCQL78Rxd7oIiFw1QSyu625
-MUqGeh-6mqyVWPPXMHfbr-z7kshkX_Nl-8C7cUMKu6PVSkNwUhARG9lYhQiS_0V6tY0D
-KtP4EbDt0RfZMjhythPTRfxDG09KZORrDhkARKWVAr5mpuU",
-      "q": "9CJWjX-gQRfmFht7XjBf9BJ3gJuU1i0H-NQ8bPAGFgP3GFVWrvU_lc40
-3IOzjeE3JNGSM2b8J6cgz9HU5fgj8GGxJ-yoR0vP-dEzpRnX9nePpxM8ayGJQxDCDTXe
-F5yVEJHwF1qbgGFlsT1EAvqJ2oEJeGCUUVWoYcRGZaWwDYk",
+      "n": "0g592OMQDnwiaoVcstSTp8AACnd3z101qIES6PD6D4KPWcaDYE2QCM8L
+apwq7EOv3SfDGpcx0aNwQp0SaZstDZf5jiNBjfEou9CG8e1299_1mH7YV2JSjrtiyNia
+JyI4Va-JzIYBUouybF8GgTD3nnjVVYf9gKFoUf6kHTYPiblM44c43u55wC5oAxdMvkK7
+eAVkGFzLWLIEnkLtxIXc-Naxurl01zJfnH7dLfpcATN4uV9inI1vAnP9Lyg0RsSSoa3X
+cuKDsTBs5Fm1wLyQm0KVhus2tNMLMfoNMZOcmrhycaOEymo7FaayLgTWqjOv9-bIaw3H
+QvJ-OmJSxSohkw",
+      "p": "3W1eZKJtxy5tdbtuSxbYFJvVJoOvYZw91XGPcbMz1cbkJZN60h4_709y
+Z72TEyojO-Ch-CBdgqgHdR2BBjZGESdH1FOYrQxgYsiKz1FlHW5h79fsqe3cn2JAwoEx
+U1jTwuGPanAQArnRsfxnjZIcJ9aUlfaVf-MbfljBolZPIgc",
+      "q": "8tqhQpVw7x7p68v0_vv7Uz-KFUVBjlEvJu6jfFDHBF8-zTqGhpe1H-Jw
+t_YRlm8thINKUbKaQy3uiZWTe_baHSHexi72-1NQNdd9Ztha2l_NHDKp4d24Mo3f72cT
+egkaudZAuo8uoAblK2DBZ5CmszO1rFyZQBpHRfjvh91PMRU",
       "use": "sig"
     }
   ]
@@ -1496,62 +1499,85 @@ who adds the two signed metadata staments it has.
 One for each of SWAMID and Feide.Since it knows that it is the Foodle RP which is the subject
 of the JWT it adds Foodle's identifier as 'sub'
 </t>
-<section title="Metadata statement about Foodle signed by UNINETT">
+<section title="Metadata statements about Foodle signed by UNINETT">
+<t>
+With SWAMID as Federation operator
+</t>
 <figure>
 <artwork> <![CDATA[
 {
   "application_type": "web",
-  "exp": 1491651299,
-  "iat": 1491564899,
+  "exp": 1496130898,
+  "iat": 1496044498,
   "iss": "https://www.uninett.no",
-  "kid": "dif1npSsQnZDxpF8v9v5kDF7wt9z4m8s3C7hulDn8H4",
-  "metadata_statements": [
-    "eyJhbGciOiJSUzI1NiIsImtpZCI6IlVGUF9JSE5EX25ELVp6U2N1blQtUW5DY29
-tTVoyZUZib0hIWk44X0Jac0kifQ.eyJzY29wZXMiOiBbIm9wZW5pZCIsICJlbWFpbCJd
-LCAicmVzcG9uc2VfdHlwZXMiOiBbImNvZGUiLCAidG9rZW4iXSwgImlhdCI6IDE0OTE1
-NjQ4OTksICJqdGkiOiAiNjRjM2I4M2UxOWU0NDc1NGI4NmNhMzdiNzNiNzJmMTUiLCAi
-ZmVkZXJhdGlvbl91c2FnZSI6ICJyZWdpc3RyYXRpb24iLCAidG9rZW5fZW5kcG9pbnRf
-YXV0aF9tZXRob2QiOiAicHJpdmF0ZV9rZXlfand0IiwgInNpZ25pbmdfa2V5cyI6IHsi
-a2V5cyI6IFt7ImUiOiAiQVFBQiIsICJrdHkiOiAiUlNBIiwgImtpZCI6ICJkaWYxbnBT
-c1FuWkR4cEY4djl2NWtERjd3dDl6NG04czNDN2h1bERuOEg0IiwgIm4iOiAiM2J6Snlh
-ZUhnenQtUFlLY1JjLWxaNmkwdjVIak1qbW1mZm10WmxtcDlLc0Q2blJHYUFyRU5qcjJo
-cDJycTJ4V1FPX2RIVHB4OVZLMU9haVNGZXlIYzdZeWtib2Mxd0NFOWt0RmRmb3pZX0cw
-LXdZTGNnWFBMdDlnTGI1OFpjUTBSV0Y2T3pneUtGcFYtbXJWS2pjVDltdWdlaEJqZFU4
-T0JKODMzWUV5Vk5Edlh5WE0xODZ0Z28yMDFwc1ZmOGxZaFEzb1MtM3hGZmllUm1fX2Na
-UXQ4X0FGb0RDdWVFYy1HMmVZOFZXTFBybmRhT0JTNHZvdmhOZjZkanI4clIwcFBJdUg0
-enl1NkdLUUV5VFhpU0J3STRWWUdIaFRHVU5aVGs4SW1wek5UajJqaEVSN25jQUd0aU9C
-WUxSaTRCclNFT0RRcXZITHZZNGV1MGtlMnpSbTFRIiwgInVzZSI6ICJzaWcifV19LCAi
-aXNzIjogImh0dHBzOi8vc3dhbWlkLnN1bmV0LnNlLyIsICJraWQiOiAiVUZQX0lITkRf
-bkQtWnpTY3VuVC1RbkNjb21NWjJlRmJvSEhaTjhfQlpzSSIsICJleHAiOiAxNDk0MTU2
-ODk5fQ.kMS0M7_m8UyRlOH-T_gBwK57jC69hPk328IVTZiD15cOHp7y8VAMVh1s0PKE3
-NgOBptRRcDjZ2Bis5iHjTFbPMSoBxJF-OJoxCCFSuL65b3kTr7LyRt9uRSU-el3IFIOs
-bTSNYBVTieDz_kfJ_YdZx2oQgrHGWKsDnvb3H3pP4MttTx7o6Yw2XXDeRa8vuEFHZ3xM
-CBA6AhDEPwuLeLQIXTOlHWXmHwvD_l-pIBSsYxv3RDUM8M6SLVZEHahAq7G4SJbTCEg_
-0XJN8qauk3JY4pxdM2heX9rS-b7jlQzXxu9sIQzVQCClLnQFlnBLn2Nsx6W7GK_nWZ6Q
-QHK39BgWg",
-    "eyJhbGciOiJSUzI1NiIsImtpZCI6IlZYaXVZVXpleWpRRnpWTTIyc19reTAxb1Z
-YeUVrN0gteGducXR0UloxVGsifQ.eyJpZF90b2tlbl9zaWduaW5nX2FsZ192YWx1ZXNf
-c3VwcG9ydGVkIjogWyJSUzI1NiIsICJSUzUxMiJdLCAiaWF0IjogMTQ5MTU2NDg5OSwg
-ImNsYWltcyI6IFsic3ViIiwgIm5hbWUiLCAiZW1haWwiLCAicGljdHVyZSJdLCAianRp
-IjogIjFlMDNjZjg2ZGFkZDQyMjdiY2VjZjM2M2M0MmEzYjcxIiwgImZlZGVyYXRpb25f
-dXNhZ2UiOiAicmVnaXN0cmF0aW9uIiwgInNpZ25pbmdfa2V5cyI6IHsia2V5cyI6IFt7
-ImUiOiAiQVFBQiIsICJrdHkiOiAiUlNBIiwgImtpZCI6ICJkaWYxbnBTc1FuWkR4cEY4
-djl2NWtERjd3dDl6NG04czNDN2h1bERuOEg0IiwgIm4iOiAiM2J6SnlhZUhnenQtUFlL
-Y1JjLWxaNmkwdjVIak1qbW1mZm10WmxtcDlLc0Q2blJHYUFyRU5qcjJocDJycTJ4V1FP
-X2RIVHB4OVZLMU9haVNGZXlIYzdZeWtib2Mxd0NFOWt0RmRmb3pZX0cwLXdZTGNnWFBM
-dDlnTGI1OFpjUTBSV0Y2T3pneUtGcFYtbXJWS2pjVDltdWdlaEJqZFU4T0JKODMzWUV5
-Vk5Edlh5WE0xODZ0Z28yMDFwc1ZmOGxZaFEzb1MtM3hGZmllUm1fX2NaUXQ4X0FGb0RD
-dWVFYy1HMmVZOFZXTFBybmRhT0JTNHZvdmhOZjZkanI4clIwcFBJdUg0enl1NkdLUUV5
-VFhpU0J3STRWWUdIaFRHVU5aVGs4SW1wek5UajJqaEVSN25jQUd0aU9CWUxSaTRCclNF
-T0RRcXZITHZZNGV1MGtlMnpSbTFRIiwgInVzZSI6ICJzaWcifV19LCAiaXNzIjogImh0
-dHBzOi8vd3d3LmZlaWRlLm5vIiwgImtpZCI6ICJWWGl1WVV6ZXlqUUZ6Vk0yMnNfa3kw
-MW9WWHlFazdILXhnbnF0dFJaMVRrIiwgImV4cCI6IDE0OTQxNTY4OTl9.FRVYPUf1he_
-nJnj8zr63evL0EnKk6khzYgX1eDS-j-hh-ZZQpO800oIbayGNaa5YuNwyV8PP2I2lFyR
-8NXaI4aM1G-6TwicN7hl38TOMrjrgUKAM3fVjxUm0r6kgNUBiGrcqp_kmCA-Cpl53mM_
-hksIeZTQp4qizLILJi8nKyeeOFkkir0FmiI1lztqmDt3JrNHWjUv9N0oouiRVaFHsOIM
--wRvcR13SYn7Y-QLTPkggi5DyuT5khUEJRGe3G7v7wqzEeVf41A8RaoquVKNr39YjYCh
-HfiMfF3LAXiiyCfWgjU0-6-81yj17WkcWVrv4kl8IkBoFxfTi7GEcfRq4uw"
+  "kid": "5jl-7XNA-LaMiorIlf3qDdk35hbRaxnesdqzg1Q5rcg",
+  "metadata_statements": {
+    "https://swamid.sunet.se/": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjY1TUp
+yRnFDeDBGUjk2SzNxWHJNZ0ZWMTkxOF9fVFc3dnVJMl9MUl9HZ28ifQ.eyJmZWRlcmF0
+aW9uX3VzYWdlIjogInJlZ2lzdHJhdGlvbiIsICJzaWduaW5nX2tleXMiOiB7ImtleXMi
+OiBbeyJrdHkiOiAiUlNBIiwgInVzZSI6ICJzaWciLCAia2lkIjogIjVqbC03WE5BLUxh
+TWlvcklsZjNxRGRrMzVoYlJheG5lc2RxemcxUTVyY2ciLCAibiI6ICIyTmRUbXpNYThw
+cWlzZU8wdFNITW1SaU1VbWVhRmQxVUNfLVUwSXJiLTdEUlBZTE92OER2VWRJRTA2OXZu
+eURMWlNpM1VpbzNIMkUyNVc1c1FwUjdpZWVHeHI1bDNYWVdKZ2tpcW1EaWtIblF3anRw
+RklPM1lfNWd5SHBCZHFLSHpZcnFPaDZhTWRyeUZqWkhqRF9QcDVkaF8tZG5WUjFqbHdB
+M0wzSF91WG92QzAwYmVDMzBGUFk4OFByRFl2X1hDYm1KaUhtZ0FFTHlmZ1N2d0lHcUV6
+a241VHc0Mk80RVlfaFB6Vm5NYkdSTEl6cy11eUlqSTJKTGpoemdWUDJBZlBkVF9zNkdB
+QktmVlBrWDZvQ090enpqbVZfY2EzX2VPUGZ2MVlJQ0xlSnJ5M0pTVnRIbHFSekNDS2wy
+ZFdQZC1XY09MN0lNVWlBd3hSV1hkNzFvbVEiLCAiZSI6ICJBUUFCIn1dfSwgInJlc3Bv
+bnNlX3R5cGVzIjogWyJjb2RlIiwgInRva2VuIl0sICJ0b2tlbl9lbmRwb2ludF9hdXRo
+X21ldGhvZCI6ICJwcml2YXRlX2tleV9qd3QiLCAic2NvcGVzIjogWyJvcGVuaWQiLCAi
+ZW1haWwiXSwgImlzcyI6ICJodHRwczovL3N3YW1pZC5zdW5ldC5zZS8iLCAiaWF0Ijog
+MTQ5NjA0NDQ5NywgImV4cCI6IDE0OTg2MzY0OTcsICJraWQiOiAiNjVNSnJGcUN4MEZS
+OTZLM3FYck1nRlYxOTE4X19UVzd2dUkyX0xSX0dnbyIsICJqdGkiOiAiMWMzOTY0NmM0
+MGExNDVkNGFkYWIwMGNlNmQ0MmRhYmMifQ.YPcpHSluei_DbOyRxDQ9PeL5FU23ZHU45
+G33WTJlCT1QxqzKLYFjHdm28WVHxquQ4FrgmY49Wt9vm1cvsg5hSyxNcHJMDDL3Y4pfe
+LeozTVZhDrx-wUCcPqCIxpU9WdtuWvefyvxzbuF8qMf7_4Aiw8V1TqJc7tqYpd_Ic0xd
+uHEMFaF1UATztdGOKy4iISSR6qKOKGfJyW4IlNw-hLR5DImln4W7uikHFUxkKjmrXCQ-
+AnKhMUub75dThKg-vIZiXD8T0KbIsi2l40bH_n9qWexnpX_BAGvCgY9LlEJ0Z8wlTpHq
+HzD2mrs218ysop2tB45ICJpsW_YDqWHgvP9mQ"
+  },
+  "response_types": [
+    "code"
   ],
+  "sub": "https://foodle.uninett.no"
+}
+]]></artwork ></figure>
+<t>
+With Feide as Federation operator
+</t>
+<figure>
+<artwork> <![CDATA[
+{
+  "application_type": "web",
+  "exp": 1496130898,
+  "iat": 1496044498,
+  "iss": "https://www.uninett.no",
+  "kid": "5jl-7XNA-LaMiorIlf3qDdk35hbRaxnesdqzg1Q5rcg",
+  "metadata_statements": {
+    "https://www.feide.no": "eyJhbGciOiJSUzI1NiIsImtpZCI6IklRN0xYTnd
+YREdad2ZBZ2pQR3JLWlJMdVV6QURPZzRsbC1MaFZZQ1poU3cifQ.eyJmZWRlcmF0aW9u
+X3VzYWdlIjogInJlZ2lzdHJhdGlvbiIsICJzaWduaW5nX2tleXMiOiB7ImtleXMiOiBb
+eyJrdHkiOiAiUlNBIiwgInVzZSI6ICJzaWciLCAia2lkIjogIjVqbC03WE5BLUxhTWlv
+cklsZjNxRGRrMzVoYlJheG5lc2RxemcxUTVyY2ciLCAibiI6ICIyTmRUbXpNYThwcWlz
+ZU8wdFNITW1SaU1VbWVhRmQxVUNfLVUwSXJiLTdEUlBZTE92OER2VWRJRTA2OXZueURM
+WlNpM1VpbzNIMkUyNVc1c1FwUjdpZWVHeHI1bDNYWVdKZ2tpcW1EaWtIblF3anRwRklP
+M1lfNWd5SHBCZHFLSHpZcnFPaDZhTWRyeUZqWkhqRF9QcDVkaF8tZG5WUjFqbHdBM0wz
+SF91WG92QzAwYmVDMzBGUFk4OFByRFl2X1hDYm1KaUhtZ0FFTHlmZ1N2d0lHcUV6a241
+VHc0Mk80RVlfaFB6Vm5NYkdSTEl6cy11eUlqSTJKTGpoemdWUDJBZlBkVF9zNkdBQktm
+VlBrWDZvQ090enpqbVZfY2EzX2VPUGZ2MVlJQ0xlSnJ5M0pTVnRIbHFSekNDS2wyZFdQ
+ZC1XY09MN0lNVWlBd3hSV1hkNzFvbVEiLCAiZSI6ICJBUUFCIn1dfSwgImlkX3Rva2Vu
+X3NpZ25pbmdfYWxnX3ZhbHVlc19zdXBwb3J0ZWQiOiBbIlJTMjU2IiwgIlJTNTEyIl0s
+ICJjbGFpbXMiOiBbInN1YiIsICJuYW1lIiwgImVtYWlsIiwgInBpY3R1cmUiXSwgImlz
+cyI6ICJodHRwczovL3d3dy5mZWlkZS5ubyIsICJpYXQiOiAxNDk2MDQ0NDk3LCAiZXhw
+IjogMTQ5ODYzNjQ5NywgImtpZCI6ICJJUTdMWE53WERHWndmQWdqUEdyS1pSTHVVekFE
+T2c0bGwtTGhWWUNaaFN3IiwgImp0aSI6ICIzNTdmNTRiNzhjZDc0ZGY3YWFjZTkxNzI3
+NWRkMzk3NyJ9.KgkrB2CuT_WImSAQfA-ioNDE5SeGN9pZSpwcvzrCadCQNxbx2f2s8Jm
+5Nw39kuls2FBeyjeSk25vpkx05cJdy5KULLWQU9HHRjd6tAzS8JjAjNnrs8b2i90UqWl
+Sv8yY5jGVZYxhYYo21ea9kxTRK2F4ELQWGm6EDJoiyvAww4irwPwBqczQujMx2KWbVoS
+_yLcATwW3PYANhCGhdZ0FWDYhCl_P4MbdUkporMxxFyEDv9lsbsuzW8N17Afw_AxXOF-
+G_ZZymugFm73xDZJCGFwqoVQvij_I_xnIbjFQzvm9p-Y7NQm8Am40sh6QzGQX7U9mMjz
+eUKCTlK6eW2WuBQ"
+  },
   "response_types": [
     "code"
   ],
@@ -1566,7 +1592,7 @@ Now, when Foodle wants to register as a client with an OP it adds
 the signed Metadata statement it received from UNINETT to
 the client registration request.
 Note that 'redirect_uri' MUST be in the registration request as
-this is requied by the OIDC standard.If the 'redirect_uris' values that are transfered unprotected
+this is requied by the OIDC standard.If the 'redirect_uris' values that are transfered unprotected 
 where to differ from what's in the signed metadata
 statement the OP MUST refuse the registration.
 </t>
@@ -1574,78 +1600,92 @@ statement the OP MUST refuse the registration.
 <preamble>Registration Request published by RP</preamble>
 <artwork> <![CDATA[
 {
-  "metadata_statements": [
-    "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRpZjFucFNzUW5aRHhwRjh2OXY1a0RGN3d
-0OXo0bThzM0M3aHVsRG44SDQifQ.eyJyZXNwb25zZV90eXBlcyI6IFsiY29kZSJdLCAi
-aWF0IjogMTQ5MTU2NDg5OSwgInN1YiI6ICJodHRwczovL2Zvb2RsZS51bmluZXR0Lm5v
-IiwgImlzcyI6ICJodHRwczovL3d3dy51bmluZXR0Lm5vIiwgImtpZCI6ICJkaWYxbnBT
-c1FuWkR4cEY4djl2NWtERjd3dDl6NG04czNDN2h1bERuOEg0IiwgImV4cCI6IDE0OTE2
-NTEyOTksICJtZXRhZGF0YV9zdGF0ZW1lbnRzIjogWyJleUpoYkdjaU9pSlNVekkxTmlJ
-c0ltdHBaQ0k2SWxWR1VGOUpTRTVFWDI1RUxWcDZVMk4xYmxRdFVXNURZMjl0VFZveVpV
-WmliMGhJV2s0NFgwSmFjMGtpZlEuZXlKelkyOXdaWE1pT2lCYkltOXdaVzVwWkNJc0lD
-SmxiV0ZwYkNKZExDQWljbVZ6Y0c5dWMyVmZkSGx3WlhNaU9pQmJJbU52WkdVaUxDQWlk
-RzlyWlc0aVhTd2dJbWxoZENJNklERTBPVEUxTmpRNE9Ua3NJQ0pxZEdraU9pQWlOalJq
-TTJJNE0yVXhPV1UwTkRjMU5HSTRObU5oTXpkaU56TmlOekptTVRVaUxDQWlabVZrWlhK
-aGRHbHZibDkxYzJGblpTSTZJQ0p5WldkcGMzUnlZWFJwYjI0aUxDQWlkRzlyWlc1ZlpX
-NWtjRzlwYm5SZllYVjBhRjl0WlhSb2IyUWlPaUFpY0hKcGRtRjBaVjlyWlhsZmFuZDBJ
-aXdnSW5OcFoyNXBibWRmYTJWNWN5STZJSHNpYTJWNWN5STZJRnQ3SW1VaU9pQWlRVkZC
-UWlJc0lDSnJkSGtpT2lBaVVsTkJJaXdnSW10cFpDSTZJQ0prYVdZeGJuQlRjMUZ1V2tS
-NGNFWTRkamwyTld0RVJqZDNkRGw2TkcwNGN6TkROMmgxYkVSdU9FZzBJaXdnSW00aU9p
-QWlNMko2U25saFpVaG5lblF0VUZsTFkxSmpMV3hhTm1rd2RqVklhazFxYlcxbVptMTBX
-bXh0Y0RsTGMwUTJibEpIWVVGeVJVNXFjakpvY0RKeWNUSjRWMUZQWDJSSVZIQjRPVlpM
-TVU5aGFWTkdaWGxJWXpkWmVXdGliMk14ZDBORk9XdDBSbVJtYjNwWlgwY3dMWGRaVEdO
-bldGQk1kRGxuVEdJMU9GcGpVVEJTVjBZMlQzcG5lVXRHY0ZZdGJYSldTMnBqVkRsdGRX
-ZGxhRUpxWkZVNFQwSktPRE16V1VWNVZrNUVkbGg1V0UweE9EWjBaMjh5TURGd2MxWm1P
-R3haYUZFemIxTXRNM2hHWm1sbFVtMWZYMk5hVVhRNFgwRkdiMFJEZFdWRll5MUhNbVZa
-T0ZaWFRGQnlibVJoVDBKVE5IWnZkbWhPWmpaa2FuSTRjbEl3Y0ZCSmRVZzBlbmwxTmtk
-TFVVVjVWRmhwVTBKM1NUUldXVWRJYUZSSFZVNWFWR3M0U1cxd2VrNVVhakpxYUVWU04y
-NWpRVWQwYVU5Q1dVeFNhVFJDY2xORlQwUlJjWFpJVEhaWk5HVjFNR3RsTW5wU2JURlJJ
-aXdnSW5WelpTSTZJQ0p6YVdjaWZWMTlMQ0FpYVhOeklqb2dJbWgwZEhCek9pOHZjM2Ro
-Yldsa0xuTjFibVYwTG5ObEx5SXNJQ0pyYVdRaU9pQWlWVVpRWDBsSVRrUmZia1F0V25w
-VFkzVnVWQzFSYmtOamIyMU5XakpsUm1KdlNFaGFUamhmUWxwelNTSXNJQ0psZUhBaU9p
-QXhORGswTVRVMk9EazVmUS5rTVMwTTdfbThVeVJsT0gtVF9nQndLNTdqQzY5aFBrMzI4
-SVZUWmlEMTVjT0hwN3k4VkFNVmgxczBQS0UzTmdPQnB0UlJjRGpaMkJpczVpSGpURmJQ
-TVNvQnhKRi1PSm94Q0NGU3VMNjViM2tUcjdMeVJ0OXVSU1UtZWwzSUZJT3NiVFNOWUJW
-VGllRHpfa2ZKX1lkWngyb1FnckhHV0tzRG52YjNIM3BQNE10dFR4N282WXcyWFhEZVJh
-OHZ1RUZIWjN4TUNCQTZBaERFUHd1TGVMUUlYVE9sSFdYbUh3dkRfbC1wSUJTc1l4djNS
-RFVNOE02U0xWWkVIYWhBcTdHNFNKYlRDRWdfMFhKTjhxYXVrM0pZNHB4ZE0yaGVYOXJT
-LWI3amxRelh4dTlzSVF6VlFDQ2xMblFGbG5CTG4yTnN4Nlc3R0tfbldaNlFRSEszOUJn
-V2ciLCAiZXlKaGJHY2lPaUpTVXpJMU5pSXNJbXRwWkNJNklsWllhWFZaVlhwbGVXcFJS
-bnBXVFRJeWMxOXJlVEF4YjFaWWVVVnJOMGd0ZUdkdWNYUjBVbG94VkdzaWZRLmV5SnBa
-RjkwYjJ0bGJsOXphV2R1YVc1blgyRnNaMTkyWVd4MVpYTmZjM1Z3Y0c5eWRHVmtJam9n
-V3lKU1V6STFOaUlzSUNKU1V6VXhNaUpkTENBaWFXRjBJam9nTVRRNU1UVTJORGc1T1N3
-Z0ltTnNZV2x0Y3lJNklGc2ljM1ZpSWl3Z0ltNWhiV1VpTENBaVpXMWhhV3dpTENBaWNH
-bGpkSFZ5WlNKZExDQWlhblJwSWpvZ0lqRmxNRE5qWmpnMlpHRmtaRFF5TWpkaVkyVmpa
-ak0yTTJNME1tRXpZamN4SWl3Z0ltWmxaR1Z5WVhScGIyNWZkWE5oWjJVaU9pQWljbVZu
-YVhOMGNtRjBhVzl1SWl3Z0luTnBaMjVwYm1kZmEyVjVjeUk2SUhzaWEyVjVjeUk2SUZ0
-N0ltVWlPaUFpUVZGQlFpSXNJQ0pyZEhraU9pQWlVbE5CSWl3Z0ltdHBaQ0k2SUNKa2FX
-WXhibkJUYzFGdVdrUjRjRVk0ZGpsMk5XdEVSamQzZERsNk5HMDRjek5ETjJoMWJFUnVP
-RWcwSWl3Z0ltNGlPaUFpTTJKNlNubGhaVWhuZW5RdFVGbExZMUpqTFd4YU5ta3dkalZJ
-YWsxcWJXMW1abTEwV214dGNEbExjMFEyYmxKSFlVRnlSVTVxY2pKb2NESnljVEo0VjFG
-UFgyUklWSEI0T1ZaTE1VOWhhVk5HWlhsSVl6ZFplV3RpYjJNeGQwTkZPV3QwUm1SbWIz
-cFpYMGN3TFhkWlRHTm5XRkJNZERsblRHSTFPRnBqVVRCU1YwWTJUM3BuZVV0R2NGWXRi
-WEpXUzJwalZEbHRkV2RsYUVKcVpGVTRUMEpLT0RNeldVVjVWazVFZGxoNVdFMHhPRFow
-WjI4eU1ERndjMVptT0d4WmFGRXpiMU10TTNoR1ptbGxVbTFmWDJOYVVYUTRYMEZHYjBS
-RGRXVkZZeTFITW1WWk9GWlhURkJ5Ym1SaFQwSlROSFp2ZG1oT1pqWmthbkk0Y2xJd2NG
-QkpkVWcwZW5sMU5rZExVVVY1VkZocFUwSjNTVFJXV1VkSWFGUkhWVTVhVkdzNFNXMXdl
-azVVYWpKcWFFVlNOMjVqUVVkMGFVOUNXVXhTYVRSQ2NsTkZUMFJSY1haSVRIWlpOR1Yx
-TUd0bE1ucFNiVEZSSWl3Z0luVnpaU0k2SUNKemFXY2lmVjE5TENBaWFYTnpJam9nSW1o
-MGRIQnpPaTh2ZDNkM0xtWmxhV1JsTG01dklpd2dJbXRwWkNJNklDSldXR2wxV1ZWNlpY
-bHFVVVo2VmsweU1uTmZhM2t3TVc5V1dIbEZhemRJTFhobmJuRjBkRkphTVZScklpd2dJ
-bVY0Y0NJNklERTBPVFF4TlRZNE9UbDkuRlJWWVBVZjFoZV9uSm5qOHpyNjNldkwwRW5L
-azZraHpZZ1gxZURTLWotaGgtWlpRcE84MDBvSWJheUdOYWE1WXVOd3lWOFBQMkkybEZ5
-UjhOWGFJNGFNMUctNlR3aWNON2hsMzhUT01yanJnVUtBTTNmVmp4VW0wcjZrZ05VQmlH
-cmNxcF9rbUNBLUNwbDUzbU1faGtzSWVaVFFwNHFpekxJTEppOG5LeWVlT0Zra2lyMEZt
-aUkxbHp0cW1EdDNKck5IV2pVdjlOMG9vdWlSVmFGSHNPSU0td1J2Y1IxM1NZbjdZLVFM
-VFBrZ2dpNUR5dVQ1a2hVRUpSR2UzRzd2N3dxekVlVmY0MUE4UmFvcXVWS05yMzlZallD
-aEhmaU1mRjNMQVhpaXlDZldnalUwLTYtODF5ajE3V2tjV1ZydjRrbDhJa0JvRnhmVGk3
-R0VjZlJxNHV3Il0sICJhcHBsaWNhdGlvbl90eXBlIjogIndlYiJ9.0Em2-rmer1fEkd5
-GGUBaXVu32rNmW4HHOFWjGwxO7mGQsuIdmMBlp48nlExHDuGGUSmFbw7jjzoN__h3yEi
-vKxM3Q6pdq6gqkB-m_uCR_mShViyZ07sgi_7yZ0FMl6WNwhboXXG3cAaucl2fWRORMaX
-hDVUsYarBYdurLPb6OvC6z49noRckSjORtkMvGW7sqM4KYLf7-wD0QkndSdCi_t6FdlM
-xjX35jtENR5RbHjxLhq9jbBxZ49LuiplJZqCoWBo0QcJlB0o6xte1Qf9ccGHKnIKJqlJ
-csLXC7v0mCb88QdGx9lGbakBWGIMpMgjajaZnbdRl4puHga0LfTXt0Q"
-  ],
+  "metadata_statements": {
+    "https://swamid.sunet.se/": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjVqbC0
+3WE5BLUxhTWlvcklsZjNxRGRrMzVoYlJheG5lc2RxemcxUTVyY2cifQ.eyJhcHBsaWNh
+dGlvbl90eXBlIjogIndlYiIsICJyZXNwb25zZV90eXBlcyI6IFsiY29kZSJdLCAibWV0
+YWRhdGFfc3RhdGVtZW50cyI6IHsiaHR0cHM6Ly9zd2FtaWQuc3VuZXQuc2UvIjogImV5
+SmhiR2NpT2lKU1V6STFOaUlzSW10cFpDSTZJalkxVFVweVJuRkRlREJHVWprMlN6TnhX
+SEpOWjBaV01Ua3hPRjlmVkZjM2RuVkpNbDlNVWw5SFoyOGlmUS5leUptWldSbGNtRjBh
+Vzl1WDNWellXZGxJam9nSW5KbFoybHpkSEpoZEdsdmJpSXNJQ0p6YVdkdWFXNW5YMnRs
+ZVhNaU9pQjdJbXRsZVhNaU9pQmJleUpyZEhraU9pQWlVbE5CSWl3Z0luVnpaU0k2SUNK
+emFXY2lMQ0FpYTJsa0lqb2dJalZxYkMwM1dFNUJMVXhoVFdsdmNrbHNaak54UkdSck16
+Vm9ZbEpoZUc1bGMyUnhlbWN4VVRWeVkyY2lMQ0FpYmlJNklDSXlUbVJVYlhwTllUaHdj
+V2x6WlU4d2RGTklUVzFTYVUxVmJXVmhSbVF4VlVOZkxWVXdTWEppTFRkRVVsQlpURTky
+T0VSMlZXUkpSVEEyT1hadWVVUk1XbE5wTTFWcGJ6TklNa1V5TlZjMWMxRndVamRwWldW
+SGVISTFiRE5ZV1ZkS1oydHBjVzFFYVd0SWJsRjNhblJ3UmtsUE0xbGZOV2Q1U0hCQ1pI
+RkxTSHBaY25GUGFEWmhUV1J5ZVVacVdraHFSRjlRY0RWa2FGOHRaRzVXVWpGcWJIZEJN
+MHd6U0Y5MVdHOTJRekF3WW1WRE16QkdVRms0T0ZCeVJGbDJYMWhEWW0xS2FVaHRaMEZG
+VEhsbVoxTjJkMGxIY1VWNmEyNDFWSGMwTWs4MFJWbGZhRkI2Vm01TllrZFNURWw2Y3kx
+MWVVbHFTVEpLVEdwb2VtZFdVREpCWmxCa1ZGOXpOa2RCUWt0bVZsQnJXRFp2UTA5MGVu
+cHFiVlpmWTJFelgyVlBVR1oyTVZsSlEweGxTbko1TTBwVFZuUkliSEZTZWtORFMyd3la
+RmRRWkMxWFkwOU1OMGxOVldsQmQzaFNWMWhrTnpGdmJWRWlMQ0FpWlNJNklDSkJVVUZD
+SW4xZGZTd2dJbkpsYzNCdmJuTmxYM1I1Y0dWeklqb2dXeUpqYjJSbElpd2dJblJ2YTJW
+dUlsMHNJQ0owYjJ0bGJsOWxibVJ3YjJsdWRGOWhkWFJvWDIxbGRHaHZaQ0k2SUNKd2Nt
+bDJZWFJsWDJ0bGVWOXFkM1FpTENBaWMyTnZjR1Z6SWpvZ1d5SnZjR1Z1YVdRaUxDQWla
+VzFoYVd3aVhTd2dJbWx6Y3lJNklDSm9kSFJ3Y3pvdkwzTjNZVzFwWkM1emRXNWxkQzV6
+WlM4aUxDQWlhV0YwSWpvZ01UUTVOakEwTkRRNU55d2dJbVY0Y0NJNklERTBPVGcyTXpZ
+ME9UY3NJQ0pyYVdRaU9pQWlOalZOU25KR2NVTjRNRVpTT1RaTE0zRlljazFuUmxZeE9U
+RTRYMTlVVnpkMmRVa3lYMHhTWDBkbmJ5SXNJQ0pxZEdraU9pQWlNV016T1RZME5tTTBN
+R0V4TkRWa05HRmtZV0l3TUdObE5tUTBNbVJoWW1NaWZRLllQY3BIU2x1ZWlfRGJPeVJ4
+RFE5UGVMNUZVMjNaSFU0NUczM1dUSmxDVDFReHF6S0xZRmpIZG0yOFdWSHhxdVE0RnJn
+bVk0OVd0OXZtMWN2c2c1aFN5eE5jSEpNRERMM1k0cGZlTGVvelRWWmhEcngtd1VDY1Bx
+Q0l4cFU5V2R0dVd2ZWZ5dnh6YnVGOHFNZjdfNEFpdzhWMVRxSmM3dHFZcGRfSWMweGR1
+SEVNRmFGMVVBVHp0ZEdPS3k0aUlTU1I2cUtPS0dmSnlXNElsTnctaExSNURJbWxuNFc3
+dWlrSEZVeGtLam1yWENRLUFuS2hNVXViNzVkVGhLZy12SVppWEQ4VDBLYklzaTJsNDBi
+SF9uOXFXZXhucFhfQkFHdkNnWTlMbEVKMFo4d2xUcEhxSHpEMm1yczIxOHlzb3AydEI0
+NUlDSnBzV19ZRHFXSGd2UDltUSJ9LCAiaXNzIjogImh0dHBzOi8vd3d3LnVuaW5ldHQu
+bm8iLCAiaWF0IjogMTQ5NjA0NDQ5OCwgImV4cCI6IDE0OTYxMzA4OTgsICJraWQiOiAi
+NWpsLTdYTkEtTGFNaW9ySWxmM3FEZGszNWhiUmF4bmVzZHF6ZzFRNXJjZyIsICJzdWIi
+OiAiaHR0cHM6Ly9mb29kbGUudW5pbmV0dC5ubyJ9.ioRfk8nzESbwhbLig_VwzqelgaP
+m01jQ5LGg1i2FYjgb7MiFkITb9JTeXjZ5H-HBDIBd2-CByL9L8W_XrFS-wuZovVudV3Z
+blkwVGFTqkzHHGrN385Jh3GHRJORH87SkF2GJ-ZOUP1TXQ3NXT7IXhi75AsYaUDa6E5t
+sCPyQ39XuHPIAR6ACkVAeEUiWnx8Yg5Ryf9pkAYhcQjTYq50uF6lENiqCF2mWlBmVcN8
+83P9gjz8iXZYnlBsKr8LY5SnLD3ljU8XXDCl4J616E0dPIucgUMxnWCaMmUv9gOSZ1wQ
+fjD36sk9_KQ7Ei-JItSGzqElfSyhFS7cWORCdINs4-w",
+    "https://www.feide.no": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjVqbC03WE5
+BLUxhTWlvcklsZjNxRGRrMzVoYlJheG5lc2RxemcxUTVyY2cifQ.eyJhcHBsaWNhdGlv
+bl90eXBlIjogIndlYiIsICJyZXNwb25zZV90eXBlcyI6IFsiY29kZSJdLCAibWV0YWRh
+dGFfc3RhdGVtZW50cyI6IHsiaHR0cHM6Ly93d3cuZmVpZGUubm8iOiAiZXlKaGJHY2lP
+aUpTVXpJMU5pSXNJbXRwWkNJNklrbFJOMHhZVG5kWVJFZGFkMlpCWjJwUVIzSkxXbEpN
+ZFZWNlFVUlBaelJzYkMxTWFGWlpRMXBvVTNjaWZRLmV5Sm1aV1JsY21GMGFXOXVYM1Z6
+WVdkbElqb2dJbkpsWjJsemRISmhkR2x2YmlJc0lDSnphV2R1YVc1blgydGxlWE1pT2lC
+N0ltdGxlWE1pT2lCYmV5SnJkSGtpT2lBaVVsTkJJaXdnSW5WelpTSTZJQ0p6YVdjaUxD
+QWlhMmxrSWpvZ0lqVnFiQzAzV0U1QkxVeGhUV2x2Y2tsc1pqTnhSR1JyTXpWb1lsSmhl
+RzVsYzJSeGVtY3hVVFZ5WTJjaUxDQWliaUk2SUNJeVRtUlViWHBOWVRod2NXbHpaVTh3
+ZEZOSVRXMVNhVTFWYldWaFJtUXhWVU5mTFZVd1NYSmlMVGRFVWxCWlRFOTJPRVIyVldS
+SlJUQTJPWFp1ZVVSTVdsTnBNMVZwYnpOSU1rVXlOVmMxYzFGd1VqZHBaV1ZIZUhJMWJE
+TllXVmRLWjJ0cGNXMUVhV3RJYmxGM2FuUndSa2xQTTFsZk5XZDVTSEJDWkhGTFNIcFpj
+bkZQYURaaFRXUnllVVpxV2tocVJGOVFjRFZrYUY4dFpHNVdVakZxYkhkQk0wd3pTRjkx
+V0c5MlF6QXdZbVZETXpCR1VGazRPRkJ5UkZsMlgxaERZbTFLYVVodFowRkZUSGxtWjFO
+MmQwbEhjVVY2YTI0MVZIYzBNazgwUlZsZmFGQjZWbTVOWWtkU1RFbDZjeTExZVVscVNU
+SktUR3BvZW1kV1VESkJabEJrVkY5ek5rZEJRa3RtVmxCcldEWnZRMDkwZW5wcWJWWmZZ
+MkV6WDJWUFVHWjJNVmxKUTB4bFNuSjVNMHBUVm5SSWJIRlNla05EUzJ3eVpGZFFaQzFY
+WTA5TU4wbE5WV2xCZDNoU1YxaGtOekZ2YlZFaUxDQWlaU0k2SUNKQlVVRkNJbjFkZlN3
+Z0ltbGtYM1J2YTJWdVgzTnBaMjVwYm1kZllXeG5YM1poYkhWbGMxOXpkWEJ3YjNKMFpX
+UWlPaUJiSWxKVE1qVTJJaXdnSWxKVE5URXlJbDBzSUNKamJHRnBiWE1pT2lCYkluTjFZ
+aUlzSUNKdVlXMWxJaXdnSW1WdFlXbHNJaXdnSW5CcFkzUjFjbVVpWFN3Z0ltbHpjeUk2
+SUNKb2RIUndjem92TDNkM2R5NW1aV2xrWlM1dWJ5SXNJQ0pwWVhRaU9pQXhORGsyTURR
+ME5EazNMQ0FpWlhod0lqb2dNVFE1T0RZek5qUTVOeXdnSW10cFpDSTZJQ0pKVVRkTVdF
+NTNXRVJIV25kbVFXZHFVRWR5UzFwU1RIVlZla0ZFVDJjMGJHd3RUR2hXV1VOYWFGTjNJ
+aXdnSW1wMGFTSTZJQ0l6TlRkbU5UUmlOemhqWkRjMFpHWTNZV0ZqWlRreE56STNOV1Jr
+TXprM055SjkuS2drckIyQ3VUX1dJbVNBUWZBLWlvTkRFNVNlR045cFpTcHdjdnpyQ2Fk
+Q1FOeGJ4MmYyczhKbTVOdzM5a3VsczJGQmV5amVTazI1dnBreDA1Y0pkeTVLVUxMV1FV
+OUhIUmpkNnRBelM4SmpBak5ucnM4YjJpOTBVcVdsU3Y4eVk1akdWWll4aFlZbzIxZWE5
+a3hUUksyRjRFTFFXR202RURKb2l5dkF3dzRpcndQd0JxY3pRdWpNeDJLV2JWb1NfeUxj
+QVR3VzNQWUFOaENHaGRaMEZXRFloQ2xfUDRNYmRVa3Bvck14eEZ5RUR2OWxzYnN1elc4
+TjE3QWZ3X0F4WE9GLUdfWlp5bXVnRm03M3hEWkpDR0Z3cW9WUXZpal9JX3huSWJqRlF6
+dm05cC1ZN05RbThBbTQwc2g2UXpHUVg3VTltTWp6ZVVLQ1RsSzZlVzJXdUJRIn0sICJp
+c3MiOiAiaHR0cHM6Ly93d3cudW5pbmV0dC5ubyIsICJpYXQiOiAxNDk2MDQ0NDk4LCAi
+ZXhwIjogMTQ5NjEzMDg5OCwgImtpZCI6ICI1amwtN1hOQS1MYU1pb3JJbGYzcURkazM1
+aGJSYXhuZXNkcXpnMVE1cmNnIiwgInN1YiI6ICJodHRwczovL2Zvb2RsZS51bmluZXR0
+Lm5vIn0.FTG1ydN7uGa1J6ZZjs9xgPgtPd_cJuIyrXrfo7WT6q3IdPvziNpeWDCcimKD
+tM8AGNMwNnr6LFkCwmwkxcKn9Aua6mmq9HaqtfIcauA8GOnKN3sK2he2NfuHF3JGGkjP
+dcQ-JgIv50FrZ7M07HeQgn7gLGqv9sjWbuysMyO8LHKbEOkg3TJb8uLG8_9AHJzG8tyu
+VlRinpnu9Vajuntw8Qxq7RRkkg-ttMDAuO_CwLwivpSxmogqo_qvYBwn3Pmli4-EGPbK
+o1B4jaJPrrhJZnuwFaURBvojJ9YOZIVYGQo2F6dObCF9ugpbhWCYn6ZCGgLsQEx4YwHg
+Qu2jiG6rZQ"
+  },
   "redirect_uris": [
     "https://foodle.uninett.no/callback"
   ]
@@ -1661,28 +1701,7 @@ If that works it can then flatten the compounded metadata statements.
 </t>
 </section>
 <section title="Unpacked and flattened metadata statement per FO">
-<section title="*** https://swamid.sunet.se/ ***">
-<figure>
-<artwork> <![CDATA[
-{
-  "application_type": "web",
-  "federation_usage": "registration",
-  "redirect_uris": [
-    "https://foodle.uninett.no/callback"
-  ],
-  "response_types": [
-    "code",
-    "token"
-  ],
-  "scopes": [
-    "openid",
-    "email"
-  ],
-  "token_endpoint_auth_method": "private_key_jwt"
-}
-]]></artwork ></figure>
-</section>
-<section title="*** https://www.feide.no ***">
+<section title="***  ***">
 <figure>
 <artwork> <![CDATA[
 {
@@ -1707,8 +1726,28 @@ If that works it can then flatten the compounded metadata statements.
 }
 ]]></artwork ></figure>
 </section>
+<section title="***  ***">
+<figure>
+<artwork> <![CDATA[
+{
+  "application_type": "web",
+  "federation_usage": "registration",
+  "redirect_uris": [
+    "https://foodle.uninett.no/callback"
+  ],
+  "response_types": [
+    "code",
+    "token"
+  ],
+  "scopes": [
+    "openid",
+    "email"
+  ],
+  "token_endpoint_auth_method": "private_key_jwt"
+}
+]]></artwork ></figure>
 </section>
 </section>
-
+</section>
     </back>
 </rfc>

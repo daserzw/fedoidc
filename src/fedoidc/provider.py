@@ -3,7 +3,7 @@ import logging
 import copy
 
 from fedoidc import ClientMetadataStatement
-from oic.oauth2 import error
+from oic.oauth2 import error, Message
 from oic.oic import provider
 from oic.oic.message import DiscoveryRequest
 from oic.oic.message import DiscoveryResponse
@@ -71,7 +71,7 @@ class Provider(provider.Provider):
         _ms = self.create_signed_metadata_statement('discovery', fos, setup)
 
         pcr = self.create_providerinfo(setup=setup)
-        pcr['metadata_statements'] = [_ms]
+        pcr['metadata_statements'] = Message(**_ms)
 
         return pcr
 
@@ -116,7 +116,7 @@ class Provider(provider.Provider):
 
         if ms_list:
             ms = self.federation_entity.pick_by_priority(ms_list)
-            self.federation = ms.iss
+            self.federation = ms.fo
         else:  # Nothing I can use
             return error(error='invalid_request',
                          descr='No signed metadata statement I could use')
@@ -128,16 +128,19 @@ class Provider(provider.Provider):
             return result
 
         # TODO This is where the OP should sign the response
-        if ms.iss:
+        if ms.fo:
+            _fo = ms.fo
             try:
-                ms = self.response_metadata_statements[ms.iss]
+                ms = self.response_metadata_statements[ms.fo]
             except KeyError:
                 logger.error(
-                    'No response metadata found for: {}'.format(ms.iss))
+                    'No response metadata found for: {}'.format(ms.fo))
                 raise
-            result['metadata_statements'] = [ms]
+            else:
+                result['metadata_statements'] = Message(**{_fo: ms})
+            # Sign by myself
             sms = self.federation_entity.pack_metadata_statement(result)
-            result['metadata_statements'] = [sms]
+            result['metadata_statements'] = Message(**{_fo: sms})
 
         return Created(result.to_json(), content="application/json",
                        headers=[("Cache-Control", "no-store")])

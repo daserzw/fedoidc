@@ -1,8 +1,7 @@
-import json
 import os
 
 from jwkest import jws
-from oic.oauth2.message import MissingSigningKey
+from oic.oauth2.message import MissingSigningKey, Message
 from oic.utils.keyio import build_keyjar
 from oic.utils.keyio import KeyJar
 
@@ -72,7 +71,7 @@ def test_create_client_metadata_statement():
     ms_jwt = ms.to_jwt(KEYS['fo']['keyjar'].get_signing_key('rsa'))
 
     cms = ClientMetadataStatement(
-        metadata_statements=[ms_jwt],
+        metadata_statements=Message(**{ISSUER['org']: ms_jwt}),
         contacts=['info@example.com']
     )
 
@@ -136,8 +135,8 @@ def test_pack_and_unpack_ms_lev1():
     )
 
     # signed by the org
-    ms_rp = ORGOP.pack_metadata_statement(cms_rp, alg='RS256',
-                                          metadata_statements=[ms_org])
+    ms_rp = ORGOP.pack_metadata_statement(
+        cms_rp, alg='RS256', metadata_statements=Message(**{FOP.iss: ms_org}))
 
     receiver = fo_member(FOP)
     ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
@@ -159,8 +158,9 @@ def test_pack_and_unpack_ms_lev2():
     )
 
     #  signed by org
-    ms_inter = ORGOP.pack_metadata_statement(cms_inter, alg='RS256',
-                                             metadata_statements=[ms_org])
+    ms_inter = ORGOP.pack_metadata_statement(
+        cms_inter, alg='RS256',
+        metadata_statements=Message(**{FOP.iss: ms_org}))
 
     cms_rp = ClientMetadataStatement(
         signing_keys=KEYS['admin']['jwks'],
@@ -168,8 +168,8 @@ def test_pack_and_unpack_ms_lev2():
     )
 
     #  signed by intermediate
-    ms_rp = INTEROP.pack_metadata_statement(cms_rp, alg='RS256',
-                                            metadata_statements=[ms_inter])
+    ms_rp = INTEROP.pack_metadata_statement(
+        cms_rp, alg='RS256', metadata_statements=Message(**{FOP.iss: ms_inter}))
 
     receiver = fo_member(FOP)
     ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
@@ -196,16 +196,17 @@ def test_multiple_fo_one_working():
         redirect_uris=['https://rp.example.com/auth_cb']
     )
 
-    ms_rp = ORGOP.pack_metadata_statement(cms_rp, alg='RS256',
-                                          metadata_statements=[ms_org1,
-                                                               ms_org2])
+    ms_rp = ORGOP.pack_metadata_statement(
+        cms_rp, alg='RS256',
+        metadata_statements=Message(**{FOP.iss: ms_org1, FO1P.iss: ms_org2}))
 
     # only knows about one FO
     receiver = fo_member(FOP)
     ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
     assert len(ri.result['metadata_statements']) == 1
-    _ms = json.loads(ri.result['metadata_statements'][0])
+    _key = list(ri.result['metadata_statements'].keys())[0]
+    _ms = ri.result['metadata_statements'][_key]
     assert _ms['iss'] == ISSUER['fo']
 
 
@@ -228,16 +229,16 @@ def test_multiple_fo_all_working():
         redirect_uris=['https://rp.example.com/auth_cb']
     )
 
-    ms_rp = ORGOP.pack_metadata_statement(cms_rp, alg='RS256',
-                                          metadata_statements=[ms_org1,
-                                                               ms_org2])
+    ms_rp = ORGOP.pack_metadata_statement(
+        cms_rp, alg='RS256', metadata_statements=Message(**{FOP.iss: ms_org1,
+                                                            FO1P.iss: ms_org2}))
 
     # knows all FO's
     receiver = fo_member(FOP, FO1P)
     ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
     assert len(ri.result['metadata_statements']) == 2
-    _iss = [json.loads(x)['iss'] for x in ri.result['metadata_statements']]
+    _iss = [iss for iss, val in ri.result['metadata_statements'].items()]
     assert set(_iss) == {ISSUER['fo'], ISSUER['fo1']}
 
 
@@ -270,8 +271,9 @@ def test_evaluate_metadata_statement_1():
     )
 
     #  signed by org
-    ms_inter = ORGOP.pack_metadata_statement(cms_inter, alg='RS256',
-                                             metadata_statements=[ms_org])
+    ms_inter = ORGOP.pack_metadata_statement(
+        cms_inter, alg='RS256',
+        metadata_statements=Message(**{FOP.iss: ms_org}))
 
     cms_rp = ClientMetadataStatement(
         signing_keys=KEYS['admin']['jwks'],
@@ -279,15 +281,16 @@ def test_evaluate_metadata_statement_1():
     )
 
     #  signed by intermediate
-    ms_rp = INTEROP.pack_metadata_statement(cms_rp, alg='RS256',
-                                            metadata_statements=[ms_inter])
+    ms_rp = INTEROP.pack_metadata_statement(
+        cms_rp, alg='RS256',
+        metadata_statements=Message(**{FOP.iss: ms_inter}))
 
     receiver = fo_member(FOP)
     ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
     res = receiver.evaluate_metadata_statement(ri.result)
     assert len(res) == 1
-    assert res[0].iss == ISSUER['fo']
+    assert res[0].iss == ISSUER['inter']
     assert sorted(list(res[0].keys())) == sorted(
         ['contacts', 'tos_uri', 'redirect_uris', 'scope'])
 
@@ -308,8 +311,9 @@ def test_evaluate_metadata_statement_2():
     )
 
     #  signed by org
-    ms_inter = ORGOP.pack_metadata_statement(cms_inter, alg='RS256',
-                                             metadata_statements=[ms_org])
+    ms_inter = ORGOP.pack_metadata_statement(
+        cms_inter, alg='RS256',
+        metadata_statements=Message(**{FOP.iss: ms_org}))
 
     cms_rp = ClientMetadataStatement(
         signing_keys=KEYS['admin']['jwks'],
@@ -318,15 +322,17 @@ def test_evaluate_metadata_statement_2():
     )
 
     #  signed by intermediate
-    ms_rp = INTEROP.pack_metadata_statement(cms_rp, alg='RS256',
-                                            metadata_statements=[ms_inter])
+    ms_rp = INTEROP.pack_metadata_statement(
+        cms_rp, alg='RS256',
+        metadata_statements=Message(**{FOP.iss: ms_inter}))
 
     receiver = fo_member(FOP)
     ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
     res = receiver.evaluate_metadata_statement(ri.result)
     assert len(res) == 1
-    assert res[0].iss == ISSUER['fo']
+    assert res[0].iss == ISSUER['inter']
+    assert res[0].fo == ISSUER['fo']
     assert sorted(list(res[0].keys())) == sorted(
         ['contacts', 'tos_uri', 'redirect_uris', 'scope'])
 
@@ -354,10 +360,12 @@ def test_evaluate_metadata_statement_3():
         tos_uri=['https://inter.example.com/tos.html']
     )
 
-    #  signed by org
-    ms_inter = ORGOP.pack_metadata_statement(cms_inter, alg='RS256',
-                                             metadata_statements=[ms_org1,
-                                                                  ms_org2])
+    ms_inter = {}
+    for k, v in {FOP.iss: ms_org1, FO1P.iss: ms_org2}.items():
+        #  signed by org
+        ms_inter[k] = ORGOP.pack_metadata_statement(
+            cms_inter, alg='RS256',
+            metadata_statements=Message(**{k: v}))
 
     cms_rp = ClientMetadataStatement(
         signing_keys=KEYS['admin']['jwks'],
@@ -366,8 +374,8 @@ def test_evaluate_metadata_statement_3():
     )
 
     #  signed by intermediate
-    ms_rp = INTEROP.pack_metadata_statement(cms_rp, alg='RS256',
-                                            metadata_statements=[ms_inter])
+    ms_rp = INTEROP.pack_metadata_statement(
+        cms_rp, alg='RS256', metadata_statements=Message(**ms_inter))
 
     # knows all FO's
     receiver = fo_member(FOP, FO1P)
@@ -375,14 +383,16 @@ def test_evaluate_metadata_statement_3():
 
     res = receiver.evaluate_metadata_statement(ri.result)
     assert len(res) == 2
-    assert set([r.iss for r in res]) == {ISSUER['fo'], ISSUER['fo1']}
-    assert sorted(list(res[0].keys())) == sorted(
-        ['claims', 'contacts', 'tos_uri', 'redirect_uris', 'scope'])
-
-    assert res[0]['scope'] == ['openid', 'email', 'phone']
-    assert res[1]['scope'] == ['openid', 'email', 'address']
-    assert 'claims' in res[0]
-    assert 'claims' not in res[1]
+    assert set([r.fo for r in res]) == {ISSUER['fo'], ISSUER['fo1']}
+    for r in res:
+        if r.fo == ISSUER['fo']:
+            assert sorted(list(r.keys())) == sorted(
+                ['claims', 'contacts', 'tos_uri', 'redirect_uris', 'scope'])
+            assert r['scope'] == ['openid', 'email', 'phone']
+        else:
+            assert sorted(list(r.keys())) == sorted(
+                ['contacts', 'tos_uri', 'redirect_uris', 'scope'])
+            assert r['scope'] == ['openid', 'email', 'address']
 
 
 def test_evaluate_metadata_statement_4():
@@ -406,8 +416,9 @@ def test_evaluate_metadata_statement_4():
     )
 
     #  signed by org
-    ms_inter0 = ORGOP.pack_metadata_statement(cms_inter, alg='RS256',
-                                              metadata_statements=[ms_org])
+    ms_inter0 = ORGOP.pack_metadata_statement(
+        cms_inter, alg='RS256',
+        metadata_statements=Message(**{FOP.iss: ms_org}))
 
     ms_inter1 = LIGOOP.pack_metadata_statement(cms_inter, alg='ES256')
 
@@ -418,15 +429,17 @@ def test_evaluate_metadata_statement_4():
     )
 
     #  signed by intermediate
-    ms_rp = INTEROP.pack_metadata_statement(cms_rp, alg='RS256',
-                                            metadata_statements=[ms_inter0,
-                                                                 ms_inter1])
+    ms_rp = INTEROP.pack_metadata_statement(
+        cms_rp, alg='RS256',
+        metadata_statements=Message(
+            **{FOP.iss: ms_inter0, LIGOOP.iss: ms_inter1}))
 
     # knows both FO's
     receiver = fo_member(FOP, LIGOOP)
     ri = receiver.unpack_metadata_statement(jwt_ms=ms_rp)
 
-    res = le_dict(receiver.evaluate_metadata_statement(ri.result))
+    _re = receiver.evaluate_metadata_statement(ri.result)
+    res = le_dict(_re)
     assert set(res.keys()) == {ISSUER['fo'], ISSUER['ligo']}
     assert sorted(list(res[ISSUER['fo']].keys())) == sorted(
         ['claims', 'contacts', 'redirect_uris', 'scope', 'tos_uri'])
@@ -452,24 +465,25 @@ def test_unpack_discovery_info():
     )
 
     #  signed by org
-    ms_rp = ORGOP.pack_metadata_statement(cms_sa, alg='RS256',
-                                          metadata_statements=[ms_org])
+    ms_rp = ORGOP.pack_metadata_statement(
+        cms_sa, alg='RS256',
+        metadata_statements=Message(**{FOP.iss: ms_org}))
 
     # ProviderConfigurationResponse sent to the RP
     pcr = ProviderConfigurationResponse(
         issuer='https://example.org/op',
         authorization_endpoint='https://example.org/op/auth',
-        metadata_statements=[ms_rp]
+        metadata_statements=Message(**{FOP.iss: ms_rp})
     )
 
     receiver = fo_member(FOP)
     ri = receiver.unpack_metadata_statement(json_ms=pcr,
-                                              cls=ProviderConfigurationResponse)
+                                            cls=ProviderConfigurationResponse)
 
     pcr_ms = receiver.evaluate_metadata_statement(ri.result)
 
     assert len(pcr_ms) == 1
-    assert pcr_ms[0].iss == ISSUER['fo']
+    assert pcr_ms[0].fo == ISSUER['fo']
     assert pcr_ms[0]['issuer'] == 'https://example.org/op'
 
     _ms = pcr_ms[0]

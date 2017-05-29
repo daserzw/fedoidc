@@ -103,7 +103,7 @@ def make_ms(desc, leaf, operator, ms=None, ms_uris=None):
     _signer = operator[desc['signer']]
 
     if ms:
-        req['metadata_statements'] = list(ms.values())
+        req['metadata_statements'] = dict(ms.items())
         if len(ms):
             _fo = list(ms.keys())[0]
         else:
@@ -370,19 +370,19 @@ def unpack_using_metadata_store(url, mds):
     _jws0 = mds[p.path.split('/')[-1]]
     _md0 = unfurl(_jws0)
 
-    _mds = []
+    _mds = {}
     if 'metadata_statement_uris' in _md0:
         for _fo, _url in _md0['metadata_statement_uris'].items():
             p = urlparse(_url)
             _jws = mds[p.path.split('/')[-1]]
             _md = unfurl(_jws)
             if 'metadata_statement_uris' in _md:
-                _mdss = []
-                for fo, _url in _md['metadata_statement_uris'].items():
-                    _mdss.append(unpack_using_metadata_store(_url, mds))
+                _mdss = {}
+                for fo, _urlu in _md['metadata_statement_uris'].items():
+                    _mdss[fo] = unpack_using_metadata_store(_urlu, mds)
                 _md['metadata_statement'] = _mdss
                 del _md['metadata_statement_uris']
-            _mds.append(json.dumps(_md))
+            _mds[_fo] = json.dumps(_md)
 
         _md0['metadata_statements'] = _mds
         del _md0['metadata_statement_uris']

@@ -6,13 +6,13 @@ from jwkest import BadSignature
 from jwkest.jws import JWSException
 import time
 
-from fedoidc import ClientMetadataStatement
+from fedoidc import ClientMetadataStatement, MetadataStatementError
 from fedoidc import DoNotCompare
 from fedoidc import IgnoreKeys
 from fedoidc import is_lesser
 from fedoidc import unfurl
 
-from oic.oauth2.message import MissingSigningKey
+from oic.oauth2.message import MissingSigningKey, Message
 
 from oic.utils.keyio import build_keyjar
 from oic.utils.jwt import JWT
@@ -37,7 +37,7 @@ class ParseInfo(object):
 
 
 class LessOrEqual(object):
-    def __init__(self, iss='', sup=None):
+    def __init__(self, iss='', sup=None, exp=0):
         if sup:
             self.fo = sup.fo
         else:
@@ -47,6 +47,7 @@ class LessOrEqual(object):
         self.sup = sup
         self.err = {}
         self.le = {}
+        self.exp = exp
 
     def __setitem__(self, key, value):
         self.le[key] = value
@@ -109,7 +110,23 @@ class LessOrEqual(object):
 
 
 def le_dict(les):
-    return dict([(l.iss, l) for l in les])
+    return dict([(l.fo, l) for l in les])
+
+
+def get_fo(ms):
+    try:
+        _mds = ms['metadata_statements']
+    except KeyError:
+        return ms['iss']
+    else:
+        # should only be one
+        try:
+            assert len(_mds) == 1
+        except AssertionError:
+            raise MetadataStatementError('Branching not allowed')
+
+        _ms = list(_mds.values())[0]
+        return get_fo(_ms)
 
 
 class Operator(object):
@@ -154,19 +171,35 @@ class Operator(object):
                 pr.parsed_statement.append(_pi.result)
         return pr
 
-    def _unpack(self, json_ms, keyjar, cls, jwt_ms=None):
+    def _unpack(self, json_ms, keyjar, cls, jwt_ms=None, liss=None):
+        """
+        
+        :param json_ms: Metadata statement as a JSON document 
+        :param keyjar: A keyjar with the necessary FO keys
+        :param cls: What class to map the metadata into
+        :param jwt_ms: Metadata statement as a JWS 
+        :param liss: List of FO issuer IDs
+        :return: ParseInfo instance
+        """
+        if liss is None:
+            liss = []
+
         _pr = ParseInfo()
         _pr.input = json_ms
         ms_flag = False
         if 'metadata_statements' in json_ms:
             ms_flag = True
-            for meta_s in json_ms['metadata_statements']:
-                _pr = self._ums(_pr, meta_s, keyjar)
+            for iss, _ms in json_ms['metadata_statements'].items():
+                if liss and iss not in liss:
+                    continue
+                _pr = self._ums(_pr, _ms, keyjar)
 
         if 'metadata_statement_uris' in json_ms:
             ms_flag = True
             if self.httpcli:
                 for iss, url in json_ms['metadata_statement_uris'].items():
+                    if liss and iss not in liss:
+                        continue
                     rsp = self.httpcli.http_request(url)
                     if rsp.status_code == 200:
                         _pr = self._ums(_pr, rsp.text, keyjar)
@@ -192,13 +225,16 @@ class Operator(object):
                 _pr.error[jwt_ms] = err
             else:
                 try:
-                    _pr.expires = _pr.result['exp']
+                    _pr.result.expires = _pr.result['exp']
                 except KeyError:
                     pass
         else:
             _pr.result = json_ms
 
         if _pr.result and _pr.parsed_statement:
+            _prr = _pr.result
+
+            _res = {}
             for x in _pr.parsed_statement:
                 if x:
                     try:
@@ -206,17 +242,27 @@ class Operator(object):
                     except KeyError:
                         continue
                     else:
-                        if _pr.expires == 0:
-                            _pr.expires = _exp
-                        elif _exp < _pr.expires:
-                            _pr.expires = _exp
+                        if isinstance(_prr, Message):
+                            try:
+                                _expires = _prr.expires
+                            except AttributeError:
+                                _prr.expires = _exp
+                            else:
+                                if _expires == 0:
+                                    _prr.expires = _exp
+                                elif _exp < _expires:
+                                    _prr.expires = _exp
+                            _res[get_fo(x)] = x
+                        else:
+                            _res[get_fo(_pr.parsed_statement[0])] = x
 
-            _pr.result['metadata_statements'] = [
-                x.to_json() for x in _pr.parsed_statement if x]
+            _pr.result['metadata_statements'] = Message(**_res)
+            # _pr.result['metadata_statements'] = [
+            #     x.to_json() for x in _pr.parsed_statement if x]
         return _pr
 
     def unpack_metadata_statement(self, json_ms=None, jwt_ms='', keyjar=None,
-                                  cls=ClientMetadataStatement):
+                                  cls=ClientMetadataStatement, liss=None):
         """
 
         :param json_ms: Metadata statement as a JSON document
@@ -224,6 +270,8 @@ class Operator(object):
         :param keyjar: Keys that should be used to verify the signature of the
             document
         :param cls: What type (Class) of metadata statement this is
+        :param liss: list of FO identifiers that matters. The rest will be 
+            ignored
         :return: ParseInfo instance
         """
 
@@ -237,7 +285,7 @@ class Operator(object):
                 raise
 
         if json_ms:
-            return self._unpack(json_ms, keyjar, cls, jwt_ms)
+            return self._unpack(json_ms, keyjar, cls, jwt_ms, liss)
         else:
             raise AttributeError('Need one of json_ms or jwt_ms')
 
@@ -287,7 +335,7 @@ class Operator(object):
         statement.
         If something goes wrong during the evaluation an exception is raised
 
-        :param metadata: The compounded metadata statement
+        :param metadata: The compounded metadata statement as a dictionary
         :return: A Flatten instance
         """
 
@@ -297,18 +345,20 @@ class Operator(object):
 
         if 'metadata_statements' in metadata:
             les = []
-            for ms in metadata['metadata_statements']:
-                for _le in self.evaluate_metadata_statement(json.loads(ms)):
+            for fo, ms in metadata['metadata_statements'].items():
+                if isinstance(ms, str):
+                    ms = json.loads(ms)
+                for _le in self.evaluate_metadata_statement(ms):
                     try:
                         _sign = metadata['iss']
                     except KeyError:
                         _sign = ''
-                    le = LessOrEqual(sup=_le, iss=_sign)
+                    le = LessOrEqual(sup=_le, iss=_sign, exp=ms['exp'])
                     le.eval(res, _sign)
                     les.append(le)
             return les
         else:  # this is the innermost
-            le = LessOrEqual(iss=metadata['iss'])
+            le = LessOrEqual(iss=metadata['iss'], exp=metadata['exp'])
             le.eval(res, metadata['iss'])
             return [le]
 
@@ -322,13 +372,13 @@ class Operator(object):
         """
 
         if 'metadata_statements' in metadata:
-            _msl = []
-            for ms in metadata['metadata_statements']:
+            _msl = {}
+            for fo, ms in metadata['metadata_statements']:
                 if self.correct_usage(json.loads(ms),
                                       federation_usage=federation_usage):
-                    _msl.append(ms)
+                    _msl[fo] = ms
             if _msl:
-                metadata['metadata_statements'] = _msl
+                metadata['metadata_statements'] = Message(**_msl)
                 return metadata
             else:
                 return None

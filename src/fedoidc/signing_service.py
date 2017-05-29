@@ -5,6 +5,7 @@ from urllib.parse import unquote_plus
 
 import logging
 import requests
+from oic.oauth2 import Message
 
 from fedoidc.file_system import FileSystem
 from oic.utils.jwt import JWT
@@ -131,12 +132,13 @@ class Signer(object):
             statement should be used
         :param fos: Signed metadata statements from these Federation Operators
             should be added.
-        :return: signed Metadata Statement
+        :return: Dictionary with signed Metadata Statements as values
         """
 
         if not context:
             context = self.def_context
 
+        _sms = {}
         if self.metadata_statements:
             try:
                 cms = self.metadata_statements[context]
@@ -155,8 +157,6 @@ class Signer(object):
                 if fos is None:
                     fos = list(cms.keys())
 
-                _msl = []
-                _msu = {}
                 for f in fos:
                     try:
                         val = cms[f]
@@ -164,16 +164,15 @@ class Signer(object):
                         continue
 
                     if val.startswith('http'):
-                        _msu[f] = val
+                        req['metadata_statement_uris'] = {f: val}
+                        _sms[f] = self.signing_service(req)
+                        del req['metadata_statement_uris']
                     else:
-                        _msl.append(val)
+                        req['metadata_statements'] = {f: val}
+                        _sms[f] = self.signing_service(req)
+                        del req['metadata_statements']
 
-                if fos and not _msl and not _msu:
+                if fos and not _sms:
                     raise KeyError('No metadata statements matched')
 
-                if _msl:
-                    req['metadata_statements'] = _msl
-                if _msu:
-                    req['metadata_statement_uris'] = _msu
-
-        return self.signing_service(req)
+        return _sms

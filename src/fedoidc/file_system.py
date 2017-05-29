@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +114,8 @@ class FileSystem(object):
 
     def sync(self):
         if not os.path.isdir(self.fdir):
-            raise ValueError('No such directory: {}'.format(self.fdir))
+            os.makedirs(self.fdir)
+            #raise ValueError('No such directory: {}'.format(self.fdir))
         for f in os.listdir(self.fdir):
             fname = os.path.join(self.fdir, f)
             if not os.path.isfile(fname):
@@ -141,7 +143,9 @@ class FileSystem(object):
 
         for f in os.listdir(self.fdir):
             fname = os.path.join(self.fdir, f)
-            os.unlink(fname)
+            if os.path.isdir(fname):
+                shutil.rmtree(fname)
+
             try:
                 del self.db[f]
             except KeyError:

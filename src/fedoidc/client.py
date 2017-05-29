@@ -11,7 +11,7 @@ from oic.exception import ParseError
 from oic.exception import RegistrationError
 from oic.oauth2 import ErrorResponse
 from oic.oauth2 import sanitize
-from oic.oauth2.message import MissingRequiredAttribute
+from oic.oauth2.message import MissingRequiredAttribute, Message
 from oic.oic import RegistrationResponse
 
 from fedoidc.operator import le_dict
@@ -63,7 +63,7 @@ class Client(oic.Client):
         if len(resp) == 1:
             ms = ms_list[0]
             self.handle_provider_config(ms, issuer)
-            self.federation = ms.iss
+            self.federation = ms.fo
         else:
             self.provider_federations = ms_list
 
@@ -86,7 +86,7 @@ class Client(oic.Client):
         if len(ms_list) == 1:
             ms = ms_list[0]
             self.store_registration_info(ms)
-            self.federation = ms.iss
+            self.federation = ms.fo
         else:
             self.registration_federations = ms_list
 
@@ -136,20 +136,20 @@ class Client(oic.Client):
         """
         for fo in self.fo_priority:
             for ms in ms_list:
-                if ms.iss == fo:
+                if ms.fo == fo:
                     return ms
 
         return ms_list[0]
 
     def chose_provider_federation(self, issuer):
         _pcr = self.chose_federation(self.provider_federations)
-        self.federation = _pcr.iss
+        self.federation = _pcr.fo
         self.handle_provider_config(_pcr, issuer)
         return _pcr
 
     def chose_registration_federation(self):
         _pcr = self.chose_federation(self.registration_federations)
-        self.federation = _pcr.iss
+        self.federation = _pcr.fo
         self.store_registration_info(_pcr)
         return _pcr
 
@@ -221,13 +221,13 @@ class Client(oic.Client):
             _cms = _fe.create_metadata_statement_request(req)
             sms = _fe.signer.create_signed_metadata_statement(
                 _cms, 'registration', fos=[self.federation])
-            req['metadata_statements'] = [sms]
+            req['metadata_statements'] = Message(**sms)
         else:
-            _fos = list([r.iss for r in self.provider_federations])
+            _fos = list([r.fo for r in self.provider_federations])
             _cms = _fe.create_metadata_statement_request(copy.copy(req))
             sms = _fe.signer.create_signed_metadata_statement(
                 _cms, 'registration', _fos)
-            req['metadata_statements'] = [sms]
+            req['metadata_statements'] = Message(**sms)
 
         return req
 

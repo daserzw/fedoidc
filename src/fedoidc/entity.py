@@ -82,7 +82,8 @@ class FederationEntity(Operator):
         """
         Unpack and evaluate a compound metadata statement
 
-        :param json_ms: The metadata statement as a JSON document
+        :param json_ms: The metadata statement as a JSON document or a 
+            dictionary
         :param cls: The class the response should be typed into
         :param context: In which context the metadata statement should be used.
         :return: A list of metadata statements 

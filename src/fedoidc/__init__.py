@@ -23,12 +23,16 @@ __author__ = 'roland'
 __version__ = '0.3.1'
 
 
+class MetadataStatementError(Exception):
+    pass
+
+
 class MetadataStatement(JasonWebToken):
     c_param = JasonWebToken.c_param.copy()
     c_param.update({
         "signing_keys": SINGLE_OPTIONAL_STRING,
         'signing_keys_uri': SINGLE_OPTIONAL_STRING,
-        'metadata_statements': OPTIONAL_LIST_OF_STRINGS,
+        'metadata_statements': OPTIONAL_MESSAGE,
         'metadata_statement_uris': OPTIONAL_MESSAGE,
         'signed_jwks_uri': SINGLE_OPTIONAL_STRING,
         'federation_usage': SINGLE_OPTIONAL_STRING
@@ -49,9 +53,12 @@ class MetadataStatement(JasonWebToken):
                     raise VerificationError('"signing_keys" not a proper JWKS')
 
         if "metadata_statements" in self and "metadata_statement_uris" in self:
-            raise VerificationError(
-                'You can only have one of "metadata_statements" and '
-                '"metadata_statement_uris" in a metadata statement')
+            s = set(self['metadata_statements'].keys())
+            t = set(self['metadata_statement_uris'].keys())
+            if s.intersection(t):
+                raise VerificationError(
+                    'You should not have the same key in "metadata_statements" '
+                    'and in "metadata_statement_uris"')
 
         return True
 

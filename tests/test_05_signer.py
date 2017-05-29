@@ -1,4 +1,8 @@
+import os
+import shutil
+
 from fedoidc import test_utils, MetadataStatement
+from fedoidc.file_system import FileSystem
 
 KEYDEFS = [
     {"type": "RSA", "key": '', "use": ["sig"]},
@@ -51,6 +55,9 @@ SMSU_DEF = {
     }
 }
 
+fs = FileSystem('ms_dir')
+fs.reset()
+
 liss = list(FO.values())
 liss.extend(list(OA.values()))
 
@@ -62,7 +69,7 @@ signer, keybundle = test_utils.setup(
 def test_signer():
     items = signer[OA['sunet']].items()
     assert set(list(items.keys())) == {'discovery', 'registration'}
-    assert set(list(items['discovery'])) == {FO['swamid'], FO['feide']}
+    assert set(list(items['discovery'])) == {FO['feide'], FO['swamid']}
 
 
 def test_create_sms():

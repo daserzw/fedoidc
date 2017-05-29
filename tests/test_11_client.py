@@ -134,7 +134,7 @@ def test_parse_pi():
     rp.parse_federation_provider_info(pi, sunet_op)
 
     assert len(rp.provider_federations) == 2
-    assert set([r.iss for r in rp.provider_federations]) == {
+    assert set([r.fo for r in rp.provider_federations]) == {
         'https://swamid.sunet.se', 'https://www.feide.no'}
 
     # Got two alternative FOs one I can use the other I can't
