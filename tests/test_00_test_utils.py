@@ -1,6 +1,7 @@
 import os
 import shutil
 
+from jwkest.jws import factory
 from oic.utils.keyio import build_keyjar
 from oic.utils.keyio import KeyJar
 
@@ -9,7 +10,6 @@ from fedoidc.operator import Operator
 from fedoidc.test_utils import make_fs_jwks_bundle
 from fedoidc.test_utils import MetaDataStore
 from fedoidc.test_utils import make_ms
-from fedoidc.test_utils import make_signed_metadata_statement_uri
 from fedoidc.test_utils import unpack_using_metadata_store
 from fedoidc.test_utils import make_jwks_bundle
 from fedoidc.test_utils import make_signed_metadata_statement
@@ -23,7 +23,7 @@ KEYDEFS = [
 SIGN_KEYJAR = build_keyjar(KEYDEFS)[1]
 
 FO = {'swamid': 'https://swamid.sunet.se', 'feide': 'https://www.feide.no',
-      'edugain': 'https://edugain.com'}
+      'edugain': 'https://edugain.com', 'example': 'https://example.com'}
 OA = {'sunet': 'https://sunet.se', 'uninett': 'https://uninett.no'}
 
 SMS_DEF = {
@@ -32,19 +32,26 @@ SMS_DEF = {
             FO['swamid']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': 'discovery'},
-                 'signer': FO['swamid']}
+                 'signer': FO['swamid'], 'uri': False}
             ],
             FO['feide']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': 'discovery'},
-                 'signer': FO['feide']}
+                 'signer': FO['feide'], 'uri': False}
             ],
             FO['edugain']: [
                 {'request': {}, 'requester': FO['swamid'],
                  'signer_add': {'federation_usage': 'discovery'},
-                 'signer': FO['edugain']},
+                 'signer': FO['edugain'], 'uri': True},
                 {'request': {}, 'requester': OA['sunet'],
-                 'signer_add': {}, 'signer': FO['swamid']}
+                 'signer_add': {}, 'signer': FO['swamid'], 'uri': True}
+            ],
+            FO['example']: [
+                {'request': {}, 'requester': FO['swamid'],
+                 'signer_add': {'federation_usage': 'discovery'},
+                 'signer': FO['example'], 'uri': True},
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {}, 'signer': FO['swamid'], 'uri': False}
             ]
         }
     }
@@ -91,6 +98,7 @@ def test_make_fs_jwks_bundle():
 
 
 def test_make_signed_metadata_statements():
+    mds = MetaDataStore('mds')
     liss = list(FO.values())
     liss.extend(list(OA.values()))
 
@@ -102,12 +110,21 @@ def test_make_signed_metadata_statements():
         operator[entity] = Operator(iss=entity, keyjar=_keyjar)
 
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['swamid']]
-    ms = make_signed_metadata_statement(_spec, operator)
+    ms = make_signed_metadata_statement(_spec, operator, mds=mds,
+                                        base_uri='https:/example.org/ms')
     assert ms
 
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['edugain']]
-    ms = make_signed_metadata_statement(_spec, operator)
+    ms = make_signed_metadata_statement(_spec, operator, mds=mds,
+                                        base_uri='https:/example.org/ms')
     assert list(ms.keys()) == [FO['edugain']]
+
+    _spec = SMS_DEF[OA['sunet']]["discovery"][FO['example']]
+    ms = make_signed_metadata_statement(_spec, operator, mds=mds,
+                                        base_uri='https:/example.org/ms')
+    assert list(ms.keys()) == [FO['example']]
+    _jws = factory(ms[FO['example']])
+    assert _jws
 
 
 def test_metadatastore():
@@ -129,7 +146,7 @@ def test_metadatastore():
     assert mds.hash(_jws) in list(mds.keys())
 
 
-def test_make_signed_metadata_statement_uris():
+def test_make_signed_metadata_statement_mixed():
     liss = list(FO.values())
     liss.extend(list(OA.values()))
 
@@ -143,14 +160,14 @@ def test_make_signed_metadata_statement_uris():
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['swamid']]
     mds = MetaDataStore('mds')
     mds.reset()
-    ms = make_signed_metadata_statement_uri(_spec, operator, mds,
-                                            'https:/example.org/ms')
+    ms = make_signed_metadata_statement(_spec, operator, mds=mds,
+                                        base_uri='https:/example.org/ms')
     assert ms
 
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['edugain']]
     mds.reset()
-    ms = make_signed_metadata_statement_uri(_spec, operator, mds,
-                                            'https:/example.org/ms')
+    ms = make_signed_metadata_statement(_spec, operator, mds=mds,
+                                        base_uri='https:/example.org/ms')
     assert list(ms.keys()) == [FO['edugain']]
 
     # Now parse the result
@@ -162,7 +179,7 @@ def test_make_signed_metadata_statement_uris():
     assert _res[0].le == {'federation_usage': 'discovery'}
 
 
-def test_setup_msuri():
+def test_setup_ms():
     liss = list(FO.values())
     liss.extend(list(OA.values()))
     for path in ['ms_dir', 'mds']:
@@ -170,7 +187,7 @@ def test_setup_msuri():
             shutil.rmtree(path)
 
     # keydefs, tool_iss, liss, ms_path
-    res = test_utils.setup(KEYDEFS, 'iss', liss, 'ms_dir', csmsu_def=SMS_DEF,
-                mds_dir='mds', base_url='http://example.org')
+    res = test_utils.setup(KEYDEFS, 'iss', liss, 'ms_dir', csms_def=SMS_DEF,
+                           mds_dir='mds', base_url='http://example.org')
 
     assert res

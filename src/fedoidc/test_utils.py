@@ -129,36 +129,7 @@ def make_ms(desc, leaf, operator, ms=None, ms_uris=None):
     return {_fo: ms}
 
 
-def make_signed_metadata_statement(ms_chain, operator):
-    """
-    Based on a set of metadata statement descriptions build a compounded
-    metadata statement. This is not using metadata_statement_uris.
-    
-    :param ms_chain: 
-    :param operator: 
-    :return: 
-    """
-    _ms = None
-    depth = len(ms_chain)
-    i = 1
-    leaf = False
-    for desc in ms_chain:
-        if i == depth:
-            leaf = True
-        if isinstance(desc, dict):
-            _ms = make_ms(desc, leaf, operator, _ms)
-        else:
-            _ms = {}
-            for d in desc:
-                _m = make_ms(d, leaf, operator, _ms)
-                _ms.update(_m)
-        i += 1
-
-    return _ms
-
-
-def make_signed_metadata_statement_uri(ms_chain, operator, mds=None,
-                                       base_uri=''):
+def make_signed_metadata_statement(ms_chain, operator, mds=None, base_uri=''):
     """
     Based on a set of metadata statement descriptions build a compounded
     metadata statement. This is using metadata_statement_uris.
@@ -177,21 +148,91 @@ def make_signed_metadata_statement_uri(ms_chain, operator, mds=None,
         if i == depth:
             leaf = True
         if isinstance(desc, dict):
-            _x = make_ms(desc, leaf, operator, ms_uris=_ms)
-            _ms = {}
-            for k, v in _x.items():
-                _ms[k] = '{}/{}'.format(base_uri, mds.add(v))
+            if desc['uri'] is True:
+                _x = make_ms(desc, leaf, operator, ms_uris=_ms)
+                _ms = {}
+                for k, v in _x.items():
+                    _ms[k] = '{}/{}'.format(base_uri, mds.add(v))
+            else:
+                _ms = make_ms(desc, leaf, operator, _ms)
         else:
             _ms = {}
             for d in desc:
-                _x = make_ms(d, leaf, operator, ms_uris=_ms)
-                _m = {}
-                for k, v in _x.items():
-                    _m[k] = '{}/{}'.format(base_uri, mds.add(v))
+                if desc['uri'] is True:
+                    _x = make_ms(d, leaf, operator, ms_uris=_ms)
+                    _m = {}
+                    for k, v in _x.items():
+                        _m[k] = '{}/{}'.format(base_uri, mds.add(v))
+                else:
+                    _m = make_ms(d, leaf, operator, _ms)
                 _ms.update(_m)
         i += 1
 
     return _ms
+
+# def make_signed_metadata_statement(ms_chain, operator):
+#     """
+#     Based on a set of metadata statement descriptions build a compounded
+#     metadata statement. This is not using metadata_statement_uris.
+#
+#     :param ms_chain:
+#     :param operator:
+#     :return:
+#     """
+#     _ms = None
+#     depth = len(ms_chain)
+#     i = 1
+#     leaf = False
+#     for desc in ms_chain:
+#         if i == depth:
+#             leaf = True
+#         if isinstance(desc, dict):
+#             _ms = make_ms(desc, leaf, operator, _ms)
+#         else:
+#             _ms = {}
+#             for d in desc:
+#                 _m = make_ms(d, leaf, operator, _ms)
+#                 _ms.update(_m)
+#         i += 1
+#
+#     return _ms
+#
+#
+# def make_signed_metadata_statement_uri(ms_chain, operator, mds=None,
+#                                        base_uri=''):
+#     """
+#     Based on a set of metadata statement descriptions build a compounded
+#     metadata statement. This is using metadata_statement_uris.
+#
+#     :param ms_chain:
+#     :param operator:
+#     :param mds:
+#     :param base_uri;
+#     :return:
+#     """
+#     _ms = {}
+#     depth = len(ms_chain)
+#     i = 1
+#     leaf = False
+#     for desc in ms_chain:
+#         if i == depth:
+#             leaf = True
+#         if isinstance(desc, dict):
+#             _x = make_ms(desc, leaf, operator, ms_uris=_ms)
+#             _ms = {}
+#             for k, v in _x.items():
+#                 _ms[k] = '{}/{}'.format(base_uri, mds.add(v))
+#         else:
+#             _ms = {}
+#             for d in desc:
+#                 _x = make_ms(d, leaf, operator, ms_uris=_ms)
+#                 _m = {}
+#                 for k, v in _x.items():
+#                     _m[k] = '{}/{}'.format(base_uri, mds.add(v))
+#                 _ms.update(_m)
+#         i += 1
+#
+#     return _ms
 
 
 def make_signed_metadata_statements(smsdef, operator, mds_dir='', base_uri=''):
@@ -209,12 +250,12 @@ def make_signed_metadata_statements(smsdef, operator, mds_dir='', base_uri=''):
 
     if mds_dir:
         mds = MetaDataStore(mds_dir)
-        for ms_chain in smsdef:
-            res.append(make_signed_metadata_statement_uri(ms_chain, operator,
-                                                          mds, base_uri))
     else:
-        for ms_chain in smsdef:
-            res.append(make_signed_metadata_statement(ms_chain, operator))
+        mds = None
+
+    for ms_chain in smsdef:
+        res.append(make_signed_metadata_statement(ms_chain, operator,
+                                                      mds, base_uri))
 
     return res
 
@@ -239,38 +280,38 @@ def init(keydefs, tool_iss, liss):
     return {'jb': jb, 'operator': operator, 'key_bundle': key_bundle}
 
 
-def setup_ms(csms_def, ms_path, operators):
+# def setup_ms(csms_def, ms_path, operators):
+#     """
+#
+#     :param csms_def: Definition of which signed metadata statements to build
+#     :param ms_path: Where to store the signed metadata statements and uris
+#     :param operators: Dictionary with federation Operators
+#     :return: Dictionary with Signers
+#     """
+#
+#     for iss, sms_def in csms_def.items():
+#         ms_dir = os.path.join(ms_path, quote_plus(iss))
+#         for context, spec in sms_def.items():
+#             _dir = os.path.join(ms_dir, context)
+#             metadata_statements = FileSystem(
+#                 _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
+#             for fo, _desc in spec.items():
+#                 res = make_signed_metadata_statement_x(_desc, operators)
+#                 metadata_statements[fo] = res[fo]
+#
+#     signers = {}
+#     for iss, sms_def in csms_def.items():
+#         ms_dir = os.path.join(ms_path, quote_plus(iss))
+#         signers[iss] = Signer(
+#             InternalSigningService(iss, operators[iss].keyjar), ms_dir)
+#
+#     return signers
+
+
+def setup_ms(csms_def, ms_path, mds_dir, base_url, operators):
     """
 
     :param csms_def: Definition of which signed metadata statements to build
-    :param ms_path: Where to store the signed metadata statements and uris
-    :param operators: Dictionary with federation Operators
-    :return: Dictionary with Signers 
-    """
-
-    for iss, sms_def in csms_def.items():
-        ms_dir = os.path.join(ms_path, quote_plus(iss))
-        for context, spec in sms_def.items():
-            _dir = os.path.join(ms_dir, context)
-            metadata_statements = FileSystem(
-                _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
-            for fo, _desc in spec.items():
-                res = make_signed_metadata_statement(_desc, operators)
-                metadata_statements[fo] = res[fo]
-
-    signers = {}
-    for iss, sms_def in csms_def.items():
-        ms_dir = os.path.join(ms_path, quote_plus(iss))
-        signers[iss] = Signer(
-            InternalSigningService(iss, operators[iss].keyjar), ms_dir)
-
-    return signers
-
-
-def setup_msu(csmsu_def, ms_path, mds_dir, base_url, operators):
-    """
-
-    :param csmsu_def: Definition of which signed metadata statements to build
     :param ms_path: Where to store the signed metadata statements and uris
     :param mds_dir: Directory where the URL to singed metadata statements are
         kept
@@ -281,19 +322,19 @@ def setup_msu(csmsu_def, ms_path, mds_dir, base_url, operators):
 
     mds = MetaDataStore(mds_dir)
 
-    for iss, sms_def in csmsu_def.items():
+    for iss, sms_def in csms_def.items():
         ms_dir = os.path.join(ms_path, quote_plus(iss))
         for context, spec in sms_def.items():
             _dir = os.path.join(ms_dir, context)
             metadata_statements = FileSystem(
                 _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
             for fo, _desc in spec.items():
-                res = make_signed_metadata_statement_uri(
-                    _desc, operators, mds, base_url)
+                res = make_signed_metadata_statement(_desc, operators, mds,
+                                                       base_url)
                 metadata_statements[fo] = res[fo]
 
     signers = {}
-    for iss, sms_def in csmsu_def.items():
+    for iss, sms_def in csms_def.items():
         ms_dir = os.path.join(ms_path, quote_plus(iss))
         signers[iss] = Signer(
             InternalSigningService(iss, operators[iss].keyjar), ms_dir)
@@ -301,16 +342,14 @@ def setup_msu(csmsu_def, ms_path, mds_dir, base_url, operators):
     return signers
 
 
-def setup(keydefs, tool_iss, liss, ms_path, csms_def=None, csmsu_def=None,
-          mds_dir='', base_url=''):
+def setup(keydefs, tool_iss, liss, ms_path, csms_def=None, mds_dir='',
+          base_url=''):
     """
 
     :param keydefs: Definition of which signing keys to create/load
     :param tool_iss: An identifier for the JWKSBundle instance
     :param liss: List of federation entity IDs
     :param csms_def: Definition of which signed metadata statements to build
-    :param csmsu_def: Definition of which signed metadata statements to build,
-        these are referenced using URLs 
     :param ms_path: Where to store the signed metadata statements and uris
     :param mds_dir: Where to store the uri -> metadata statement mapping
     :param base_url: Common base URL to all metadata_statement_uris
@@ -319,15 +358,7 @@ def setup(keydefs, tool_iss, liss, ms_path, csms_def=None, csmsu_def=None,
 
     _init = init(keydefs, tool_iss, liss)
 
-    if csms_def:
-        signers = setup_ms(csms_def, ms_path, _init['operator'])
-    else:
-        signers = {}
-
-    if csmsu_def and mds_dir and base_url:
-        _signers = setup_msu(csmsu_def, ms_path, mds_dir,
-                             base_url, _init['operator'])
-        signers.update(_signers)
+    signers = setup_ms(csms_def, ms_path, mds_dir, base_url, _init['operator'])
 
     return signers, _init['key_bundle']
 
