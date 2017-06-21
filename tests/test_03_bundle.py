@@ -31,7 +31,8 @@ def test_set_get():
     _kj.issuer_keys['https://www.swamid.se'] = _kj.issuer_keys['']
     del _kj.issuer_keys['']
 
-    assert bundle['https://www.swamid.se'] == _kj
+    _sekj = bundle['https://www.swamid.se']
+    assert _sekj == _kj
 
 
 def test_set_del_get():

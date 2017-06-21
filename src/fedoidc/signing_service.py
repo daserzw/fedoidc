@@ -124,7 +124,8 @@ class Signer(object):
         except KeyError:
             return 0
 
-    def create_signed_metadata_statement(self, req, context='', fos=None):
+    def create_signed_metadata_statement(self, req, context='', fos=None,
+                                         intermediate=False):
         """
 
         :param req: The metadata statement to be signed
@@ -138,17 +139,25 @@ class Signer(object):
         if not context:
             context = self.def_context
 
-        _sms = {}
+        _sms = None
         if self.metadata_statements:
             try:
                 cms = self.metadata_statements[context]
             except KeyError:
+                if self.metadata_statements == {'register': {},
+                                                'discovery': {},
+                                                'response': {}}:
+                    # No superior so an FO then.
+                    _sms = self.signing_service(req)
+                    return _sms
+
                 try:
                     logger.error(
                         'Signer: {}, items: {}'.format(self.signing_service.iss,
                                                        self.items()))
                 except AttributeError:
-                    pass
+                    raise ServiceError(
+                        'This signer can not sign for that context')
                 logger.error(
                     'No metadata statements for this context: {}'.format(
                         context))
@@ -157,20 +166,42 @@ class Signer(object):
                 if fos is None:
                     fos = list(cms.keys())
 
-                for f in fos:
-                    try:
-                        val = cms[f]
-                    except KeyError:
-                        continue
+                if intermediate:
+                    _sms = {}
+                    for f in fos:
+                        try:
+                            val = cms[f]
+                        except KeyError:
+                            continue
 
-                    if val.startswith('http'):
-                        req['metadata_statement_uris'] = {f: val}
-                        _sms[f] = self.signing_service(req)
-                        del req['metadata_statement_uris']
-                    else:
-                        req['metadata_statements'] = {f: val}
-                        _sms[f] = self.signing_service(req)
-                        del req['metadata_statements']
+                        if val.startswith('http'):
+                            req['metadata_statement_uris'] = {f: val}
+                            _sms[f] = self.signing_service(req)
+                            del req['metadata_statement_uris']
+                        else:
+                            req['metadata_statements'] = {f: val}
+                            _sms[f] = self.signing_service(req)
+                            del req['metadata_statements']
+                else:
+                    _sms = None
+                    for f in fos:
+                        try:
+                            val = cms[f]
+                        except KeyError:
+                            continue
+
+                        if val.startswith('http'):
+                            try:
+                                req['metadata_statement_uris'][f] = val
+                            except KeyError:
+                                req['metadata_statement_uris'] = {f: val}
+                        else:
+                            try:
+                                req['metadata_statements'][f] = val
+                            except KeyError:
+                                req['metadata_statements'] = {f: val}
+
+                    _sms = self.signing_service(req)
 
                 if fos and not _sms:
                     raise KeyError('No metadata statements matched')

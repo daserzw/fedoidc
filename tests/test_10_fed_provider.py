@@ -5,13 +5,11 @@ from time import time
 
 import pytest
 
+from fedoidc import test_utils
+from fedoidc.file_system import FileSystem
+
 from fedoidc.entity import FederationEntity
-from fedoidc.operator import Operator
 from fedoidc.provider import Provider
-from fedoidc.signing_service import Signer
-from fedoidc.signing_service import InternalSigningService
-from fedoidc.test_utils import make_jwks_bundle
-from fedoidc.test_utils import make_signed_metadata_statements
 from jwkest import jws, as_unicode
 
 from oic import rndstr
@@ -19,7 +17,7 @@ from oic.utils.authn.authn_context import AuthnBroker
 from oic.utils.authn.client import verify_client
 from oic.utils.authn.user import UserAuthnMethod
 from oic.utils.authz import AuthzHandling
-from oic.utils.keyio import KeyJar, build_keyjar
+from oic.utils.keyio import build_keyjar
 from oic.utils.sdb import SessionDB
 
 # Create JWKS bundle
@@ -30,44 +28,46 @@ KEYDEFS = [
     {"type": "EC", "crv": "P-256", "use": ["sig"]}
 ]
 
-jb = make_jwks_bundle('', ['swamid', 'sunet', 'feide', 'uninett'],
-                      None, KEYDEFS)
+TOOL_ISS = 'https://localhost'
 
-# And the corresponding operators
+FO = {'swamid': 'https://swamid.sunet.se', 'feide': 'https://www.feide.no'}
 
-operator = {}
-for iss, kj in jb.items():
-    _kj = KeyJar()
-    _kj.issuer_keys[''] = kj.issuer_keys[iss]
-    operator[iss] = Operator(keyjar=_kj, iss=iss)
+OA = {'sunet': 'https://sunet.se'}
 
-# create a couple of metadata statements
+IA = {}
 
-MS_DEFS = [
-    [
-        {'request': {}, "requester": 'sunet', 'signer': 'swamid',
-         'signer_add': {}}
-    ],
-    [
-        {'request': {}, "requester": 'sunet', 'signer': 'feide',
-         'signer_add': {}}
-    ]
-]
+SMS_DEF = {
+    OA['sunet']: {
+        "discovery": {
+            FO['swamid']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': 'discovery'},
+                 'signer': FO['swamid'], 'uri': False},
+            ]
+        },
+        "registration": {
+            FO['swamid']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': 'registration'},
+                 'signer': FO['swamid'], 'uri': False},
+            ]
+        },
+    }
+}
 
-SMS = make_signed_metadata_statements(MS_DEFS, operator)
-MS_ROOT = 'ms_dir'
+MS_DIR = 'ms_dir_10'
+fs = FileSystem(MS_DIR)
+fs.reset()
 
-if os.path.isdir(MS_ROOT):
-    shutil.rmtree(MS_ROOT)
+if os.path.isdir('mds'):
+    shutil.rmtree('mds')
 
-os.makedirs(MS_ROOT)
+liss = list(FO.values())
+liss.extend(list(OA.values()))
 
-for spec in SMS:
-    for key, val in spec.items():
-        fname = os.path.join(MS_ROOT, key)
-        fp = open(fname, 'w')
-        fp.write(val)
-        fp.close()
+signer, keybundle = test_utils.setup(
+    KEYDEFS, TOOL_ISS, liss, ms_path=MS_DIR, csms_def=SMS_DEF,
+    mds_dir='mds', base_url='https://localhost')
 
 
 class DummyAuthn(UserAuthnMethod):
@@ -108,12 +108,6 @@ USERDB = {
 
 USERINFO = UserInfo(USERDB)
 
-SIGNER = Signer(ms_dir='ms_dir',
-                signing_service=InternalSigningService(
-                    'https://operator.example.com',
-                    build_keyjar(KEYDEFS)[1]
-                ))
-
 
 class TestProvider(object):
     @pytest.fixture(autouse=True)
@@ -122,7 +116,7 @@ class TestProvider(object):
 
         _kj = build_keyjar(KEYDEFS)[1]
         fed_ent = FederationEntity(None, keyjar=_kj, iss=sunet_op,
-                                   signer=SIGNER)
+                                   signer=signer[OA['sunet']])
 
         self.op = Provider(sunet_op, SessionDB(sunet_op), {},
                            AUTHN_BROKER, USERINFO,
@@ -151,13 +145,16 @@ class TestProvider(object):
         _js = jws.factory(sjwt)
         assert _js
         assert _js.jwt.headers['alg'] == 'RS256'
+        _req = json.loads(as_unicode(_js.jwt.part[1]))
+        assert _req['iss'] == OA['sunet']
 
     def test_create_fed_provider_info(self):
         fedpi = self.op.create_fed_providerinfo()
 
         assert 'signing_keys' not in fedpi
 
-        _js = jws.factory(fedpi['metadata_statements'][0])
+        assert len(fedpi['metadata_statements']) == 1
+        _js = jws.factory(fedpi['metadata_statements'][FO['swamid']])
         assert _js
         assert _js.jwt.headers['alg'] == 'RS256'
         _body = json.loads(as_unicode(_js.jwt.part[1]))

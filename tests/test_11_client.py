@@ -1,5 +1,6 @@
 import json
 
+from oic.oic import ClaimsRequest, Claims
 from oic.utils.http_util import Created
 
 from fedoidc.bundle import JWKSBundle
@@ -39,24 +40,24 @@ SMS_DEF = {
             FO['swamid']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': 'discovery'},
-                 'signer': FO['swamid']},
+                 'signer': FO['swamid'], 'uri': False},
             ],
             FO['feide']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': 'discovery'},
-                 'signer': FO['feide']},
+                 'signer': FO['feide'], 'uri': False},
             ]
         },
         "registration": {
             FO['swamid']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': 'registration'},
-                 'signer': FO['swamid']},
+                 'signer': FO['swamid'], 'uri': False},
             ],
             FO['feide']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': 'registration'},
-                 'signer': FO['feide']},
+                 'signer': FO['feide'], 'uri': False},
             ]
         },
     },
@@ -65,7 +66,7 @@ SMS_DEF = {
             FO['feide']: [
                 {'request': {}, 'requester': OA['uninett'],
                  'signer_add': {'federation_usage': 'registration'},
-                 'signer': FO['feide']},
+                 'signer': FO['feide'], 'uri': False},
             ]
         }
     },
@@ -74,16 +75,16 @@ SMS_DEF = {
             FO['swamid']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': 'response'},
-                 'signer': FO['swamid']},
+                 'signer': FO['swamid'], 'uri': False},
                 {'request': {}, 'requester': EO['sunet.op'],
-                 'signer_add': {}, 'signer': OA['sunet']}
+                 'signer_add': {}, 'signer': OA['sunet'], 'uri': False}
             ],
             FO['feide']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': "response"},
-                 'signer': FO['feide']},
+                 'signer': FO['feide'], 'uri': False},
                 {'request': {}, 'requester': EO['sunet.op'],
-                 'signer_add': {}, 'signer': OA['sunet']}
+                 'signer_add': {}, 'signer': OA['sunet'], 'uri': False}
             ]
         }
     }
@@ -92,8 +93,8 @@ liss = list(FO.values())
 liss.extend(list(OA.values()))
 liss.extend(list(EO.values()))
 
-signer, keybundle = test_utils.setup(KEYDEFS, TOOL_ISS, liss, csms_def=SMS_DEF,
-                                     ms_path='ms_dir')
+signer, keybundle = test_utils.setup(KEYDEFS, TOOL_ISS, liss, ms_path='ms_dir',
+                                     csms_def=SMS_DEF, mds_dir='ms_dir')
 
 fo_keybundle = JWKSBundle('https://example.com')
 for iss in FO.values():
@@ -137,10 +138,11 @@ def test_parse_pi():
     assert set([r.fo for r in rp.provider_federations]) == {
         'https://swamid.sunet.se', 'https://www.feide.no'}
 
-    # Got two alternative FOs one I can use the other I can't
+    # Got two alternative FOs, one I can use the other not
+
     req = rp.federated_client_registration_request(
         redirect_uris='https://foodle.uninett.no/authz',
-        claims=['openid', 'email', 'phone']
+        scope=['openid', 'email', 'phone']
     )
 
     assert req

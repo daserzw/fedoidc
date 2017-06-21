@@ -226,7 +226,7 @@ class Client(oic.Client):
             _fos = list([r.fo for r in self.provider_federations])
             _cms = _fe.create_metadata_statement_request(copy.copy(req))
             sms = _fe.signer.create_signed_metadata_statement(
-                _cms, 'registration', _fos)
+                _cms, 'registration', _fos, intermediate=True)
             req['metadata_statements'] = Message(**sms)
 
         return req

@@ -210,7 +210,7 @@ class Operator(object):
         for _ms in _pr.parsed_statement:
             if _ms:  # can be None
                 try:
-                    keyjar.import_jwks(_ms['signing_keys'], '')
+                    keyjar.import_jwks(_ms['signing_keys'], json_ms['iss'])
                 except KeyError:
                     pass
 
@@ -272,6 +272,7 @@ class Operator(object):
         :param cls: What type (Class) of metadata statement this is
         :param liss: list of FO identifiers that matters. The rest will be 
             ignored
+        :param sk_iss: The owner of the signing key
         :return: ParseInfo instance
         """
 

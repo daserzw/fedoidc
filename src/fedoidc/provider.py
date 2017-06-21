@@ -58,7 +58,7 @@ class Provider(provider.Provider):
 
         _req = _fe.create_metadata_statement_request(pcr)
         return _fe.signer.create_signed_metadata_statement(
-            _req, context, fos=fos)
+            _req, context, fos=fos, intermediate=True)
 
     def create_fed_providerinfo(self, fos=None, setup=None):
         """

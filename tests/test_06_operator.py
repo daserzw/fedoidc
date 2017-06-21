@@ -31,14 +31,26 @@ SMS_DEF = {
             FO['swamid']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': 'discovery'},
-                 'signer': FO['swamid']},
+                 'signer': FO['swamid'], 'uri': False},
+            ],
+            FO['feide']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': 'discovery'},
+                 'signer': FO['feide'], 'uri': True},
+            ],
+            FO['edugain']: [
+                {'request': {}, 'requester': FO['swamid'],
+                 'signer_add': {'federation_usage': 'discovery'},
+                 'signer': FO['edugain'], 'uri': True},
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {}, 'signer': FO['swamid'], 'uri': True}
             ]
         },
         "registration": {
             FO['swamid']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': 'registration'},
-                 'signer': FO['swamid']},
+                 'signer': FO['swamid'], 'uri': False},
             ]
         }
     }
@@ -46,32 +58,18 @@ SMS_DEF = {
 
 SMSU_DEF = {
     OA['sunet']: {
-        "discovery": {
-            FO['feide']: [
-                {'request': {}, 'requester': OA['sunet'],
-                 'signer_add': {'federation_usage': 'discovery'},
-                 'signer': FO['feide']},
-            ],
-            FO['edugain']: [
-                {'request': {}, 'requester': FO['swamid'],
-                 'signer_add': {'federation_usage': 'discovery'},
-                 'signer': FO['edugain']},
-                {'request': {}, 'requester': OA['sunet'],
-                 'signer_add': {}, 'signer': FO['swamid']}
-            ]
-        },
         "registration": {
             FO['feide']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': 'registration'},
-                 'signer': FO['feide']},
+                 'signer': FO['feide'], 'uri': True},
             ],
             FO['edugain']: [
                 {'request': {}, 'requester': FO['swamid'],
                  'signer_add': {'federation_usage': 'response'},
                  'signer': FO['edugain']},
                 {'request': {}, 'requester': OA['sunet'],
-                 'signer_add': {}, 'signer': FO['swamid']}
+                 'signer_add': {}, 'signer': FO['swamid'], 'uri': True}
             ]
         },
     }
@@ -81,8 +79,8 @@ liss = list(FO.values())
 liss.extend(list(OA.values()))
 
 signer, keybundle = test_utils.setup(
-    KEYDEFS, TOOL_ISS, liss, csms_def=SMS_DEF, ms_path='ms_dir',
-    csmsu_def=SMSU_DEF, mds_dir='mds', base_url='https://localhost')
+    KEYDEFS, TOOL_ISS, liss, ms_path='ms_dir', csms_def=SMS_DEF,
+    mds_dir='mds', base_url='https://localhost')
 
 
 class Response(object):
@@ -115,6 +113,7 @@ def test_key_rotation():
 def test_unpack_metadata_statement():
     s = signer[OA['sunet']]
     req = MetadataStatement(issuer='https://example.org/op')
+    # Not intermediate
     ms = s.create_signed_metadata_statement(req, 'discovery')
 
     jb = FSJWKSBundle('', None, 'fo_jwks',
@@ -128,5 +127,5 @@ def test_unpack_metadata_statement():
     loel = op.evaluate_metadata_statement(res.result)
     assert len(loel) == 3
     assert set([l.fo for l in loel]) == {'https://swamid.sunet.se',
-                                          'https://www.feide.no',
-                                          'https://edugain.com'}
+                                         'https://edugain.com',
+                                         'https://www.feide.no'}
