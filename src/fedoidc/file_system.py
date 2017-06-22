@@ -150,3 +150,7 @@ class FileSystem(object):
                 del self.db[f]
             except KeyError:
                 pass
+
+    def update(self, ava):
+        for key, val in ava.items():
+            self[key] = val

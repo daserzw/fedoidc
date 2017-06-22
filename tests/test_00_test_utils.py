@@ -115,15 +115,15 @@ def test_make_signed_metadata_statements():
     assert ms
 
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['edugain']]
-    ms = make_signed_metadata_statement(_spec, operator, mds=mds,
+    res = make_signed_metadata_statement(_spec, operator, mds=mds,
                                         base_uri='https:/example.org/ms')
-    assert list(ms.keys()) == [FO['edugain']]
+    assert list(res['ms_uri'].keys()) == [FO['edugain']]
 
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['example']]
-    ms = make_signed_metadata_statement(_spec, operator, mds=mds,
+    res = make_signed_metadata_statement(_spec, operator, mds=mds,
                                         base_uri='https:/example.org/ms')
-    assert list(ms.keys()) == [FO['example']]
-    _jws = factory(ms[FO['example']])
+    assert list(res['ms'].keys()) == [FO['example']]
+    _jws = factory(res['ms'][FO['example']])
     assert _jws
 
 
@@ -160,19 +160,19 @@ def test_make_signed_metadata_statement_mixed():
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['swamid']]
     mds = MetaDataStore('mds')
     mds.reset()
-    ms = make_signed_metadata_statement(_spec, operator, mds=mds,
+    sms = make_signed_metadata_statement(_spec, operator, mds=mds,
                                         base_uri='https:/example.org/ms')
-    assert ms
+    assert sms
 
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['edugain']]
     mds.reset()
-    ms = make_signed_metadata_statement(_spec, operator, mds=mds,
+    sms = make_signed_metadata_statement(_spec, operator, mds=mds,
                                         base_uri='https:/example.org/ms')
-    assert list(ms.keys()) == [FO['edugain']]
+    assert list(sms['ms_uri'].keys()) == [FO['edugain']]
 
     # Now parse the result
 
-    _md0 = unpack_using_metadata_store(ms[FO['edugain']], mds)
+    _md0 = unpack_using_metadata_store(sms['ms_uri'][FO['edugain']], mds)
 
     op = Operator()
     _res = op.evaluate_metadata_statement(_md0)

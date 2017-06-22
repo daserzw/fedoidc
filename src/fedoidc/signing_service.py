@@ -149,7 +149,7 @@ class Signer(object):
                                                 'response': {}}:
                     # No superior so an FO then.
                     _sms = self.signing_service(req)
-                    return _sms
+                    return {self.signing_service.iss: _sms}
 
                 try:
                     logger.error(
@@ -163,6 +163,11 @@ class Signer(object):
                         context))
                 raise
             else:
+                if cms == {}:
+                    # No superior so a FO then.
+                    _sms = self.signing_service(req)
+                    return {self.signing_service.iss: _sms}
+
                 if fos is None:
                     fos = list(cms.keys())
 
