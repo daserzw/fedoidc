@@ -61,7 +61,7 @@
       </address>
     </author>
 
-    <date day="7" month="April" year="2017"/>
+    <date day="26" month="June" year="2017"/>
 
     <workgroup>OpenID Connect Working Group</workgroup>
 
@@ -78,7 +78,7 @@
         is self-asserted.
       </t>
       <t>
-        In an identity federation context this is not sufficient. The
+        In an identity federation context, this is not sufficient. The
         participants of the federation must be able to trust
         information provided about other participants in the federation.
       </t>
@@ -98,17 +98,17 @@
         necessary for future successful OIDC communication.
       </t>
       <t>One problem with using dynamic discovery and registration is that
-        the correctness of the information that is exchanged can not be
+        the correctness of the information that is exchanged cannot be
         easily
         verified by the recipient as it is self-asserted.
       </t>
       <t>Another problem that has been raised is the dependency on TLS as
         the sole protection against attacks on the transferred
         information.
-        These last couple of years a number of problems with openSSL,
+        These last couple of years a number of problems with OpenSSL,
         which
-        is probably the most widely used TLS library, has been
-        discovered that puts reasonable doubt into this dependency.
+        is probably the most widely used TLS library, have been
+        discovered that put reasonable doubt into this dependency.
       </t>
       <t>
         We are extending Signed Metadata, as introduced by
@@ -126,7 +126,7 @@
       <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
         NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and
         "OPTIONAL" in this document are to be interpreted as described
-        in<xref target="RFC2119">RFC 2119</xref>.
+        in <xref target="RFC2119">RFC 2119</xref>.
       </t>
     </section>
     <section title="Metadata Statement" anchor="entity_metadata">
@@ -224,9 +224,9 @@
               This together with the differences in the roles
               between an OP and an RP, means that policies for
               RPs will not be the same as for OPs. There is
-              therefor a need for tagging the Metadata statement
+              therefore a need for tagging the Metadata statement
               such that a Metadata statement intended
-              to be used in one context can not be used in another.
+              to be used in one context cannot be used in another.
               This is the reason for the
               <spanx style="verb">federation_usage</spanx>
               parameter.
@@ -291,9 +291,9 @@
           level 0 metadata statements.
         </t>
         <t>
-          An OP MUST sign it's JWKs and therefore publish a
+          An OP MUST sign its JWKs and therefore publish a
           signed_jwks_uri. An RP that is able to handle secrets
-          MUST also sign it's JWKS and publish a signed_jwks_uri.
+          MUST also sign its JWKS and publish a signed_jwks_uri.
         </t>
       </section>
       <section title="Specific Client Metadata">
@@ -313,7 +313,7 @@
               JSON array containing a list of the
               <xref target="RFC6749">RFC6749</xref>
               scope values that
-              this clients expects to use.
+              this client expects to use.
             </t>
             <t hangText="claims">
               <vspace/>
@@ -336,7 +336,7 @@
       <section title="Compounded Metadata Statement">
         <section title="Basic components" anchor="components">
           <t>
-            To describe Compounded Metadata Statements we need a
+            To describe Compounded Metadata Statements, we need a
             way of describing the different components in such a
             statement.
             These are the basic components:
@@ -357,7 +357,7 @@
             </list>
           </t>
           <t anchor="Level0SMS">
-            Using these basic components we can now describe a
+            Using these basic components, we can now describe a
             simple signed Metadata Statement as:
             <figure>
               <artwork>A(ms_B + SK[B])</artwork>
@@ -369,7 +369,7 @@
             Creating a compounded metadata statements involves
             adding previously signed metadata statements to the
             request before signing it.
-            So if we start of with C sending this signing request
+            So if we start off with C sending this signing request
             to B,
             <figure>
               <artwork>(ms_C + SK[C])</artwork>
@@ -383,7 +383,7 @@
             which is then signed by B before being returned to C.
           </t>
           <t anchor="Level1SMS">
-            This is the resulting compounded metadata statement :
+            This is the resulting compounded metadata statement:
             <figure>
               <artwork>B(ms_C + SK[C) + A(ms_B + SK[B]))</artwork>
             </figure>
@@ -411,7 +411,7 @@
             described by one or more metadata statements (for
             example, ms_0, ms_1, ..., ms_n).
             ms_0 (the level 0 metadata statement mentioned above)
-            would be the most generic, and ms_1, ...,ms_n would in
+            would be the most generic, and ms_1, ..., ms_n would in
             turn be successively more specific.
             ms_0 would typically contain information that belongs
             to the organization, for instance
@@ -427,7 +427,7 @@
             <figure>
               <preamble>
                 The following is a non-normative example of a
-                compounded metadata statement. Also note that the
+                compounded metadata statement. Also note that
                 the metadata_statement MUST be a signed
                 JWT. In this example, the only the parts of the
                 signed JWT payload pertinent to the example are
@@ -535,7 +535,7 @@
               <spanx style="verb">requester</spanx>
               constructs a signing request by collecting the
               necessary client or provider metadata as described
-              in<xref target='entity_metadata'/>.
+              in <xref target='entity_metadata'/>.
             </t>
             <t>
               If this is about the top most metadata statement
@@ -610,8 +610,8 @@ L1Req <- L0Req(ms_L1Req + SK[L1Req] + FO(ms_L0Req+SK[L0Req])) - L0Req
       </section>
       <section title="Verifying the Metadata Statement" anchor="verify">
         <t>
-          Verifying a metadata statement you first grab the innermost
-          signed metadata statement. If this is signed by a FO you
+          Verifying a metadata statement, you first grab the innermost
+          signed metadata statement. If this is signed by a FO, you
           have the public part of the signing keys from then you
           can verify the signature of the metadata statement.
           If the verification concludes that the signature was correct
@@ -660,7 +660,7 @@ def unpack(jwt, sign_keys):
       </section>
       <section title="Flattening the compounded metadata statement">
         <t>
-          Once you have a verified compounded metadata statement you
+          Once you have a verified compounded metadata statement, you
           have to flatten it to get a useful metadata statement.
           To do this you can for instance use the method outlined in
           <xref target="entityMD"/>
@@ -701,7 +701,7 @@ def unpack(jwt, sign_keys):
           additional metadata parameters specified above.
         </t>
         <t>
-          The OP SHOULD have the complete response signed by it's
+          The OP SHOULD have the complete response signed by its
           superior in the signing chain and MAY have them signed
           in advance.
         </t>
@@ -718,7 +718,7 @@ def unpack(jwt, sign_keys):
           the additional metadata specified above.
         </t>
         <t>
-          The RP SHOULD have the complete request signed by it's
+          The RP SHOULD have the complete request signed by its
           superior in the signing chain and MAY have it signed
           in advance.
         </t>
@@ -736,19 +736,19 @@ def unpack(jwt, sign_keys):
           signed by the superior. Once it has that it can sign the
           response plus the signed metadata statement and construct a
           compounded metadata statement that can be verified using the
-          method described in<xref target='verify'/>.
+          method described in <xref target='verify'/>.
         </t>
       </section>
     </section>
     <section title="Belonging to Several Federations">
       <section title="Choosing federation">
         <t>
-          This draft allows any entity to belong to more then one
+          This draft allows any entity to belong to more than one
           federation.
           During the provider discovery and client registration
-          process the
-          parties has to agree on which federation to use.
-          Ultimately the OP decides.
+          process, the
+          parties have to agree on which federation to use.
+          Ultimately, the OP decides.
         </t>
         <t>
           <list style="number">
@@ -892,7 +892,7 @@ def unpack(jwt, sign_keys):
       </section>
     </section>
     <section title="Timeouts">
-      <t>There are a number of timeouts that MUST considered
+      <t>There are a number of timeouts that MUST considered:
         <list style="empty">
           <t>Each signature has a timeout.</t>
           <t>A client registration has a timeout.</t>
@@ -1052,7 +1052,7 @@ def unpack(jwt, sign_keys):
         </front>
       </reference>
       <reference anchor="I-D.draft-ietf-oauth-discovery"
-                 target="https://tools.ietf.org/html/draft-ietf-oauth-discovery-04">
+                 target="https://tools.ietf.org/html/draft-ietf-oauth-discovery-06">
         <front>
           <title>OAuth 2.0 Authorization Server Metadata
           </title>
@@ -1076,7 +1076,7 @@ def unpack(jwt, sign_keys):
             </organization>
           </author>
 
-          <date day="3" month="August" year="2016"/>
+          <date day="10" month="March" year="2017"/>
         </front>
       </reference>
     </references>
@@ -1090,7 +1090,7 @@ def unpack(jwt, sign_keys):
       <t>
         <spanx style="strong">
           Given two metadata statements
-          ms_i and ms_j (j &gt; i, i=0,..,n-1, j=1,..,n)
+          ms_i and ms_j (j &gt; i, i=0, ..., n-1, j=1, ..., n)
           For every claim in ms_j:
           If the claim does not appear in ms_i add it to ms_i.
           If the claim appears in ms_i then replace the value
@@ -1191,7 +1191,7 @@ def unpack(jwt, sign_keys):
     </section>
     <section anchor="app-additional" title="Example">
       <t>
-        The story is that the organisation UNINETT has applied and been accepted
+        The story is that the organization UNINETT has applied and been accepted
         as a member of two federations: Feide and SWAMID.
       </t>
       <t>
@@ -1341,7 +1341,7 @@ IMUiAwxRWXd71omQ",
           </figure>
           <t>
             UNINETT sends the Metadata statement signing request to Feide and
-            Feide adds claims representing the Feide federation policiy.
+            Feide adds claims representing the Feide federation policy.
           </t>
           <section title="Signed Metadata statement created by Feide">
             <figure>
@@ -1442,13 +1442,13 @@ IMUiAwxRWXd71omQ",
           Time to create the Foodle (RP) metadata statement
         </t>
         <t>
-          We take a road similar to the request/request_uri path. That is we
+          We take a road similar to the request/request_uri path. That is, we
           include all the information about the client that needs to be
           protect from tampering by a MITM and places it in the
           metadata statement signing request.
         </t>
         <t>
-          But first Foodle needs it's own signing keys. Not for signing
+          But first Foodle needs its own signing keys. Not for signing
           Metadata Statements but for signing the JWKS document found at
           the URI pointed to by jwks_uri.
           It is vital to protect this key information from tampering since
@@ -1504,10 +1504,10 @@ egkaudZAuo8uoAblK2DBZ5CmszO1rFyZQBpHRfjvh91PMRU",
         </figure>
         <t>
           The Client Registration Request is sent to UNINETT
-          who adds the two signed metadata staments it has.
-          One for each of SWAMID and Feide.Since it knows that it is the Foodle
+          who adds the two signed metadata statements it has.
+          One for each of SWAMID and Feide. Since it knows that it is the Foodle
           RP which is the subject
-          of the JWT it adds Foodle's identifier as 'sub'
+          of the JWT it adds Foodle's identifier as 'sub'.
         </t>
         <section title="Metadata statements about Foodle signed by UNINETT">
           <t>
@@ -1604,10 +1604,10 @@ eUKCTlK6eW2WuBQ"
           the signed Metadata statement it received from UNINETT to
           the client registration request.
           Note that 'redirect_uri' MUST be in the registration request as
-          this is requied by the OIDC standard.If the 'redirect_uris' values
-          that are transfered unprotected
-          where to differ from what's in the signed metadata
-          statement the OP MUST refuse the registration.
+          this is required by the OIDC standard. If the 'redirect_uris' values
+          that are transferred unprotected
+          were to differ from what's in the signed metadata
+          statement, the OP MUST refuse the registration.
         </t>
         <figure>
           <preamble>Registration Request published by RP</preamble>
