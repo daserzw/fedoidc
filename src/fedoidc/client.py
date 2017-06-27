@@ -4,17 +4,17 @@ import logging
 from fedoidc import ClientMetadataStatement
 from fedoidc import ProviderConfigurationResponse
 
-from oic import oic, OIDCONF_PATTERN
+from oic import oic
+from oic import OIDCONF_PATTERN
 from oic.exception import CommunicationError
 from oic.exception import ParameterError
 from oic.exception import ParseError
 from oic.exception import RegistrationError
 from oic.oauth2 import ErrorResponse
 from oic.oauth2 import sanitize
-from oic.oauth2.message import MissingRequiredAttribute, Message
+from oic.oauth2.message import Message
+from oic.oauth2.message import MissingRequiredAttribute
 from oic.oic import RegistrationResponse
-
-from fedoidc.operator import le_dict
 
 try:
     from json import JSONDecodeError
@@ -218,17 +218,26 @@ class Client(oic.Client):
 
         _fe = self.federation_entity
         if self.federation:
-            _cms = _fe.create_metadata_statement_request(req)
-            sms = _fe.signer.create_signed_metadata_statement(
-                _cms, 'registration', fos=[self.federation])
-            req['metadata_statements'] = Message(**sms)
+            if _fe.signer.signing_service:
+                _cms = _fe.create_metadata_statement_request(req)
+                sms = _fe.signer.create_signed_metadata_statement(
+                    _cms, 'registration', fos=[self.federation])
+                req['metadata_statements'] = Message(**sms)
+            else:
+                req.update(
+                    _fe.signer.gather_metadata_statements(
+                        'registration', fos=[self.federation]))
         else:
             _fos = list([r.fo for r in self.provider_federations])
-            _cms = _fe.create_metadata_statement_request(copy.copy(req))
-            sms = _fe.signer.create_signed_metadata_statement(
-                _cms, 'registration', _fos, intermediate=True)
-            req['metadata_statements'] = Message(**sms)
-
+            if _fe.signer.signing_service:
+                _cms = _fe.create_metadata_statement_request(copy.copy(req))
+                sms = _fe.signer.create_signed_metadata_statement(
+                    _cms, 'registration', _fos, intermediate=True)
+                req['metadata_statements'] = Message(**sms)
+            else:
+                req.update(
+                    _fe.signer.gather_metadata_statements('registration',
+                                                          fos=_fos))
         return req
 
     def register(self, url, reg_type='federation', **kwargs):

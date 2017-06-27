@@ -176,18 +176,20 @@ def get_signing_keys(eid, keydef, key_file):
     return kj
 
 
-def jwks_to_keyjar(jwks):
+def jwks_to_keyjar(jwks, iss=''):
     """
 
     :param jwks: String representation of a JWKS
     :return: A KeyJar instance
     """
-    try:
-        _jwks = json.loads(jwks)
-    except json.JSONDecodeError:
-        raise ValueError('No proper JWKS')
+    if not isinstance(jwks, dict):
+        try:
+            jwks = json.loads(jwks)
+        except json.JSONDecodeError:
+            raise ValueError('No proper JSON')
+
     kj = KeyJar()
-    kj.import_jwks(_jwks, issuer='')
+    kj.import_jwks(jwks, issuer=iss)
     return kj
 
 

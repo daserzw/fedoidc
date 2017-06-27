@@ -88,23 +88,30 @@ class WebSigningService(SigningService):
         return self.url
 
 
+OPERATIONS = ['registration', 'discovery', 'response']
+MIN_SET = dict([(k, {}) for k in OPERATIONS])
+
+
 class Signer(object):
     def __init__(self, signing_service, ms_dir=None, def_context=''):
         self.metadata_statements = {}
 
         if isinstance(ms_dir, dict):
             for key, _dir in ms_dir.items():
+                if key not in OPERATIONS:
+                    raise ValueError('{} not expected operation'.format(key))
                 self.metadata_statements[key] = FileSystem(
                     _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
         elif ms_dir:
             for item in os.listdir(ms_dir):
+                if item not in OPERATIONS:
+                    raise ValueError('{} not expected operation'.format(item))
                 _dir = os.path.join(ms_dir, item)
                 if os.path.isdir(_dir):
                     self.metadata_statements[item] = FileSystem(
                         _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
         else:
-            self.metadata_statements = {'register': {}, 'discovery': {},
-                                        'response': {}}
+            self.metadata_statements = MIN_SET
 
         self.signing_service = signing_service
         self.def_context = def_context
@@ -212,3 +219,55 @@ class Signer(object):
                     raise KeyError('No metadata statements matched')
 
         return _sms
+
+    def gather_metadata_statements(self, context='', fos=None):
+        """
+
+        :param context: The context in which this Signed metadata
+            statement should be used
+        :param fos: Signed metadata statements from these Federation Operators
+            should be added.
+        :return: Dictionary with signed Metadata Statements as values
+        """
+
+        if not context:
+            context = self.def_context
+
+        _res = {}
+        if self.metadata_statements:
+            try:
+                cms = self.metadata_statements[context]
+            except KeyError:
+                if self.metadata_statements == {'register': {},
+                                                'discovery': {},
+                                                'response': {}}:
+                    # No superior so an FO then. Nothing to add ..
+                    pass
+                else:
+                    logger.error(
+                        'No metadata statements for this context: {}'.format(
+                            context))
+                    raise ValueError('Wrong context "{}"'.format(context))
+            else:
+                if cms != {}:
+                    if fos is None:
+                        fos = list(cms.keys())
+
+                    for f in fos:
+                        try:
+                            val = cms[f]
+                        except KeyError:
+                            continue
+
+                        if val.startswith('http'):
+                            attr = 'metadata_statement_uris'
+                        else:
+                            attr = 'metadata_statements'
+
+                        try:
+                            _res[attr][f] = val
+                        except KeyError:
+                            _res[attr] = Message()
+                            _res[attr][f] = val
+
+        return _res
