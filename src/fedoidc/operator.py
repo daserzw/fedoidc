@@ -37,7 +37,17 @@ class ParseInfo(object):
 
 
 class LessOrEqual(object):
+    """
+    Class in which to store the parse result from flattening a compounded
+    metadata statement.
+    """
     def __init__(self, iss='', sup=None, exp=0):
+        """
+        :param iss: Issuer ID
+        :param sup: Superior
+        :type sup: LessOrEqual instance
+        :param exp: Expiration time
+        """
         if sup:
             self.fo = sup.fo
         else:
@@ -65,12 +75,23 @@ class LessOrEqual(object):
         return item in self.le
 
     def sup_items(self):
+        """
+        Items (key+values) from the superior
+        :return:
+        """
         if self.sup:
             return self.sup.le.items()
         else:
             return {}
 
     def eval(self, orig, signer):
+        """
+        Apply the less or equal algorithm on the ordered list of metadata
+        statements
+        :param orig: Start values
+        :param signer: Who vouched for this information
+        :return:
+        """
         _le = {}
         _err = []
         for k, v in self.sup_items():
@@ -95,10 +116,16 @@ class LessOrEqual(object):
         self.err = _err
 
     def protected_claims(self):
+        """
+        Someone in the list of signers has said this is OK
+        """
         if self.sup:
             return self.sup.le
 
     def unprotected_claims(self):
+        """
+        This is self asserted information.
+        """
         if self.sup:
             res = {}
             for k, v in self.le.items():
@@ -151,6 +178,10 @@ class Operator(object):
         self.lifetime = lifetime
 
     def signing_keys_as_jwks(self):
+        """
+        Build a JWKS from the signing keys in the KeyJar
+        :return: Dictionary
+        """
         _l = [x.serialize() for x in self.keyjar.get_signing_key()]
         if not _l:
             _l = [x.serialize() for x in
@@ -264,6 +295,8 @@ class Operator(object):
     def unpack_metadata_statement(self, json_ms=None, jwt_ms='', keyjar=None,
                                   cls=ClientMetadataStatement, liss=None):
         """
+        Starting with a signed JWT or a JSON document unpack and verify all
+        the separate metadata statements.
 
         :param json_ms: Metadata statement as a JSON document
         :param jwt_ms: Metadata statement as JWT
@@ -293,6 +326,7 @@ class Operator(object):
     def pack_metadata_statement(self, metadata, keyjar=None, iss=None, alg='',
                                 jwt_args=None, lifetime=-1, **kwargs):
         """
+        Given a MetadataStatment instance create a signed JWT.
 
         :param metadata: Original metadata statement as a MetadataStatement
             instance
@@ -337,7 +371,7 @@ class Operator(object):
         If something goes wrong during the evaluation an exception is raised
 
         :param metadata: The compounded metadata statement as a dictionary
-        :return: A Flatten instance
+        :return: A list of LessOrEqual instances, one per FO.
         """
 
         # start from the innermost metadata statement and work outwards

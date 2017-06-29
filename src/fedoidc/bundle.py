@@ -15,15 +15,25 @@ class JWKSBundle(object):
     """
 
     def __init__(self, iss, sign_keys=None):
+        """
+
+        :param iss: Issuer identifier, will be used as the value of 'iss'
+        when a signed JWT containg the bundle is constructed
+        :param sign_keys: Keys that this entity can use to sign JWTs.
+        :type sign_keys: oic.utils.KeyJar instance
+        """
         self.iss = iss
-        self.sign_keys = sign_keys  # These are my signing keys as a KeyJar
-        self.bundle = {}
+        self.sign_keys = sign_keys
+        self.bundle = {}  # In memory database
 
     def __setitem__(self, key, value):
         """
 
         :param key: issuer ID
-        :param value: Supposed to be KeyJar or a JWKS (JSON document)
+        :type: String
+        :param value: Cryptographic keys that should be connected to to an
+         issuer ID.
+        :type value: KeyJar or a JWKS (JSON document)
         """
         if not isinstance(value, KeyJar):
             kj = KeyJar()
@@ -135,10 +145,12 @@ class JWKSBundle(object):
 
 def verify_signed_bundle(signed_bundle, ver_keys):
     """
+    Verify the signature of a signed JWT.
 
     :param signed_bundle: A signed JWT where the body is a JWKS bundle
     :param ver_keys: Keys that can be used to verify signatures of the
-        signed_bundle as a KeyJar.
+        signed_bundle.
+    :type ver_keys: oic.utils.KeyJar instance
     :return: The bundle or None
     """
     _jwt = JWT(ver_keys)
@@ -146,6 +158,14 @@ def verify_signed_bundle(signed_bundle, ver_keys):
 
 
 def get_bundle(iss, ver_keys, bundle_file):
+    """
+    Read a signed JWKS bundle from disc, verify the signature and
+    instantiate a JWKSBundle instance with the information from the file.
+    :param iss:
+    :param ver_keys:
+    :param bundle_file:
+    :return:
+    """
     fp = open(bundle_file, 'r')
     signed_bundle = fp.read()
     fp.close()
@@ -178,6 +198,7 @@ def get_signing_keys(eid, keydef, key_file):
 
 def jwks_to_keyjar(jwks, iss=''):
     """
+    Convert a JWKS to a KeyJar instance.
 
     :param jwks: String representation of a JWKS
     :return: A KeyJar instance
@@ -193,7 +214,7 @@ def jwks_to_keyjar(jwks, iss=''):
     return kj
 
 
-def k_to_k(keyjar, private=False):
+def k_to_j(keyjar, private=False):
     k = list(keyjar.keys())
     if len(k) == 1:
         return json.dumps(keyjar.export_jwks(issuer=k[0], private=private))
@@ -205,15 +226,33 @@ def k_to_k(keyjar, private=False):
 
 
 def keyjar_to_jwks(keyjar):
-    return k_to_k(keyjar)
+    """
+    Convert a KeyJar instance to a JWKS (JSON document).
+    :param keyjar: A oic.utils.KeyJar instance
+    """
+    return k_to_j(keyjar)
 
 
 def keyjar_to_jwks_private(keyjar):
-    return k_to_k(keyjar, private=True)
+    """
+    Convert a KeyJar instance to a JWKS (JSON document).
+    Including the private key.
+    :param keyjar: A oic.utils.KeyJar instance
+    """
+    return k_to_j(keyjar, private=True)
 
 
 class FSJWKSBundle(JWKSBundle):
     def __init__(self, iss, sign_keys=None, fdir='./', key_conv=None):
+        """
+
+        :param iss: Issuer ID for this entity
+        :param sign_keys: Signing Keys used by this entity to sign JWTs
+        :param fdir: A directory where JWKS can be stored
+        :param key_conv: Specification of directory key to file name conversion.
+        A set of keys are represented in the local cache as a KeyJar instance
+        and as a JWKS on disc.
+        """
         JWKSBundle.__init__(self, iss, sign_keys=sign_keys)
         self.bundle = FileSystem(fdir, key_conv=key_conv,
                                  value_conv={'to': keyjar_to_jwks,

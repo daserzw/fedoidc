@@ -7,7 +7,29 @@ logger = logging.getLogger(__name__)
 
 
 class FileSystem(object):
-    def __init__(self, fdir, key_conv=None, value_conv=None):
+    """
+    FileSystem implements a simple file based database.
+    It has a dictionary like interface.
+    Each key maps one-to-one to a file on disc, where the content of the
+    file is the value.
+    """
+
+    def __init__(self, fdir, key_conv=None, value_conv=None, c_size=0):
+        """
+        :param fdir: The root of the directory
+        :param key_conv: Converts to/from the key displayed by this class to
+        users of it to something that can be used as a file name.
+        The value of key_conv is a dictionary with to keys ['to', 'from']
+        where the value of 'to' is a function that can be used to convert
+        the instance key value to the file name. The value of 'from' is a
+        function that can be used to convert a file name to a key value.
+        :type key_conv: Dictionary
+        :param value_conv: As with key_conv you can convert/translate
+        the value bound to a key in the database to something that can easily
+        be stored in a file. Like with key_conv the value of this parameter
+        is a dictionary with the keys ['to', 'from'].
+        :type value_conv: dictionary
+        """
         self.fdir = fdir
         self.fmtime = {}
         self.db = {}
@@ -16,7 +38,14 @@ class FileSystem(object):
         if not os.path.isdir(fdir):
             os.makedirs(fdir)
 
+
     def __getitem__(self, item):
+        """
+        Return the value bound to an identifier.
+
+        :param item: The identifier.
+        :return:
+        """
         try:
             item = self.key_conv['to'](item)
         except KeyError:
@@ -31,9 +60,12 @@ class FileSystem(object):
 
     def __setitem__(self, key, value):
         """
+        Binds a value to a specific key. If the file that the key maps to
+        does not exist it will be created. The content of the file will be
+        set to the value given.
 
         :param key: Identifier
-        :param value: Most be a string
+        :param value: Value that should be bound to the identifier.
         :return:
         """
 
@@ -57,6 +89,9 @@ class FileSystem(object):
         self.fmtime[_key] = self.get_mtime(fname)
 
     def keys(self):
+        """
+        Implements the dict.keys() method
+        """
         self.sync()
         for k in self.db.keys():
             try:
@@ -66,6 +101,12 @@ class FileSystem(object):
 
     @staticmethod
     def get_mtime(fname):
+        """
+        Find the time this file was last modified.
+
+        :param fname: File name
+        :return:
+        """
         try:
             mtime = os.stat(fname).st_mtime_ns
         except OSError:
@@ -77,6 +118,12 @@ class FileSystem(object):
         return mtime
 
     def is_changed(self, item):
+        """
+        Find out if this item has been modified since last
+
+        :param item: A key
+        :return: True/False
+        """
         fname = os.path.join(self.fdir, item)
         if os.path.isfile(fname):
             mtime = self.get_mtime(fname)
@@ -113,6 +160,10 @@ class FileSystem(object):
         return None
 
     def sync(self):
+        """
+        Goes through the directory and builds a local cache based on
+        the content of the directory.
+        """
         if not os.path.isdir(self.fdir):
             os.makedirs(self.fdir)
             #raise ValueError('No such directory: {}'.format(self.fdir))
@@ -129,6 +180,9 @@ class FileSystem(object):
                 self.fmtime[f] = mtime
 
     def items(self):
+        """
+        Implements the dict.items() method
+        """
         self.sync()
         for k, v in self.db.items():
             try:
@@ -136,7 +190,11 @@ class FileSystem(object):
             except KeyError:
                 yield k, v
 
-    def reset(self):
+    def clear(self):
+        """
+        Completely resets the database. This means that all information in
+        the local cache and on disc will be erased.
+        """
         if not os.path.isdir(self.fdir):
             os.makedirs(self.fdir, exist_ok=True)
             return
@@ -152,5 +210,8 @@ class FileSystem(object):
                 pass
 
     def update(self, ava):
+        """
+        Implements the dict.update() method
+        """
         for key, val in ava.items():
             self[key] = val

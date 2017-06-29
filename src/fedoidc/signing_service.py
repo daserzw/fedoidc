@@ -195,7 +195,6 @@ class Signer(object):
                             _sms[f] = self.signing_service(req)
                             del req['metadata_statements']
                 else:
-                    _sms = None
                     for f in fos:
                         try:
                             val = cms[f]
