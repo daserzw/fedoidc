@@ -159,13 +159,13 @@ def test_make_signed_metadata_statement_mixed():
 
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['swamid']]
     mds = MetaDataStore('mds')
-    mds.reset()
+    mds.clear()
     sms = make_signed_metadata_statement(_spec, operator, mds=mds,
                                         base_uri='https:/example.org/ms')
     assert sms
 
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['edugain']]
-    mds.reset()
+    mds.clear()
     sms = make_signed_metadata_statement(_spec, operator, mds=mds,
                                         base_uri='https:/example.org/ms')
     assert list(sms['ms_uri'].keys()) == [FO['edugain']]

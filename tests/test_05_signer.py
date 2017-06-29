@@ -37,7 +37,7 @@ SMS_DEF = {
 }
 
 fs = FileSystem('ms_dir')
-fs.reset()
+fs.clear()
 
 if os.path.isdir('mds'):
     shutil.rmtree('mds')
