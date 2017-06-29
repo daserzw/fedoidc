@@ -29,6 +29,9 @@ __author__ = 'roland'
 
 
 class Client(oic.Client):
+    """
+    Federation aware OIDC Client
+    """
     def __init__(self, client_id=None, ca_certs=None,
                  client_prefs=None, client_authn_method=None, keyjar=None,
                  verify_ssl=True, config=None, client_cert=None,
@@ -47,9 +50,20 @@ class Client(oic.Client):
 
     def parse_federation_provider_info(self, resp, issuer):
         """
-
+        Takes a provider info response and parses it.
+        If according to the info the OP has more then one federation 
+        in common with the client then the decision has to be handled higher up.
+        The list of :py:class:`fedoidc.operator.LessOrEqual` instances are 
+        stored in *provider_federations*.
+        If the OP and RP only has one federation in common then the choice is
+        easy and the name of the federation are stored in the *federation* 
+        attribute while the provider info are stored in the normal pyoidc 
+        Client way.
+        
         :param resp: A MetadataStatement instance
+        :param issuer: The OpenID Provider ID
         """
+
         ms_list = self.federation_entity.get_metadata_statement(
             resp, cls=ProviderConfigurationResponse)
 
@@ -62,16 +76,24 @@ class Client(oic.Client):
         # federation I'll be working.
         if len(resp) == 1:
             ms = ms_list[0]
-            self.handle_provider_config(ms, issuer)
+            self.handle_provider_config(ms.protected_claims(), issuer)
             self.federation = ms.fo
         else:
             self.provider_federations = ms_list
 
-    def parse_federation_registration(self, resp, issuer):
+    def parse_federation_registration(self, resp):
         """
-
+        Receives a dynamic client registration response, verifies the
+        signature and parses the compounded metadata statement.
+        If only one federation are mentioned in the response then the name
+        of that federation are stored in the *federation* attribute and
+        the flattened response is handled in the normal pyoidc way.
+        If there are more then one federation involved then the decision
+        on which to use has to be made higher up, hence the list of
+        :py:class:`fedoidc.operator.LessOrEqual` instances are stored in the
+        attribute *registration_federations*
+        
         :param resp: A MetadataStatement instance or a dictionary
-        :param issuer: who is supposed to be issuing this response
         """
         ms_list = self.federation_entity.get_metadata_statement(
             resp, cls=ClientMetadataStatement)
@@ -85,7 +107,7 @@ class Client(oic.Client):
         # federation I'll be working.
         if len(ms_list) == 1:
             ms = ms_list[0]
-            self.store_registration_info(ms)
+            self.store_registration_info(ms.protected_claims())
             self.federation = ms.fo
         else:
             self.registration_federations = ms_list

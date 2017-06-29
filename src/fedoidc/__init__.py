@@ -28,6 +28,9 @@ class MetadataStatementError(Exception):
 
 
 class MetadataStatement(JasonWebToken):
+    """
+    A base class for metadata statements
+    """
     c_param = JasonWebToken.c_param.copy()
     c_param.update({
         "signing_keys": SINGLE_OPTIONAL_STRING,
@@ -39,6 +42,10 @@ class MetadataStatement(JasonWebToken):
     })
 
     def verify(self, **kwargs):
+        """
+        Verifies that an instance of this class adhers to the given 
+            restrictions.
+        """
         if "signing_keys" in self:
             if 'signing_keys_uri' in self:
                 raise VerificationError(
@@ -64,6 +71,9 @@ class MetadataStatement(JasonWebToken):
 
 
 class ClientMetadataStatement(MetadataStatement):
+    """
+    A Client registration Metadata statement.
+    """
     c_param = MetadataStatement.c_param.copy()
     c_param.update(RegistrationRequest.c_param.copy())
     c_param.update({
@@ -73,16 +83,34 @@ class ClientMetadataStatement(MetadataStatement):
 
 
 class ProviderConfigurationResponse(message.ProviderConfigurationResponse):
+    """
+    A Provider info metadata statement
+    """
     c_param = MetadataStatement.c_param.copy()
     c_param.update(message.ProviderConfigurationResponse.c_param.copy())
 
 
 def unfurl(jwt):
+    """
+    Return the body of a signed JWT, without verifying the signature.
+    
+    :param jwt: A signed JWT 
+    :return: The body of the JWT as a 'UTF-8' string
+    """
+
     _rp_jwt = factory(jwt)
     return json.loads(_rp_jwt.jwt.part[1].decode('utf8'))
 
 
 def keyjar_from_metadata_statements(iss, msl):
+    """
+    Builds a keyJar instance based on the information in the 'signing_keys'
+    claims in a list of metadata statements.
+    
+    :param iss: Owner of the signing keys 
+    :param msl: List of :py:class:`MetadataStatement` instances.
+    :return: A oic.utils.keyio.KeyJar instance
+    """
     keyjar = KeyJar()
     for ms in msl:
         keyjar.import_jwks(ms['signing_keys'], iss)
@@ -91,9 +119,10 @@ def keyjar_from_metadata_statements(iss, msl):
 
 def is_lesser(a, b):
     """
-    Verify that a in lesser then b
-    :param a:
-    :param b:
+    Verify that a is <= then b
+    
+    :param a: An item
+    :param b: Another item
     :return: True or False
     """
 

@@ -1,13 +1,17 @@
 .. _howto_rp:
 
-How to Implement a Client
-=========================
+How to Implement a Federation aware OIDC Client
+===============================================
 
 In the following description it is assumed that you have read the
-documentation on how to set up a client using pyoidc.
+documentation on how to set up a client using basic pyoidc.
+So I will concentrate on what you have to do in addition to that.
 
-The two parts that differ from a *normal* pyoidc client is provider info
+There are two places where a federation aware client will do things differently
+from a *normal* pyoidc client and that is provider info
 discovery and dynamic client registration.
+
+But first before we get into that some necessary basics.
 
 Set up
 ------

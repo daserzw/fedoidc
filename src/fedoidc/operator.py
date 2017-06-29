@@ -76,8 +76,7 @@ class LessOrEqual(object):
 
     def sup_items(self):
         """
-        Items (key+values) from the superior
-        :return:
+        Items (key+values) from the superior        
         """
         if self.sup:
             return self.sup.le.items()
@@ -88,6 +87,7 @@ class LessOrEqual(object):
         """
         Apply the less or equal algorithm on the ordered list of metadata
         statements
+        
         :param orig: Start values
         :param signer: Who vouched for this information
         :return:
@@ -122,9 +122,11 @@ class LessOrEqual(object):
         if self.sup:
             return self.sup.le
 
-    def unprotected_claims(self):
+    def unprotected_and_protected_claims(self):
         """
-        This is self asserted information.
+        This is both verified and self asserted information. As expected 
+        verified information beats self-asserted so seomthing self-asserted
+        will be blocked by something that is verified.
         """
         if self.sup:
             res = {}
@@ -157,6 +159,9 @@ def get_fo(ms):
 
 
 class Operator(object):
+    """
+    An operator in a OIDC federation.
+    """
     def __init__(self, keyjar=None, jwks_bundle=None, httpcli=None, iss=None,
                  lifetime=0):
         """
@@ -305,8 +310,7 @@ class Operator(object):
         :param cls: What type (Class) of metadata statement this is
         :param liss: list of FO identifiers that matters. The rest will be 
             ignored
-        :param sk_iss: The owner of the signing key
-        :return: ParseInfo instance
+        :return: A ParseInfo instance
         """
 
         if not keyjar:
@@ -371,7 +375,8 @@ class Operator(object):
         If something goes wrong during the evaluation an exception is raised
 
         :param metadata: The compounded metadata statement as a dictionary
-        :return: A list of LessOrEqual instances, one per FO.
+        :return: A list of :py:class:`fedoidc.operator.LessOrEqual` 
+            instances, one per FO.
         """
 
         # start from the innermost metadata statement and work outwards

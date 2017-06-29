@@ -60,6 +60,7 @@ class JWKSBundle(object):
         """
         Returns a KeyJar instance representing the keys belonging to an
         issuer
+        
         :param item: Issuer ID
         :return: A KeyJar instance
         """
@@ -73,6 +74,7 @@ class JWKSBundle(object):
     def __delitem__(self, key):
         """
         Remove the KeyJar that belong to a specific issuer
+        
         :param key: Issuer ID
         """
         del self.bundle[key]
@@ -80,11 +82,14 @@ class JWKSBundle(object):
     def create_signed_bundle(self, sign_alg='RS256', iss_list=None):
         """
         Create a signed JWT containing a dictionary with Issuer IDs as keys
-        and JWKSs as values
+        and JWKSs as values. If iss_list is empty all then all issuers are 
+        included.
+        
         :param sign_alg: Which algorithm to use when signing the JWT
+        :param iss_list: A list of issuer IDs who's keys should be included in 
+            the signed bundle.
         :return: A signed JWT
         """
-        #data = json.dumps(self.dict(iss_list))
         data = self.dict(iss_list)
         _jwt = JWT(self.sign_keys, iss=self.iss, sign_alg=sign_alg)
         return _jwt.pack(bundle=data)
@@ -93,8 +98,7 @@ class JWKSBundle(object):
         """
         Upload a bundle from an unsigned JSON document
 
-        :param jstr:
-        :return:
+        :param jstr: A bundle as a dictionary or a JSON document
         """
         if isinstance(jstr, dict):
             _info = jstr
@@ -108,18 +112,38 @@ class JWKSBundle(object):
         return self
 
     def dumps(self, iss_list=None):
+        """
+        Dumps a bundle of keys into a string. If iss_list is empty then all
+        issuers are included
+        
+        :param iss_list: List of issuers whos keys should be dumped 
+        :return: A JSON document
+        """
         return json.dumps(self.dict(iss_list))
 
     def __str__(self):
         return json.dumps(self.dict())
 
     def keys(self):
+        """
+        Return a list of all issuers there are keys for in this bundle.
+        
+        :return: List of Issuer IDs
+        """
         return self.bundle.keys()
 
     def items(self):
         return self.bundle.items()
 
     def dict(self, iss_list=None):
+        """
+        Return the bundle of keys as a dictionary with the issuer IDs as
+        the keys.
+        
+        :param iss_list: List of Issuer IDs that should be part of the 
+         output
+        :rtype: Dictionary  
+        """
         _int = {}
         for iss, kj in self.bundle.items():
             if iss_list is None or iss in iss_list:
@@ -130,10 +154,25 @@ class JWKSBundle(object):
         return _int
 
     def upload_signed_bundle(self, sign_bundle, ver_keys):
+        """
+        Input is a signed JWT with a JSON document representing the key bundle 
+        as body. This method verifies the signature and the updates the instance
+        bundle with whatever was in the received package. Note, that as with 
+        dictionary update if an Issuer ID already exists in the instance bundle
+        that will be overwritten with the new information.
+        
+        :param sign_bundle: A signed JWT
+        :param ver_keys: Keys that can be used to verify the JWT signature.
+        """
         jwt = verify_signed_bundle(sign_bundle, ver_keys)
         self.loads(jwt['bundle'])
 
     def as_keyjar(self):
+        """
+        Convert a key bundle into a KeyJar instance.
+        
+        :return: An :py:class:`oic.utils.keyio.KeyJar` instance 
+        """
         kj = KeyJar()
         for iss, k in self.bundle.items():
             try:
@@ -161,6 +200,7 @@ def get_bundle(iss, ver_keys, bundle_file):
     """
     Read a signed JWKS bundle from disc, verify the signature and
     instantiate a JWKSBundle instance with the information from the file.
+    
     :param iss:
     :param ver_keys:
     :param bundle_file:
@@ -180,7 +220,7 @@ def get_signing_keys(eid, keydef, key_file):
     :param eid: The ID of the entity that the keys belongs to
     :param keydef: What keys to create
     :param key_file: A file name
-    :return: A KeyJar instance
+    :return: A :py:class:`oic.utils.keyio.KeyJar` instance
     """
     if os.path.isfile(key_file):
         kj = KeyJar()
@@ -201,7 +241,7 @@ def jwks_to_keyjar(jwks, iss=''):
     Convert a JWKS to a KeyJar instance.
 
     :param jwks: String representation of a JWKS
-    :return: A KeyJar instance
+    :return: A :py:class:`oic.utils.keyio.KeyJar` instance
     """
     if not isinstance(jwks, dict):
         try:
@@ -228,7 +268,8 @@ def k_to_j(keyjar, private=False):
 def keyjar_to_jwks(keyjar):
     """
     Convert a KeyJar instance to a JWKS (JSON document).
-    :param keyjar: A oic.utils.KeyJar instance
+    
+    :param keyjar: A :py:class:`oic.utils.keyio.KeyJar` instance
     """
     return k_to_j(keyjar)
 
@@ -237,12 +278,17 @@ def keyjar_to_jwks_private(keyjar):
     """
     Convert a KeyJar instance to a JWKS (JSON document).
     Including the private key.
-    :param keyjar: A oic.utils.KeyJar instance
+    
+    :param keyjar: A :py:class:`oic.utils.keyio.KeyJar` instance
     """
     return k_to_j(keyjar, private=True)
 
 
 class FSJWKSBundle(JWKSBundle):
+    """
+    A JWKSBundle that keeps the key information in a 
+    :py:class:`fedoidc.file_system.FileSystem` instance.
+    """
     def __init__(self, iss, sign_keys=None, fdir='./', key_conv=None):
         """
 
@@ -250,8 +296,8 @@ class FSJWKSBundle(JWKSBundle):
         :param sign_keys: Signing Keys used by this entity to sign JWTs
         :param fdir: A directory where JWKS can be stored
         :param key_conv: Specification of directory key to file name conversion.
-        A set of keys are represented in the local cache as a KeyJar instance
-        and as a JWKS on disc.
+            A set of keys are represented in the local cache as a KeyJar 
+            instance and as a JWKS on disc.
         """
         JWKSBundle.__init__(self, iss, sign_keys=sign_keys)
         self.bundle = FileSystem(fdir, key_conv=key_conv,

@@ -18,6 +18,9 @@ class ServiceError(Exception):
 
 
 class SigningService(object):
+    """
+    A service that can sign a :py:class:`fedoidc.MetadataStatement` instance
+    """
     def __init__(self, add_ons=None, alg='RS256'):
         self.add_ons = add_ons or {}
         self.alg = alg
@@ -32,6 +35,16 @@ class SigningService(object):
 class InternalSigningService(SigningService):
     def __init__(self, iss, signing_keys, add_ons=None, alg='RS256',
                  lifetime=3600):
+        """
+        A signing service that is internal to an entity
+        
+        :param iss: The ID for this entity 
+        :param signing_keys: Signing keys this entity can use to sign JWTs with.
+        :param add_ons: Additional information the signing service must 
+            add to the Metadata statement before signing it.
+        :param alg: The signing algorithm
+        :param lifetime: The lifetime of the signed JWT
+        """
         SigningService.__init__(self, add_ons=add_ons, alg=alg)
         self.signing_keys = signing_keys
         self.iss = iss
@@ -40,8 +53,8 @@ class InternalSigningService(SigningService):
     def __call__(self, req, **kwargs):
         """
 
-        :param req: Original metadata statement as a MetadataStatement
-        instance
+        :param req: Original metadata statement as a 
+            :py:class:`MetadataStatement` instance
         :param keyjar: KeyJar in which the necessary keys should reside
         :param iss: Issuer ID
         :param alg: Which signing algorithm to use
@@ -74,6 +87,15 @@ class InternalSigningService(SigningService):
 
 class WebSigningService(SigningService):
     def __init__(self, url, add_ons=None, alg='RS256'):
+        """
+        A client to a web base signing service.
+        Uses HTTP Post to send the MetadataStatement to the service.
+        
+        :param url: The URL of the signing service 
+        :param add_ons: Additional information the signing service must 
+            add to the Metadata statement before signing it.
+        :param alg: Signing algorithm 
+        """
         SigningService.__init__(self, add_ons=add_ons, alg=alg)
         self.url = url
 
@@ -94,6 +116,18 @@ MIN_SET = dict([(k, {}) for k in OPERATIONS])
 
 class Signer(object):
     def __init__(self, signing_service, ms_dir=None, def_context=''):
+        """
+        A signer. Has no or one signing services it can use.
+        Keeps a dictionary with the created signed metadata statements.
+        
+        :param signing_service: Which signing service this signer can use. 
+        :param ms_dir: Where the file copies of the signed metadata statements
+            are kept. Storing/retrieving the signed metadata statements are
+            handled by :py:class:`fedoidc.file_system.FileSystem` instances.
+            One per operations where they are expected to used.
+        :param def_context: Default operation, one :py:const:`OPERATIONS`
+        """
+
         self.metadata_statements = {}
 
         if isinstance(ms_dir, dict):

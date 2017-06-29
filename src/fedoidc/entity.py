@@ -11,7 +11,14 @@ __author__ = 'roland'
 logger = logging.getLogger(__name__)
 
 
-def read_jwks_file(self, jwks_file):
+def read_jwks_file(jwks_file):
+    """
+    Reads a file containing a JWKS and populates a oic.utils.keyio.KeyJar from
+    it.
+    
+    :param jwks_file: file name of the JWKS file 
+    :return: A oic.utils.keyio.KeyJar instance
+    """
     _jwks = open(jwks_file, 'r').read()
     _kj = KeyJar()
     _kj.import_jwks(json.loads(_jwks), '')
@@ -19,6 +26,9 @@ def read_jwks_file(self, jwks_file):
 
 
 class FederationEntity(Operator):
+    """
+    An entity in a federation. For instance an OP or an RP.
+    """
     def __init__(self, srv, iss='', keyjar=None, signer=None, fo_bundle=None):
         """
 
@@ -53,6 +63,7 @@ class FederationEntity(Operator):
     def pick_signed_metadata_statements_regex(self, pattern, context):
         """
         Pick signed metadata statements based on ISS pattern matching
+        
         :param pattern: A regular expression to match the iss against
         :return: list of tuples (FO ID, signed metadata statement)
         """
@@ -67,6 +78,7 @@ class FederationEntity(Operator):
     def pick_signed_metadata_statements(self, fo, context):
         """
         Pick signed metadata statements based on ISS pattern matching
+        
         :param fo: Federation operators ID
         :return: list of tuples (FO ID, signed metadata statement)
         """
@@ -86,7 +98,7 @@ class FederationEntity(Operator):
             dictionary
         :param cls: The class the response should be typed into
         :param context: In which context the metadata statement should be used.
-        :return: A list of metadata statements 
+        :return: A list of :py:class:`fedoidc.operator.LessOrEqual` instances
         """
         _pi = self.unpack_metadata_statement(json_ms=json_ms, cls=cls)
         if not _pi.result:
