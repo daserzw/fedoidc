@@ -1,6 +1,9 @@
+import os
 import time
 from urllib.parse import quote_plus, urlparse
 from urllib.parse import unquote_plus
+
+import shutil
 
 from fedoidc.test_utils import MetaDataStore
 
@@ -56,31 +59,17 @@ SMS_DEF = {
     }
 }
 
-SMSU_DEF = {
-    OA['sunet']: {
-        "registration": {
-            FO['feide']: [
-                {'request': {}, 'requester': OA['sunet'],
-                 'signer_add': {'federation_usage': 'registration'},
-                 'signer': FO['feide'], 'uri': True},
-            ],
-            FO['edugain']: [
-                {'request': {}, 'requester': FO['swamid'],
-                 'signer_add': {'federation_usage': 'response'},
-                 'signer': FO['edugain']},
-                {'request': {}, 'requester': OA['sunet'],
-                 'signer_add': {}, 'signer': FO['swamid'], 'uri': True}
-            ]
-        },
-    }
-}
+# Clear out old stuff
+for d in ['mds', 'ms_dir', 'ms_path']:
+    if os.path.isdir(d):
+        shutil.rmtree(d)
 
 liss = list(FO.values())
 liss.extend(list(OA.values()))
 
 signer, keybundle = test_utils.setup(
-    KEYDEFS, TOOL_ISS, liss, ms_path='ms_dir', csms_def=SMS_DEF,
-    mds_dir='mds', base_url='https://localhost')
+    KEYDEFS, TOOL_ISS, liss, ms_path='ms_path_6', csms_def=SMS_DEF,
+    mds_dir='mds_dir_6', base_url='https://localhost')
 
 
 class Response(object):
@@ -119,7 +108,7 @@ def test_unpack_metadata_statement():
     jb = FSJWKSBundle('', None, 'fo_jwks',
                       key_conv={'to': quote_plus, 'from': unquote_plus})
 
-    mds = MetaDataStore('mds')
+    mds = MetaDataStore('mds_dir_6')
     op = Operator(jwks_bundle=jb)
     op.httpcli = MockHTTPClient(mds)
     res = op.unpack_metadata_statement(jwt_ms=ms)

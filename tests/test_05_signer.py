@@ -1,8 +1,8 @@
 import os
 import shutil
 
-from fedoidc import test_utils, MetadataStatement
-from fedoidc.file_system import FileSystem
+from fedoidc import MetadataStatement
+from fedoidc import test_utils
 
 KEYDEFS = [
     {"type": "RSA", "key": '', "use": ["sig"]},
@@ -36,18 +36,17 @@ SMS_DEF = {
     }
 }
 
-fs = FileSystem('ms_dir')
-fs.clear()
-
-if os.path.isdir('mds'):
-    shutil.rmtree('mds')
+# Clear out old stuff
+for d in ['mds', 'ms_dir', 'ms_path']:
+    if os.path.isdir(d):
+        shutil.rmtree(d)
 
 liss = list(FO.values())
 liss.extend(list(OA.values()))
 
 signer, keybundle = test_utils.setup(
-    KEYDEFS, TOOL_ISS, liss, ms_path='ms_dir', csms_def=SMS_DEF,
-    mds_dir='mds', base_url='https://localhost')
+    KEYDEFS, TOOL_ISS, liss, ms_path='ms_dir_10', csms_def=SMS_DEF,
+    mds_dir='mds_10', base_url='https://localhost')
 
 
 def test_signer():

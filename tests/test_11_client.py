@@ -2,6 +2,7 @@ import json
 import os
 from urllib.parse import quote_plus
 
+import shutil
 from oic import rndstr
 
 from fedoidc import test_utils
@@ -91,6 +92,13 @@ SMS_DEF = {
         }
     }
 }
+
+
+# Clear out old stuff
+for d in ['mds', 'ms_dir', 'ms_path']:
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+
 liss = list(FO.values())
 liss.extend(list(OA.values()))
 liss.extend(list(EO.values()))
@@ -153,7 +161,7 @@ def test_parse_pi():
 
     assert isinstance(resp, Created)
 
-    rp.parse_federation_registration(json.loads(resp.message), sunet_op)
+    rp.parse_federation_registration(json.loads(resp.message))
     assert rp.federation == FO['feide']
     assert rp.registration_response
 

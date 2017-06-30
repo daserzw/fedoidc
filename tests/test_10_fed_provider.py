@@ -55,12 +55,12 @@ SMS_DEF = {
     }
 }
 
-MS_DIR = 'ms_dir_10'
-fs = FileSystem(MS_DIR)
-fs.clear()
+# Clear out old stuff
+for d in ['mds', 'ms_dir', 'ms_path']:
+    if os.path.isdir(d):
+        shutil.rmtree(d)
 
-if os.path.isdir('mds'):
-    shutil.rmtree('mds')
+MS_DIR = 'ms_dir'
 
 liss = list(FO.values())
 liss.extend(list(OA.values()))

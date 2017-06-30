@@ -256,7 +256,8 @@ class Operator(object):
         if jwt_ms:
             try:
                 _pr.result = cls().from_jwt(jwt_ms, keyjar=keyjar)
-            except (JWSException, BadSignature, MissingSigningKey) as err:
+            except (JWSException, BadSignature, MissingSigningKey,
+                    KeyError) as err:
                 logger.error('Encountered: {}'.format(err))
                 _pr.error[jwt_ms] = err
             else:

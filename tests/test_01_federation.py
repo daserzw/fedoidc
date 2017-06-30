@@ -107,7 +107,7 @@ def test_pack_ms_wrong_fo():
     member = fo_member(FO1P)
     pr = member.unpack_metadata_statement(jwt_ms=_jwt)
     assert pr.result is None
-    assert isinstance(pr.error[_jwt], MissingSigningKey)
+    assert isinstance(pr.error[_jwt], (MissingSigningKey, KeyError))
 
     # try:
     # except JWSException as err:
@@ -487,7 +487,7 @@ def test_unpack_discovery_info():
     assert pcr_ms[0]['issuer'] == 'https://example.org/op'
 
     _ms = pcr_ms[0]
-    assert _ms.unprotected_claims() == {}
+    assert _ms.unprotected_and_protected_claims() == {}
 
 
 def test_create_fo_keys_bundle():
