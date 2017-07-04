@@ -12,15 +12,6 @@ Fedoidc classes and functions
 fedoidc
 =======
 
-.. autodata:: CONTEXTS
-    :annotation: Contexts in which metadata statements can be used
-
-.. autodata:: DoNotCompare
-    :annotation: When comparing metadata statement these claims should be ignored.
-
-.. autodata:: IgnoreKeys
-    :annotation: When flattening a counded metadata statement these claims should be ignored.
-
 .. automodule:: fedoidc
    :members:
 

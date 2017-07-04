@@ -15,7 +15,10 @@ Contents:
    :maxdepth: 2
 
    fedoidc
+   howto/operator
+   howto/entity
    howto/rp
+
 
 Indices and tables
 ==================
