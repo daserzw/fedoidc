@@ -127,13 +127,13 @@ class TestProvider(object):
     def test_create_metadata_statement_request(self):
         _fe = self.op.federation_entity
         statement = self.op.create_providerinfo()
-        req = _fe.create_metadata_statement_request(statement)
+        req = _fe.add_signing_keys(statement)
         assert 'signing_keys' in req
 
     def test_use_signing_service(self):
         _fe = self.op.federation_entity
         statement = self.op.create_providerinfo()
-        req = _fe.create_metadata_statement_request(statement)
+        req = _fe.add_signing_keys(statement)
 
         sjwt = _fe.signer.create_signed_metadata_statement(
             req, 'discovery', fos=_fe.signer.metadata_statements.keys())
