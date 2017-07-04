@@ -113,6 +113,16 @@ class Client(oic.Client):
             self.registration_federations = ms_list
 
     def handle_response(self, response, issuer, func, response_cls):
+        """
+        Handle a request response. Depending on which type of response 
+        it is different functions *func* will be used to handle it.
+        If something went wrong an exception will be raised.
+        
+        :param response: A requests.request response 
+        :param issuer: who was the request sent to
+        :param func: A function to use for handling a correct response
+        :param response_cls: The response should match this class
+        """
         err_msg = 'Got error response: {}'
         unk_msg = 'Unknown response: {}'
 
@@ -150,10 +160,11 @@ class Client(oic.Client):
 
     def chose_federation(self, ms_list):
         """
-        Given the set of possible provider info responses I got chose
-        one. This simple one uses federation_priority if present.
+        Given the set of possible provider info responses I got to chose
+        one. This simple method uses *federation_priority* if present.
         
-        :param ms_list: List of metadata statements 
+        :param ms_list: List of :py:class:`fedoidc.operator.LessOrEqual` 
+            instances.
         :return: A ProviderConfigurationResponse instance
         """
         for fo in self.fo_priority:
@@ -164,20 +175,48 @@ class Client(oic.Client):
         return ms_list[0]
 
     def chose_provider_federation(self, issuer):
-        _pcr = self.chose_federation(self.provider_federations)
-        self.federation = _pcr.fo
-        self.handle_provider_config(_pcr, issuer)
-        return _pcr
+        """
+        Once a federation has been chose store the provider info in the
+        normal pyoidc way.
+        
+        :param issuer: 
+        :return: 
+        """
+        _leo = self.chose_federation(self.provider_federations)
+        self.federation = _leo.fo
+        self.handle_provider_config(_leo.protected_claims(), issuer)
+        return ProviderConfigurationResponse(**_leo.protected_claims())
 
     def chose_registration_federation(self):
-        _pcr = self.chose_federation(self.registration_federations)
-        self.federation = _pcr.fo
-        self.store_registration_info(_pcr)
-        return _pcr
+        """
+        Chose one among many possible federations. Once the federation has been
+        choosen store the registration info.
+        
+        :return: The :py:class:`LessOrEqual` instance matching the choosen 
+            federation.
+        """
+        _leo = self.chose_federation(self.registration_federations)
+        self.federation = _leo.fo
+        self.store_registration_info(_leo.protected_claims)
+        return ClientMetadataStatement(**_leo.protected_claims())
 
     def provider_config(self, issuer, keys=True, endpoints=True,
                         response_cls=ProviderConfigurationResponse,
                         serv_pattern=OIDCONF_PATTERN):
+        """
+        The high level method that should be used, by an application, to get 
+        the provider info.
+        
+        :param issuer: The provider/issuer ID
+        :param keys: Whether I should store the keys I get back form the OP
+        :type keys: Boolean
+        :param endpoints: Should I deal with endpoints; that is store them
+            as attributes in self. 
+        :param response_cls: A class to store the response information in
+        :param serv_pattern: A string pattern used to build the 
+            query URL.
+        :return: A :py:class:`fedoidc.ProviderConfigurationResponse` instance
+        """
         if issuer.endswith("/"):
             _issuer = issuer[:-1]
         else:
@@ -224,6 +263,13 @@ class Client(oic.Client):
             return self.provider_info
 
     def federated_client_registration_request(self, **kwargs):
+        """
+        Constructs a client registration request to be used by a client in a 
+        federation.
+        
+        :param kwargs: A set of claims that should be part of the registration.
+        :return: A :py:class:`ClientMetadataStatement` 
+        """
         req = ClientMetadataStatement()
 
         try:
@@ -263,7 +309,15 @@ class Client(oic.Client):
         return req
 
     def register(self, url, reg_type='federation', **kwargs):
-
+        """
+        Do a client registration.
+        
+        :param url: The registration endpoint 
+        :param reg_type: If known to not be in a federation context this should 
+            be set to ''.
+        :param kwargs: A set of claims that should be part of the registration.
+        :return: 
+        """
         if reg_type == 'federation':
             req = self.federated_client_registration_request(**kwargs)
         else:

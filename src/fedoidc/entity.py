@@ -80,6 +80,8 @@ class FederationEntity(Operator):
         Pick signed metadata statements based on ISS pattern matching
         
         :param fo: Federation operators ID
+        :param context: In connect with which operation (one of the values in 
+            :py:data:`fedoidc.CONTEXTS`). 
         :return: list of tuples (FO ID, signed metadata statement)
         """
         sms = self.signer.metadata_statements[context]

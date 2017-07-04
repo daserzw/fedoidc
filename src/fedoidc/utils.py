@@ -33,14 +33,16 @@ def self_sign_jwks(keyjar, iss, kid='', lifetime=3600):
 def verify_self_signed_jwks(sjwt):
     """
     Verify the signature of a signed JWT containing a JWKS.
-    The JWT is signed by one of the keys in the JWKS. ::
+    The JWT is signed by one of the keys in the JWKS. 
+    In the JWT the JWKS is stored using this format ::
     
         'jwks': {
             'keys': [ ]
         }
 
     :param sjwt: Signed Jason Web Token
-    :return:
+    :return: Dictionary containing 'jwks' (the JWKS) and 'iss' (the issuer of 
+        the JWT)
     """
 
     _jws = factory(sjwt)
@@ -68,16 +70,18 @@ def request_signed_by_signing_keys(keyjar, msreq, iss, lifetime, kid=''):
     of the keys in 'signing_keys'.
 
     :param keyjar: A KeyJar instance with the private signing key
-    :param msreq: Metadata statement signing request. A MetadataStatement instance.
-    :param iss: Issuer of the signing request also the owner of the signing keys.
+    :param msreq: Metadata statement signing request. A MetadataStatement 
+    instance.
+    :param iss: Issuer of the signing request also the owner of the signing 
+    keys.
     :return: Signed JWT where the body is the metadata statement
     """
 
     try:
         jwks_to_keyjar(msreq['signing_keys'], iss)
     except KeyError:
-         jwks = keyjar.export_jwks(issuer=iss)
-         msreq['signing_keys'] = jwks
+        jwks = keyjar.export_jwks(issuer=iss)
+        msreq['signing_keys'] = jwks
 
     _jwt = JWT(keyjar, iss=iss, lifetime=lifetime)
 

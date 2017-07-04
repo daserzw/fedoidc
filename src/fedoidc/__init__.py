@@ -22,6 +22,9 @@ logger = logging.getLogger(__name__)
 __author__ = 'roland'
 __version__ = '0.3.1'
 
+CONTEXTS = ['registration', 'discovery', 'response']
+MIN_SET = dict([(k, {}) for k in CONTEXTS])
+
 
 class MetadataStatementError(Exception):
     pass
@@ -163,5 +166,5 @@ def is_lesser(a, b):
 
 #  The resulting metadata must not contain these parameters
 IgnoreKeys = list(JasonWebToken.c_param.keys())
-DoNotCompare= ['signing_keys', 'signing_keys_uri', 'metadata_statement_uris',
-               'kid', 'metadata_statements', 'usage']
+DoNotCompare = list(set(MetadataStatement.c_param.keys()).difference(IgnoreKeys))
+DoNotCompare.append('kid')

@@ -7,6 +7,7 @@ import logging
 import requests
 from oic.oauth2 import Message
 
+from fedoidc import CONTEXTS, MIN_SET
 from fedoidc.file_system import FileSystem
 from oic.utils.jwt import JWT
 
@@ -33,10 +34,12 @@ class SigningService(object):
 
 
 class InternalSigningService(SigningService):
+    """
+    A signing service that is internal to an entity
+    """
     def __init__(self, iss, signing_keys, add_ons=None, alg='RS256',
                  lifetime=3600):
         """
-        A signing service that is internal to an entity
         
         :param iss: The ID for this entity 
         :param signing_keys: Signing keys this entity can use to sign JWTs with.
@@ -86,11 +89,12 @@ class InternalSigningService(SigningService):
 
 
 class WebSigningService(SigningService):
+    """
+    A client to a web base signing service.
+    Uses HTTP Post to send the MetadataStatement to the service.
+    """
     def __init__(self, url, add_ons=None, alg='RS256'):
         """
-        A client to a web base signing service.
-        Uses HTTP Post to send the MetadataStatement to the service.
-        
         :param url: The URL of the signing service 
         :param add_ons: Additional information the signing service must 
             add to the Metadata statement before signing it.
@@ -110,35 +114,33 @@ class WebSigningService(SigningService):
         return self.url
 
 
-OPERATIONS = ['registration', 'discovery', 'response']
-MIN_SET = dict([(k, {}) for k in OPERATIONS])
-
-
 class Signer(object):
+    """
+    A signer. Has no or one signing services it can use.
+    Keeps a dictionary with the created signed metadata statements.
+    """
     def __init__(self, signing_service, ms_dir=None, def_context=''):
         """
-        A signer. Has no or one signing services it can use.
-        Keeps a dictionary with the created signed metadata statements.
         
         :param signing_service: Which signing service this signer can use. 
         :param ms_dir: Where the file copies of the signed metadata statements
             are kept. Storing/retrieving the signed metadata statements are
             handled by :py:class:`fedoidc.file_system.FileSystem` instances.
             One per operations where they are expected to used.
-        :param def_context: Default operation, one :py:const:`OPERATIONS`
+        :param def_context: Default operation, one :py:const:`fedoidc.CONTEXTS`
         """
 
         self.metadata_statements = {}
 
         if isinstance(ms_dir, dict):
             for key, _dir in ms_dir.items():
-                if key not in OPERATIONS:
+                if key not in CONTEXTS:
                     raise ValueError('{} not expected operation'.format(key))
                 self.metadata_statements[key] = FileSystem(
                     _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
         elif ms_dir:
             for item in os.listdir(ms_dir):
-                if item not in OPERATIONS:
+                if item not in CONTEXTS:
                     raise ValueError('{} not expected operation'.format(item))
                 _dir = os.path.join(ms_dir, item)
                 if os.path.isdir(_dir):
@@ -168,7 +170,12 @@ class Signer(object):
     def create_signed_metadata_statement(self, req, context='', fos=None,
                                          intermediate=False):
         """
-
+        Gathers the metadata statements adds them to the request and signs
+        the whole document.
+        If *intermediate* is **True** separate signed metadata statements will 
+        be constructed per federation operator. If *intermediate* is **False**
+        only one signed metadata statement is created.
+        
         :param req: The metadata statement to be signed
         :param context: The context in which this Signed metadata
             statement should be used
@@ -255,7 +262,8 @@ class Signer(object):
 
     def gather_metadata_statements(self, context='', fos=None):
         """
-
+        Only gathers metadata statements and returns them.
+        
         :param context: The context in which this Signed metadata
             statement should be used
         :param fos: Signed metadata statements from these Federation Operators

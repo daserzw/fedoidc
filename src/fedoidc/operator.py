@@ -117,7 +117,7 @@ class LessOrEqual(object):
 
     def protected_claims(self):
         """
-        Someone in the list of signers has said this is OK
+        Someone in the list of signers has said this information is OK
         """
         if self.sup:
             return self.sup.le
@@ -125,8 +125,9 @@ class LessOrEqual(object):
     def unprotected_and_protected_claims(self):
         """
         This is both verified and self asserted information. As expected 
-        verified information beats self-asserted so seomthing self-asserted
-        will be blocked by something that is verified.
+        verified information beats self-asserted so if there is both 
+        self-asserted and verified values for a claim then only the verified
+        will be returned.
         """
         if self.sup:
             res = {}
@@ -407,9 +408,9 @@ class Operator(object):
         """
         Remove MS paths that are marked to be used for another usage
 
-        :param metadata:
-        :param federation_usage:
-        :return:
+        :param metadata: Metadata statement as dictionary
+        :param federation_usage: In which context this is expected to used.
+        :return: Filtered Metadata statement.
         """
 
         if 'metadata_statements' in metadata:
