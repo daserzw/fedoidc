@@ -105,7 +105,7 @@ class FileSystem(object):
         Find the time this file was last modified.
 
         :param fname: File name
-        :return:
+        :return: The last time the file was modified.
         """
         try:
             mtime = os.stat(fname).st_mtime_ns

@@ -284,29 +284,8 @@ class Client(oic.Client):
 
         req.update(kwargs)
 
-        _fe = self.federation_entity
-        if self.federation:
-            if _fe.signer.signing_service:
-                _cms = _fe.create_metadata_statement_request(req)
-                sms = _fe.signer.create_signed_metadata_statement(
-                    _cms, 'registration', fos=[self.federation])
-                req['metadata_statements'] = Message(**sms)
-            else:
-                req.update(
-                    _fe.signer.gather_metadata_statements(
-                        'registration', fos=[self.federation]))
-        else:
-            _fos = list([r.fo for r in self.provider_federations])
-            if _fe.signer.signing_service:
-                _cms = _fe.create_metadata_statement_request(copy.copy(req))
-                sms = _fe.signer.create_signed_metadata_statement(
-                    _cms, 'registration', _fos, intermediate=True)
-                req['metadata_statements'] = Message(**sms)
-            else:
-                req.update(
-                    _fe.signer.gather_metadata_statements('registration',
-                                                          fos=_fos))
-        return req
+        return self.federation_entity.update_request(req,
+                                                     self.provider_federations)
 
     def register(self, url, reg_type='federation', **kwargs):
         """

@@ -1,28 +1,15 @@
-import json
+import copy
 import logging
 import re
 
+from oic.oauth2 import Message
+
 from fedoidc import MetadataStatement
-from oic.utils.keyio import KeyJar
 from fedoidc.operator import Operator
 
 __author__ = 'roland'
 
 logger = logging.getLogger(__name__)
-
-
-def read_jwks_file(jwks_file):
-    """
-    Reads a file containing a JWKS and populates a oic.utils.keyio.KeyJar from
-    it.
-    
-    :param jwks_file: file name of the JWKS file 
-    :return: A oic.utils.keyio.KeyJar instance
-    """
-    _jwks = open(jwks_file, 'r').read()
-    _kj = KeyJar()
-    _kj.import_jwks(json.loads(_jwks), '')
-    return _kj
 
 
 class FederationEntity(Operator):
@@ -47,6 +34,7 @@ class FederationEntity(Operator):
 
         # Who can sign request from this entity
         self.signer = signer
+        self.federation = None
 
     @staticmethod
     def pick_by_priority(ms_list, priority=None):
@@ -68,9 +56,9 @@ class FederationEntity(Operator):
         :return: list of tuples (FO ID, signed metadata statement)
         """
         comp_pat = re.compile(pattern)
-        sms = self.signer.metadata_statements[context]
+        sms_dict = self.signer.metadata_statements[context]
         res = []
-        for iss, vals in sms.items():
+        for iss, vals in sms_dict.items():
             if comp_pat.search(iss):
                 res.extend((iss, vals))
         return res
@@ -84,9 +72,9 @@ class FederationEntity(Operator):
             :py:data:`fedoidc.CONTEXTS`). 
         :return: list of tuples (FO ID, signed metadata statement)
         """
-        sms = self.signer.metadata_statements[context]
+        sms_dict = self.signer.metadata_statements[context]
         res = []
-        for iss, vals in sms.items():
+        for iss, vals in sms_dict.items():
             if iss == fo:
                 res.extend((iss, vals))
         return res
@@ -94,7 +82,12 @@ class FederationEntity(Operator):
     def get_metadata_statement(self, json_ms, cls=MetadataStatement,
                                context=''):
         """
-        Unpack and evaluate a compound metadata statement
+        Unpack and evaluate a compound metadata statement. Goes through the
+        necessary three steps.
+        * unpack the metadata statement
+        * verify that the given statements are expected to be used in this 
+            context
+        * evaluate the metadata statements (= flatten)
 
         :param json_ms: The metadata statement as a JSON document or a 
             dictionary
@@ -116,11 +109,63 @@ class FederationEntity(Operator):
         else:
             return []
 
-    def create_metadata_statement_request(self, statement):
+    def add_signing_keys(self, statement):
         """
-        Create a request to be signed by higher ups.
+        Adding signing keys by value to a statement.
 
-        :return: A JSON document
+        :param statement: Metadata statement to be extended
+        :return: The extended statement
         """
         statement['signing_keys'] = self.signing_keys_as_jwks()
         return statement
+
+    def extend_with_ms(self, req, sms_dict):
+        """
+        
+        :param req: 
+        :param sms_dict: 
+        :return: 
+        """
+        _ms_uri = {}
+        _ms = {}
+        for fo, sms in sms_dict.items():
+            if sms.startswith('http://') or sms.startswith('https://'):
+                _ms_uri[fo] = sms
+            else:
+                _ms[fo] = sms
+
+        if _ms:
+            req['metadata_statements'] = Message(**_ms)
+        if _ms_uri:
+            req['metadata_statement_uris'] = Message(**_ms_uri)
+        return req
+
+    def update_request(self, req, federations):
+        """
+        
+        :param req: 
+        :param federations: 
+        :return: 
+        """
+        if self.federation:
+            if self.signer.signing_service:
+                _cms = self.add_signing_keys(req)
+                sms = self.signer.create_signed_metadata_statement(
+                    _cms, 'registration', fos=[self.federation])
+                self.extend_with_ms(req, sms)
+            else:
+                req.update(
+                    self.signer.gather_metadata_statements(
+                        'registration', fos=[self.federation]))
+        else:
+            _fos = list([r.fo for r in federations])
+            if self.signer.signing_service:
+                _cms = self.add_signing_keys(copy.copy(req))
+                sms = self.signer.create_signed_metadata_statement(
+                    _cms, 'registration', _fos, intermediate=True)
+                self.extend_with_ms(req, sms)
+            else:
+                req.update(
+                    self.signer.gather_metadata_statements('registration',
+                                                          fos=_fos))
+        return req

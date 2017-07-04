@@ -12,6 +12,8 @@ from oic.utils.keyio import KeyJar
 class JWKSBundle(object):
     """
     A class to keep a number of signing keys from different issuers.
+    Behaves as a dictionary with issuer IDs as keys and oic.utils.keyio.KeyJar
+    instances as values.
     """
 
     def __init__(self, iss, sign_keys=None):

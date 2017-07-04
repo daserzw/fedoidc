@@ -127,7 +127,8 @@ class Signer(object):
             are kept. Storing/retrieving the signed metadata statements are
             handled by :py:class:`fedoidc.file_system.FileSystem` instances.
             One per operations where they are expected to used.
-        :param def_context: Default operation, one :py:const:`fedoidc.CONTEXTS`
+        :param def_context: Default operation, one out of 
+            :py:data:`fedoidc.CONTEXTS`
         """
 
         self.metadata_statements = {}
@@ -153,19 +154,31 @@ class Signer(object):
         self.def_context = def_context
 
     def items(self):
+        """
+        Return a dictionary with contexts as keys and list of FOs as values.
+        
+        :rtype: list 
+        """
         res = {}
         for key, fs in self.metadata_statements.items():
             res[key] = list(fs.keys())
         return res
 
     def metadata_statement_fos(self, context=''):
+        """
+        Get all the FOs that have signed metadata statements for a specific 
+        context
+        
+        :param context: One of :py:data:`CONTEXTS` 
+        :rtype: list
+        """
         if not context:
             context = self.def_context
 
         try:
             return list(self.metadata_statements[context].keys())
         except KeyError:
-            return 0
+            return []
 
     def create_signed_metadata_statement(self, req, context='', fos=None,
                                          intermediate=False):

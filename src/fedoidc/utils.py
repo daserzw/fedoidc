@@ -71,9 +71,9 @@ def request_signed_by_signing_keys(keyjar, msreq, iss, lifetime, kid=''):
 
     :param keyjar: A KeyJar instance with the private signing key
     :param msreq: Metadata statement signing request. A MetadataStatement 
-    instance.
+        instance.
     :param iss: Issuer of the signing request also the owner of the signing 
-    keys.
+        keys.
     :return: Signed JWT where the body is the metadata statement
     """
 

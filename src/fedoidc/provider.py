@@ -38,14 +38,16 @@ class Provider(provider.Provider):
         self.fo_priority = fo_priority
         self.response_metadata_statements = response_metadata_statements
 
-    def create_signed_metadata_statement(self, context, fos=None, setup=None):
+    def create_signed_provider_info(self, context, fos=None, setup=None):
         """
-
+        Collects metadata about this provider add signing keys and use the
+        signer to sign the complete metadata statement.
+         
         :param context: In which context the metadata statement is supposed
             to be used.
         :param fos: List of federation operators
-        :param setup:
-        :return:
+        :param setup: Extra keyword arguments to be added to the provider info
+        :return: Depends on the signer used
         """
         pcr = self.create_providerinfo(setup=setup)
         _fe = self.federation_entity
@@ -56,23 +58,22 @@ class Provider(provider.Provider):
         logger.info(
             'provider:{}, fos:{}, context:{}'.format(self.name, fos, context))
 
-        _req = _fe.create_metadata_statement_request(pcr)
+        _req = _fe.add_signing_keys(pcr)
         return _fe.signer.create_signed_metadata_statement(
             _req, context, fos=fos, intermediate=True)
 
-    def create_fed_providerinfo(self, fos=None, setup=None):
+    def create_fed_providerinfo(self, fos=None, pi_args=None):
         """
 
-        :param fos:
-        :param setup:
-        :return:
+        :param fos: Which Federation Operators to use, None means all.
+        :param pi_args: Extra provider info claims.
+        :return: oic.oic.ProviderConfigurationResponse instance 
         """
 
-        _ms = self.create_signed_metadata_statement('discovery', fos, setup)
+        _ms = self.create_signed_provider_info('discovery', fos, pi_args)
+        pcr = self.create_providerinfo(setup=pi_args)
 
-        pcr = self.create_providerinfo(setup=setup)
-        pcr['metadata_statements'] = Message(**_ms)
-
+        pcr = self.federation_entity.extend_with_ms(pcr, _ms)
         return pcr
 
     def discovery_endpoint(self, request, handle=None, **kwargs):

@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 __author__ = 'roland'
 __version__ = '0.3.1'
 
+#: Contexts in which metadata statements can be used
 CONTEXTS = ['registration', 'discovery', 'response']
+
 MIN_SET = dict([(k, {}) for k in CONTEXTS])
 
 
@@ -120,6 +122,20 @@ def keyjar_from_metadata_statements(iss, msl):
     return keyjar
 
 
+def read_jwks_file(jwks_file):
+    """
+    Reads a file containing a JWKS and populates a oic.utils.keyio.KeyJar from
+    it.
+
+    :param jwks_file: file name of the JWKS file 
+    :return: A oic.utils.keyio.KeyJar instance
+    """
+    _jwks = open(jwks_file, 'r').read()
+    _kj = KeyJar()
+    _kj.import_jwks(json.loads(_jwks), '')
+    return _kj
+
+
 def is_lesser(a, b):
     """
     Verify that a is <= then b
@@ -164,7 +180,9 @@ def is_lesser(a, b):
     return False
 
 
-#  The resulting metadata must not contain these parameters
+#: When flattening a grounded metadata statement these claims should be ignored.
 IgnoreKeys = list(JasonWebToken.c_param.keys())
+
+#: When comparing metadata statement these claims should be ignored.
 DoNotCompare = list(set(MetadataStatement.c_param.keys()).difference(IgnoreKeys))
 DoNotCompare.append('kid')
