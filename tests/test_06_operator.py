@@ -1,9 +1,13 @@
+import json
 import os
 import time
 from urllib.parse import quote_plus, urlparse
 from urllib.parse import unquote_plus
 
 import shutil
+
+from jwkest import as_unicode
+from jwkest.jws import factory
 
 from fedoidc.test_utils import MetaDataStore
 
@@ -99,7 +103,54 @@ def test_key_rotation():
     assert len(fo.keyjar.get_issuer_keys('')) == 4
 
 
-def test_unpack_metadata_statement():
+def test_pack_metadata_statement():
+    jb = FSJWKSBundle('', None, 'fo_jwks',
+                      key_conv={'to': quote_plus, 'from': unquote_plus})
+    _keyjar = build_keyjar(KEYDEFS)[1]
+    op = Operator(keyjar=_keyjar, jwks_bundle=jb, iss='https://example.com/')
+    req = MetadataStatement(issuer='https://example.org/op')
+    sms = op.pack_metadata_statement(req)
+    assert sms  # Should be a signed JWT
+    _jwt = factory(sms)
+    assert _jwt
+    assert _jwt.jwt.headers['alg'] == 'RS256'
+    _body = json.loads(as_unicode(_jwt.jwt.part[1]))
+    assert _body['iss'] == op.iss
+    assert _body['issuer'] == 'https://example.org/op'
+    # verify signature
+    r = _jwt.verify_compact(sms, _keyjar.get_signing_key())
+    assert r
+
+
+def test_pack_metadata_statement_other_iss():
+    _keyjar = build_keyjar(KEYDEFS)[1]
+    op = Operator(keyjar=_keyjar, iss='https://example.com/')
+    req = MetadataStatement(issuer='https://example.org/op')
+    sms = op.pack_metadata_statement(req, iss='https://example.com/')
+    assert sms  # Should be a signed JWT
+    _jwt = factory(sms)
+    _body = json.loads(as_unicode(_jwt.jwt.part[1]))
+    assert _body['iss'] == 'https://example.com/'
+    # verify signature
+    r = _jwt.verify_compact(sms, _keyjar.get_signing_key())
+    assert r
+
+
+def test_pack_metadata_statement_other_alg():
+    _keyjar = build_keyjar(KEYDEFS)[1]
+    op = Operator(keyjar=_keyjar, iss='https://example.com/')
+    req = MetadataStatement(issuer='https://example.org/op')
+    sms = op.pack_metadata_statement(req, alg='ES256')
+    assert sms  # Should be a signed JWT
+    _jwt = factory(sms)
+    _body = json.loads(as_unicode(_jwt.jwt.part[1]))
+    assert _body['iss'] == 'https://example.com/'
+    # verify signature
+    r = _jwt.verify_compact(sms, _keyjar.get_signing_key())
+    assert r
+
+
+def test_unpack_metadata_statement_uri():
     s = signer[OA['sunet']]
     req = MetadataStatement(issuer='https://example.org/op')
     # Not intermediate

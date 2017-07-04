@@ -332,7 +332,7 @@ class Operator(object):
     def pack_metadata_statement(self, metadata, keyjar=None, iss=None, alg='',
                                 jwt_args=None, lifetime=-1, **kwargs):
         """
-        Given a MetadataStatment instance create a signed JWT.
+        Given a MetadataStatement instance create a signed JWT.
 
         :param metadata: Original metadata statement as a MetadataStatement
             instance
@@ -346,6 +346,7 @@ class Operator(object):
         """
         if iss is None:
             iss = self.iss
+
         if keyjar is None:
             keyjar = self.keyjar
 
