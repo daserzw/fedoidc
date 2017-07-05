@@ -4,6 +4,7 @@ import shutil
 from time import time
 
 import pytest
+from oic.utils.http_util import Response, Created
 
 from fedoidc import test_utils
 from fedoidc.file_system import FileSystem
@@ -116,7 +117,8 @@ class TestProvider(object):
 
         _kj = build_keyjar(KEYDEFS)[1]
         fed_ent = FederationEntity(None, keyjar=_kj, iss=sunet_op,
-                                   signer=signer[OA['sunet']])
+                                   signer=signer[OA['sunet']],
+                                   fo_bundle=keybundle)
 
         self.op = Provider(sunet_op, SessionDB(sunet_op), {},
                            AUTHN_BROKER, USERINFO,
@@ -159,3 +161,22 @@ class TestProvider(object):
         assert _js.jwt.headers['alg'] == 'RS256'
         _body = json.loads(as_unicode(_js.jwt.part[1]))
         assert _body['iss'] == self.op.federation_entity.signer.signing_service.iss
+
+    def test_provider_endpoint(self):
+        pi_resp = self.op.providerinfo_endpoint()
+
+        assert isinstance(pi_resp, Response)
+        assert pi_resp.status == "200 OK"
+        _info = json.loads(pi_resp.message)
+        assert list(_info['metadata_statements'].keys()) == [FO['swamid']]
+        _js = jws.factory(_info['metadata_statements'][FO['swamid']])
+        assert _js
+        assert _js.jwt.headers['alg'] == 'RS256'
+        _body = json.loads(as_unicode(_js.jwt.part[1]))
+        assert _body['iss'] == self.op.federation_entity.signer.signing_service.iss
+
+    def test_registration_endpoint(self):
+        request = {'redirect_uris': ['https://example.com/rp']}
+        resp = self.op.registration_endpoint(request)
+        assert isinstance(resp, Created)
+        assert resp.status == "200 OK"

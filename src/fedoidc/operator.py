@@ -401,8 +401,14 @@ class Operator(object):
                     les.append(le)
             return les
         else:  # this is the innermost
-            le = LessOrEqual(iss=metadata['iss'], exp=metadata['exp'])
-            le.eval(res, metadata['iss'])
+            try:
+                _iss = metadata['iss']
+            except:
+                le = LessOrEqual()
+                le.eval(res, '')
+            else:
+                le = LessOrEqual(iss=_iss, exp=metadata['exp'])
+                le.eval(res, _iss)
             return [le]
 
     def correct_usage(self, metadata, federation_usage):

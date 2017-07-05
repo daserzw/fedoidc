@@ -1,16 +1,15 @@
 import logging
-
-import copy
+import sys
+import traceback
 
 from fedoidc import ClientMetadataStatement
-from oic.oauth2 import error, Message
+
+from oic.oauth2 import error
+from oic.oauth2 import Message
 from oic.oic import provider
-from oic.oic.message import DiscoveryRequest
-from oic.oic.message import DiscoveryResponse
 from oic.oic.message import OpenIDSchema
 from oic.oic.message import RegistrationRequest
-from oic.oic.provider import SWD_ISSUER
-from oic.utils.http_util import BadRequest
+from oic.oic.provider import STR
 from oic.utils.http_util import Created
 from oic.utils.http_util import Response
 from oic.utils.sanitize import sanitize
@@ -76,30 +75,40 @@ class Provider(provider.Provider):
         pcr = self.federation_entity.extend_with_ms(pcr, _ms)
         return pcr
 
-    def discovery_endpoint(self, request, handle=None, **kwargs):
-        if isinstance(request, dict):
-            request = DiscoveryRequest(**request)
-        else:
-            request = DiscoveryRequest().deserialize(request, "urlencoded")
-
+    def providerinfo_endpoint(self, handle="", **kwargs):
+        logger.info("@providerinfo_endpoint")
         try:
-            assert request["service"] == SWD_ISSUER
-        except AssertionError:
-            return BadRequest("Unsupported service")
+            _response = self.create_fed_providerinfo()
+            msg = "provider_info_response: {}"
+            logger.info(msg.format(sanitize(_response.to_dict())))
+            if self.events:
+                self.events.store('Protocol response', _response)
 
-        _response = DiscoveryResponse(locations=[self.baseurl])
-        if self.federation_entity.signed_metadata_statements:
-            _response.update(
-                {'metadata_statements':
-                     self.federation_entity.signed_metadata_statements
-                         .values()})
+            headers = [("Cache-Control", "no-store"), ("x-ffo", "bar")]
+            if handle:
+                (key, timestamp) = handle
+                if key.startswith(STR) and key.endswith(STR):
+                    cookie = self.cookie_func(key, self.cookie_name, "pinfo",
+                                              self.sso_ttl)
+                    headers.append(cookie)
 
-        headers = [("Cache-Control", "no-store")]
+            resp = Response(_response.to_json(), content="application/json",
+                            headers=headers)
+        except Exception:
+            message = traceback.format_exception(*sys.exc_info())
+            logger.error(message)
+            resp = error('service_error', message)
 
-        return Response(_response.to_json(), content="application/json",
-                        headers=headers)
+        return resp
 
     def registration_endpoint(self, request, authn=None, **kwargs):
+        """
+
+        :param request:
+        :param authn:
+        :param kwargs:
+        :return:
+        """
         logger.debug("@registration_endpoint: <<{}>>".format(sanitize(request)))
 
         if isinstance(request, dict):
@@ -110,10 +119,16 @@ class Provider(provider.Provider):
             except ValueError:
                 request = ClientMetadataStatement().deserialize(request)
 
+        try:
+            request.verify()
+        except Exception as err:
+            return error('Invalid request')
+
         logger.info(
             "registration_request:{}".format(sanitize(request.to_dict())))
 
-        ms_list = self.federation_entity.get_metadata_statement(request)
+        ms_list = self.federation_entity.get_metadata_statement(request,
+                                                                'registration')
 
         if ms_list:
             ms = self.federation_entity.pick_by_priority(ms_list)

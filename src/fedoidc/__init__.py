@@ -51,6 +51,7 @@ class MetadataStatement(JasonWebToken):
         Verifies that an instance of this class adhers to the given 
             restrictions.
         """
+        super(MetadataStatement, self).verify(**kwargs)
         if "signing_keys" in self:
             if 'signing_keys_uri' in self:
                 raise VerificationError(
