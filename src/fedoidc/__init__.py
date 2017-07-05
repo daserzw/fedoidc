@@ -20,7 +20,7 @@ from oic.oic.message import RegistrationRequest
 logger = logging.getLogger(__name__)
 
 __author__ = 'roland'
-__version__ = '0.3.1'
+__version__ = '0.4.0'
 
 #: Contexts in which metadata statements can be used
 CONTEXTS = ['registration', 'discovery', 'response']
