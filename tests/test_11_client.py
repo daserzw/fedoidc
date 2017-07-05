@@ -90,6 +90,17 @@ SMS_DEF = {
                  'signer_add': {}, 'signer': OA['sunet'], 'uri': False}
             ]
         }
+    },
+    EO['foodle.rp']: {
+        'registration': {
+            FO['feide']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': "registration"},
+                 'signer': FO['feide'], 'uri': False},
+                {'request': {}, 'requester': EO['sunet.op'],
+                 'signer_add': {}, 'signer': OA['sunet'], 'uri': False}
+            ]
+        }
     }
 }
 
@@ -127,12 +138,11 @@ def test_parse_pi():
                   response_metadata_statements=signer[
                       EO['sunet.op']].metadata_statements['response'])
     op.baseurl = op.name
+    op.signer = signer[EO['sunet.op']]
 
     # UNINETT RP
-    uninett_rp = 'https://foodle.uninett.no'
-
-    _kj = build_keyjar(KEYDEFS)[1]
-    rp_fed_ent = FederationEntity(None, keyjar=_kj, iss=uninett_rp,
+    _kj = signer[EO['foodle.rp']].signing_service.signing_keys
+    rp_fed_ent = FederationEntity(None, keyjar=_kj, iss=EO['foodle.rp'],
                                   signer=signer['https://uninett.no'],
                                   fo_bundle=fo_keybundle)
 

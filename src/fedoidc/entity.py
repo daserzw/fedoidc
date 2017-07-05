@@ -16,6 +16,7 @@ class FederationEntity(Operator):
     """
     An entity in a federation. For instance an OP or an RP.
     """
+
     def __init__(self, srv, iss='', keyjar=None, signer=None, fo_bundle=None):
         """
 
@@ -119,46 +120,29 @@ class FederationEntity(Operator):
         statement['signing_keys'] = self.signing_keys_as_jwks()
         return statement
 
-    def extend_with_ms(self, req, sms_dict):
-        """
-        
-        :param req: 
-        :param sms_dict: 
-        :return: 
-        """
-        _ms_uri = {}
-        _ms = {}
-        for fo, sms in sms_dict.items():
-            if sms.startswith('http://') or sms.startswith('https://'):
-                _ms_uri[fo] = sms
-            else:
-                _ms[fo] = sms
-
-        if _ms:
-            req['metadata_statements'] = Message(**_ms)
-        if _ms_uri:
-            req['metadata_statement_uris'] = Message(**_ms_uri)
-        return req
-
-    def update_request(self, req, federations):
+    def update_request(self, req, federation='', loes=None):
         """
         
         :param req: 
         :param federations: 
         :return: 
         """
-        if self.federation:
+        if federation:
             if self.signer.signing_service:
                 _cms = self.add_signing_keys(req)
                 sms = self.signer.create_signed_metadata_statement(
-                    _cms, 'registration', fos=[self.federation])
+                    _cms, 'registration', fos=[federation])
                 self.extend_with_ms(req, sms)
             else:
                 req.update(
                     self.signer.gather_metadata_statements(
-                        'registration', fos=[self.federation]))
+                        'registration', fos=[federation]))
         else:
-            _fos = list([r.fo for r in federations])
+            if loes:
+                _fos = list([r.fo for r in loes])
+            else:
+                return req
+
             if self.signer.signing_service:
                 _cms = self.add_signing_keys(copy.copy(req))
                 sms = self.signer.create_signed_metadata_statement(
@@ -167,5 +151,18 @@ class FederationEntity(Operator):
             else:
                 req.update(
                     self.signer.gather_metadata_statements('registration',
-                                                          fos=_fos))
+                                                           fos=_fos))
         return req
+
+    def get_signed_metadata_statements(self, context, fo=None):
+        """
+        
+        :param context: One value out of :py:data:`fedoidc.CONTEXTS` 
+        :param fo: A FO ID
+        :return: If no *fo* is given a list of FOs. If *fo* a single ID.
+            Will raise KeyError if nothin matches.
+        """
+        if fo is None:
+            return self.signer.metadata_statements[context]
+        else:
+            return self.signer.metadata_statements[context][fo]

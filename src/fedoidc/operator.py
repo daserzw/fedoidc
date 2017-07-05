@@ -440,6 +440,29 @@ class Operator(object):
                 return None
             return metadata
 
+    def extend_with_ms(self, req, sms_dict):
+        """
+        Add signed metadata statements to a request
+
+        :param req: The request 
+        :param sms_dict: A dictionary with FO IDs as keys and signed metadata
+            statements (sms) or uris pointing to sms as values.
+        :return: The updated request
+        """
+        _ms_uri = {}
+        _ms = {}
+        for fo, sms in sms_dict.items():
+            if sms.startswith('http://') or sms.startswith('https://'):
+                _ms_uri[fo] = sms
+            else:
+                _ms[fo] = sms
+
+        if _ms:
+            req['metadata_statements'] = Message(**_ms)
+        if _ms_uri:
+            req['metadata_statement_uris'] = Message(**_ms_uri)
+        return req
+
 
 class FederationOperator(Operator):
     def __init__(self, keyjar=None, jwks_bundle=None, httpcli=None,

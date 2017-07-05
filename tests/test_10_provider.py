@@ -4,9 +4,10 @@ import shutil
 from time import time
 
 import pytest
+from fedoidc.operator import Operator
 from oic.utils.http_util import Response, Created
 
-from fedoidc import test_utils
+from fedoidc import test_utils, ClientMetadataStatement
 from fedoidc.file_system import FileSystem
 
 from fedoidc.entity import FederationEntity
@@ -40,6 +41,13 @@ IA = {}
 SMS_DEF = {
     OA['sunet']: {
         "discovery": {
+            FO['swamid']: [
+                {'request': {}, 'requester': OA['sunet'],
+                 'signer_add': {'federation_usage': 'discovery'},
+                 'signer': FO['swamid'], 'uri': False},
+            ]
+        },
+        "response": {
             FO['swamid']: [
                 {'request': {}, 'requester': OA['sunet'],
                  'signer_add': {'federation_usage': 'discovery'},
@@ -125,6 +133,7 @@ class TestProvider(object):
                            AUTHZ, client_authn=verify_client, symkey=SYMKEY,
                            federation_entity=fed_ent)
         self.op.baseurl = self.op.name
+        self.op.signer = signer[OA['sunet']]
 
     def test_create_metadata_statement_request(self):
         _fe = self.op.federation_entity
@@ -175,8 +184,24 @@ class TestProvider(object):
         _body = json.loads(as_unicode(_js.jwt.part[1]))
         assert _body['iss'] == self.op.federation_entity.signer.signing_service.iss
 
-    def test_registration_endpoint(self):
+    def test_registration_endpoint_no_fed(self):
         request = {'redirect_uris': ['https://example.com/rp']}
         resp = self.op.registration_endpoint(request)
         assert isinstance(resp, Created)
-        assert resp.status == "200 OK"
+        assert resp.status == "201 Created"
+        clresp = json.loads(resp.message)
+        assert 'metadata_statements' not in clresp
+
+    def test_registration_endpoint_fed(self):
+        request = ClientMetadataStatement(
+            redirect_uris= ['https://example.com/rp'])
+        rp = Operator(keyjar=keybundle[FO['swamid']], iss=FO['swamid'])
+        sms = rp.pack_metadata_statement(request, alg='RS256')
+        request = rp.extend_with_ms(request, {FO['swamid']: sms})
+
+        resp = self.op.registration_endpoint(request.to_dict())
+        assert isinstance(resp, Created)
+        assert resp.status == "201 Created"
+
+        clresp = json.loads(resp.message)
+        assert list(clresp['metadata_statements'].keys()) == [FO['swamid']]

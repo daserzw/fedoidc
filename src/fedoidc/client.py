@@ -284,8 +284,12 @@ class Client(oic.Client):
 
         req.update(kwargs)
 
-        return self.federation_entity.update_request(req,
-                                                     self.provider_federations)
+        if self.federation:
+            return self.federation_entity.update_request(
+                req, federation=self.federation)
+        elif self.provider_federations:
+            return self.federation_entity.update_request(
+                req, loes=self.provider_federations)
 
     def register(self, url, reg_type='federation', **kwargs):
         """

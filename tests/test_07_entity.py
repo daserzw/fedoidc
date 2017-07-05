@@ -17,10 +17,10 @@ KEYDEFS = [
 
 def test_get_metadata_statement():
     jb = JWKSBundle('')
-    for iss in ['https://example.org', 'https://example.com']:
+    for iss in ['https://example.org/', 'https://example.com/']:
         jb[iss] = build_keyjar(KEYDEFS)[1]
 
-    op = Operator(keyjar=jb['https://example.com'], iss='https://example.com/')
+    op = Operator(keyjar=jb['https://example.com/'], iss='https://example.com/')
     req = MetadataStatement(foo='bar')
     sms = op.pack_metadata_statement(req, alg='RS256')
     sms_dir = {'https://example.com': sms}

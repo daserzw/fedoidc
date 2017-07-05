@@ -24,7 +24,7 @@ class Provider(provider.Provider):
                  verify_ssl=True, capabilities=None, schema=OpenIDSchema,
                  jwks_uri='', jwks_name='', baseurl=None, client_cert=None,
                  federation_entity=None, fo_priority=None,
-                 response_metadata_statements=None):
+                 response_metadata_statements=None, signer=None):
         provider.Provider.__init__(
             self, name, sdb, cdb, authn_broker, userinfo, authz,
             client_authn, symkey, urlmap=urlmap, ca_certs=ca_certs,
@@ -36,6 +36,7 @@ class Provider(provider.Provider):
         self.federation_entity = federation_entity
         self.fo_priority = fo_priority
         self.response_metadata_statements = response_metadata_statements
+        self.signer = signer
 
     def create_signed_provider_info(self, context, fos=None, setup=None):
         """
@@ -146,17 +147,21 @@ class Provider(provider.Provider):
         # TODO This is where the OP should sign the response
         if ms.fo:
             _fo = ms.fo
-            try:
-                ms = self.response_metadata_statements[ms.fo]
-            except KeyError:
-                logger.error(
-                    'No response metadata found for: {}'.format(ms.fo))
-                raise
-            else:
-                result['metadata_statements'] = Message(**{_fo: ms})
-            # Sign by myself
-            sms = self.federation_entity.pack_metadata_statement(result)
-            result['metadata_statements'] = Message(**{_fo: sms})
+            sms = self.signer.create_signed_metadata_statement(
+                result, 'response', [_fo])
+
+            # try:
+            #     ms = self.federation_entity.get_signed_metadata_statements(
+            #         'registration', _fo)
+            # except KeyError:
+            #     logger.error(
+            #         'No response metadata found for: {}'.format(_fo))
+            #     raise
+            # else:
+            #     result['metadata_statements'] = Message(**{_fo: ms})
+            # # Sign by myself
+            # sms = self.federation_entity.pack_metadata_statement(result)
+            self.federation_entity.extend_with_ms(result, {_fo: sms})
 
         return Created(result.to_json(), content="application/json",
                        headers=[("Cache-Control", "no-store")])
