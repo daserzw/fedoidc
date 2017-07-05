@@ -86,8 +86,7 @@ class FederationEntity(Operator):
         Unpack and evaluate a compound metadata statement. Goes through the
         necessary three steps.
         * unpack the metadata statement
-        * verify that the given statements are expected to be used in this 
-            context
+        * verify that the given statements are expected to be used in this context
         * evaluate the metadata statements (= flatten)
 
         :param json_ms: The metadata statement as a JSON document or a 
