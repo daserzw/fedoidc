@@ -121,17 +121,15 @@ class FederationEntity(Operator):
 
     def update_request(self, req, federation='', loes=None):
         """
+        Update a request signed metadata statements.
         
-        :param req: 
-        :param federations: 
-        :return: 
+        :param req: The request 
+        :param federations: List of Federation Operator IDs
+        :return: The updated request
         """
         if federation:
             if self.signer.signing_service:
-                _cms = self.add_signing_keys(req)
-                sms = self.signer.create_signed_metadata_statement(
-                    _cms, 'registration', fos=[federation])
-                self.extend_with_ms(req, sms)
+                self.ace(req, [federation], 'registration')
             else:
                 req.update(
                     self.signer.gather_metadata_statements(
@@ -143,18 +141,32 @@ class FederationEntity(Operator):
                 return req
 
             if self.signer.signing_service:
-                _cms = self.add_signing_keys(copy.copy(req))
-                sms = self.signer.create_signed_metadata_statement(
-                    _cms, 'registration', _fos, intermediate=True)
-                self.extend_with_ms(req, sms)
+                self.ace(req, _fos, 'registration')
             else:
                 req.update(
-                    self.signer.gather_metadata_statements('registration',
-                                                           fos=_fos))
+                    self.signer.gather_metadata_statements(
+                        'registration', fos=_fos))
         return req
+
+    def ace(self, req, fos, context):
+        """
+        Add signing keys, create metadata statement and extend request.
+        
+        :param req: Request 
+        :param fos: List of Federation Operator IDs
+        :param context: One of :py:data:`fedoidc.CONTEXTS`
+        """
+        _cms = MetadataStatement()
+        _cms.update(req)
+        _cms = self.add_signing_keys(_cms)
+        sms = self.signer.create_signed_metadata_statement(_cms, context,
+                                                           fos=fos)
+        self.extend_with_ms(req, sms)
 
     def get_signed_metadata_statements(self, context, fo=None):
         """
+        Find a set of signed metadata statements that fulfill the search
+        criteria.
         
         :param context: One value out of :py:data:`fedoidc.CONTEXTS` 
         :param fo: A FO ID

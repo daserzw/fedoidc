@@ -54,7 +54,8 @@ class Operator(object):
         except (MessageException, VerificationError) as err:
             raise cherrypy.CherryPyException(str(err))
         else:
-            _jwt = self.signer.create_signed_metadata_statement(_mds)
+            _jwt = self.signer.create_signed_metadata_statement(_mds,
+                                                                single=True)
             cherrypy.response.headers['Content-Type'] = 'application/jwt'
             return as_bytes(_jwt)
 

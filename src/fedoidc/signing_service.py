@@ -181,7 +181,7 @@ class Signer(object):
             return []
 
     def create_signed_metadata_statement(self, req, context='', fos=None,
-                                         intermediate=False):
+                                         single=False):
         """
         Gathers the metadata statements adds them to the request and signs
         the whole document.
@@ -194,6 +194,8 @@ class Signer(object):
             statement should be used
         :param fos: Signed metadata statements from these Federation Operators
             should be added.
+        :param single: Should only a single signed metadata statement be
+            returned or a set of such in a dictionary.
         :return: Dictionary with signed Metadata Statements as values
         """
 
@@ -232,23 +234,7 @@ class Signer(object):
                 if fos is None:
                     fos = list(cms.keys())
 
-                if intermediate:
-                    _sms = {}
-                    for f in fos:
-                        try:
-                            val = cms[f]
-                        except KeyError:
-                            continue
-
-                        if val.startswith('http'):
-                            req['metadata_statement_uris'] = {f: val}
-                            _sms[f] = self.signing_service(req)
-                            del req['metadata_statement_uris']
-                        else:
-                            req['metadata_statements'] = {f: val}
-                            _sms[f] = self.signing_service(req)
-                            del req['metadata_statements']
-                else:
+                if single:
                     for f in fos:
                         try:
                             val = cms[f]
@@ -267,6 +253,22 @@ class Signer(object):
                                 req['metadata_statements'] = {f: val}
 
                     _sms = self.signing_service(req)
+                else:
+                    _sms = {}
+                    for f in fos:
+                        try:
+                            val = cms[f]
+                        except KeyError:
+                            continue
+
+                        if val.startswith('http'):
+                            req['metadata_statement_uris'] = {f: val}
+                            _sms[f] = self.signing_service(req)
+                            del req['metadata_statement_uris']
+                        else:
+                            req['metadata_statements'] = {f: val}
+                            _sms[f] = self.signing_service(req)
+                            del req['metadata_statements']
 
                 if fos and not _sms:
                     raise KeyError('No metadata statements matched')

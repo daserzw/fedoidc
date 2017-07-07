@@ -60,7 +60,7 @@ class Provider(provider.Provider):
 
         _req = _fe.add_signing_keys(pcr)
         return _fe.signer.create_signed_metadata_statement(
-            _req, context, fos=fos, intermediate=True)
+            _req, context, fos=fos)
 
     def create_fed_providerinfo(self, fos=None, pi_args=None):
         """
@@ -148,19 +148,7 @@ class Provider(provider.Provider):
         if ms.fo:
             _fo = ms.fo
             sms = self.signer.create_signed_metadata_statement(
-                result, 'response', [_fo])
-
-            # try:
-            #     ms = self.federation_entity.get_signed_metadata_statements(
-            #         'registration', _fo)
-            # except KeyError:
-            #     logger.error(
-            #         'No response metadata found for: {}'.format(_fo))
-            #     raise
-            # else:
-            #     result['metadata_statements'] = Message(**{_fo: ms})
-            # # Sign by myself
-            # sms = self.federation_entity.pack_metadata_statement(result)
+                result, 'response', [_fo], single=True)
             self.federation_entity.extend_with_ms(result, {_fo: sms})
 
         return Created(result.to_json(), content="application/json",

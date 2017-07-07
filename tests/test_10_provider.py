@@ -147,7 +147,8 @@ class TestProvider(object):
         req = _fe.add_signing_keys(statement)
 
         sjwt = _fe.signer.create_signed_metadata_statement(
-            req, 'discovery', fos=_fe.signer.metadata_statements.keys())
+            req, 'discovery', fos=_fe.signer.metadata_statements.keys(),
+            single=True)
 
         assert sjwt
 

@@ -32,4 +32,4 @@ _mds = MetadataStatement(**_args)
 
 _mds.verify()
 
-print(signer.create_signed_metadata_statement(_mds))
+print(signer.create_signed_metadata_statement(_mds, single=True))

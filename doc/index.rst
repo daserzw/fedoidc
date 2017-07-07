@@ -17,6 +17,7 @@ Contents:
    fedoidc
    howto/operator
    howto/entity
+   howto/op
    howto/rp
 
 

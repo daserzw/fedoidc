@@ -154,7 +154,7 @@ def test_unpack_metadata_statement_uri():
     s = signer[OA['sunet']]
     req = MetadataStatement(issuer='https://example.org/op')
     # Not intermediate
-    ms = s.create_signed_metadata_statement(req, 'discovery')
+    ms = s.create_signed_metadata_statement(req, 'discovery', single=True)
 
     jb = FSJWKSBundle('', None, 'fo_jwks',
                       key_conv={'to': quote_plus, 'from': unquote_plus})
