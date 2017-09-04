@@ -20,7 +20,7 @@ from oic.utils.authn.saml import SAMLAuthnMethod
 from oic.utils.authn.user import UsernamePasswordMako
 from oic.utils.authz import AuthzHandling
 from oic.utils.keyio import keyjar_init, build_keyjar
-from oic.utils.sdb import SessionDB
+from oic.utils.sdb import SessionDB, create_session_db
 from oic.utils.userinfo import UserInfo
 from oic.utils.userinfo.aa_info import AaUserInfo
 
@@ -227,7 +227,8 @@ def op_setup(args, config, provider_cls):
     else:
         pass
 
-    _op = provider_cls(_issuer, SessionDB(_issuer), cdb, auth_setup.ac, None,
+    _sdb = create_session_db(_issuer, 'automover', '430X', {})
+    _op = provider_cls(_issuer, _sdb, cdb, auth_setup.ac, None,
                        authz, verify_client, config.SYM_KEY, **kwargs)
     _op.baseurl = _issuer
 
