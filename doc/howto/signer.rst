@@ -59,9 +59,9 @@ Next the Signer. The Signer needs the signing service and to know where
 to find the signed metadata statements that it should add to the request
 before handing it over to the signing service. Let's assume that the
 directory where the signed metadata statements (or uri's pointing to them)
-can be found is named 'sms'::
+can be found is named 'sms'. You then get to instanciate like this ::
 
 
     signer = Signer(sign_serv, 'sms')
 
-    signer =
+And that's it.

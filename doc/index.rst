@@ -15,6 +15,7 @@ Contents:
    :maxdepth: 2
 
    fedoidc
+   howto/signer
    howto/operator
    howto/entity
    howto/op

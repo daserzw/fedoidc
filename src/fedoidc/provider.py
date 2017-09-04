@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class Provider(provider.Provider):
+    """ OIDC OP class """
     def __init__(self, name, sdb, cdb, authn_broker, userinfo, authz,
                  client_authn, symkey, urlmap=None, ca_certs="", keyjar=None,
                  hostname="", template_lookup=None, template=None,
@@ -64,6 +65,7 @@ class Provider(provider.Provider):
 
     def create_fed_providerinfo(self, fos=None, pi_args=None):
         """
+        Create federation aware provider info.
 
         :param fos: Which Federation Operators to use, None means all.
         :param pi_args: Extra provider info claims.
@@ -77,6 +79,15 @@ class Provider(provider.Provider):
         return pcr
 
     def providerinfo_endpoint(self, handle="", **kwargs):
+        """
+        The Provider info endpoint. A request for provider info should be
+        handled by this method. It will work as well for requests from
+        federation aware RPs as for non-federation aware RPs.
+
+        :param handle: (key, timestamp) tuple used at cookie construction
+        :param kwargs: Extra key word arguments.
+        :return: Provider Info response
+        """
         logger.info("@providerinfo_endpoint")
         try:
             _response = self.create_fed_providerinfo()
@@ -104,11 +115,14 @@ class Provider(provider.Provider):
 
     def registration_endpoint(self, request, authn=None, **kwargs):
         """
+        Registration endpoint. This is where a registration request should
+        be handled.
 
-        :param request:
-        :param authn:
-        :param kwargs:
-        :return:
+        :param request: The request, either as a dictionary or as a JSON
+            document
+        :param authn: Authentication information
+        :param kwargs: Extra key work arguments.
+        :return: A request response or an error response.
         """
         logger.debug("@registration_endpoint: <<{}>>".format(sanitize(request)))
 
