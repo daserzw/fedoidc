@@ -186,6 +186,7 @@ class Operator(object):
     def signing_keys_as_jwks(self):
         """
         Build a JWKS from the signing keys in the KeyJar
+        
         :return: Dictionary
         """
         _l = [x.serialize() for x in self.keyjar.get_signing_key()]

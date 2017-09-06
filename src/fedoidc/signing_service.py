@@ -212,9 +212,10 @@ class Signer(object):
         """
         Gathers the metadata statements adds them to the request and signs
         the whole document.
-        If *intermediate* is **True** separate signed metadata statements will 
-        be constructed per federation operator. If *intermediate* is **False**
-        only one signed metadata statement is created.
+        If *single* is **False** separate signed metadata statements will 
+        be constructed per federation operator. If *single* is **True**
+        only one signed metadata statement, containing all the signed
+        metadata statements from all the federation operators, is created.
         
         :param req: The metadata statement to be signed
         :param context: The context in which this Signed metadata
