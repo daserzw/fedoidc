@@ -1,10 +1,14 @@
 import copy
+import json
 import os
 from urllib.parse import quote_plus
 from urllib.parse import unquote_plus
 
 import logging
 import requests
+from jwkest import as_unicode
+from jwkest.jws import factory
+from jwkest.jws import JWSException
 from oic.oauth2 import Message
 
 from fedoidc import CONTEXTS, MIN_SET
@@ -22,6 +26,7 @@ class SigningService(object):
     """
     A service that can sign a :py:class:`fedoidc.MetadataStatement` instance
     """
+
     def __init__(self, add_ons=None, alg='RS256'):
         self.add_ons = add_ons or {}
         self.alg = alg
@@ -37,6 +42,7 @@ class InternalSigningService(SigningService):
     """
     A signing service that is internal to an entity
     """
+
     def __init__(self, iss, signing_keys, add_ons=None, alg='RS256',
                  lifetime=3600):
         """
@@ -93,19 +99,39 @@ class WebSigningService(SigningService):
     A client to a web base signing service.
     Uses HTTP Post to send the MetadataStatement to the service.
     """
-    def __init__(self, url, add_ons=None, alg='RS256'):
+
+    def __init__(self, iss, url, keyjar, add_ons=None, alg='RS256'):
         """
-        :param url: The URL of the signing service 
+
+        :param iss: The issuer ID of the signer
+        :param url: The URL of the signing service
+        :param keyjar: A keyjar containing the public part of the signers key
         :param add_ons: Additional information the signing service must 
             add to the Metadata statement before signing it.
         :param alg: Signing algorithm 
         """
         SigningService.__init__(self, add_ons=add_ons, alg=alg)
         self.url = url
+        self.sig_iss = iss
+        self.keyjar = keyjar
 
     def __call__(self, req, **kwargs):
-        r = requests.post(self.url, json=req)
+        r = requests.post(self.url, json=req, verify=False)
         if 200 <= r.status_code < 300:
+            _jw = factory(r.text)
+
+            # First Just checking the issuer ID *not* verifying the Signature
+            body = json.loads(as_unicode(_jw.jwt.part[1]))
+            assert body['iss'] == self.sig_iss
+
+            # Now verifying the signature
+            try:
+                _jw.verify_compact(r.text,
+                                   self.keyjar.get_verify_key(
+                                       owner=self.sig_iss))
+            except AssertionError:
+                raise JWSException('JWS signature verification error')
+
             return r.text
         else:
             raise ServiceError("{}: {}".format(r.status_code, r.text))
@@ -119,6 +145,7 @@ class Signer(object):
     A signer. Has no or one signing services it can use.
     Keeps a dictionary with the created signed metadata statements.
     """
+
     def __init__(self, signing_service, ms_dir=None, def_context=''):
         """
         
