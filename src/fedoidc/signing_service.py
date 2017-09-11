@@ -18,7 +18,7 @@ from oic.utils.jwt import JWT
 logger = logging.getLogger(__name__)
 
 
-class ServiceError(Exception):
+class SigningServiceError(Exception):
     pass
 
 
@@ -112,7 +112,7 @@ class WebSigningService(SigningService):
         """
         SigningService.__init__(self, add_ons=add_ons, alg=alg)
         self.url = url
-        self.sig_iss = iss
+        self.iss = iss
         self.keyjar = keyjar
 
     def __call__(self, req, **kwargs):
@@ -122,19 +122,19 @@ class WebSigningService(SigningService):
 
             # First Just checking the issuer ID *not* verifying the Signature
             body = json.loads(as_unicode(_jw.jwt.part[1]))
-            assert body['iss'] == self.sig_iss
+            assert body['iss'] == self.iss
 
             # Now verifying the signature
             try:
                 _jw.verify_compact(r.text,
                                    self.keyjar.get_verify_key(
-                                       owner=self.sig_iss))
+                                       owner=self.iss))
             except AssertionError:
                 raise JWSException('JWS signature verification error')
 
             return r.text
         else:
-            raise ServiceError("{}: {}".format(r.status_code, r.text))
+            raise SigningServiceError("{}: {}".format(r.status_code, r.text))
 
     def name(self):
         return self.url
@@ -247,7 +247,7 @@ class Signer(object):
                         'Signer: {}, items: {}'.format(self.signing_service.iss,
                                                        self.items()))
                 except AttributeError:
-                    raise ServiceError(
+                    raise SigningServiceError(
                         'This signer can not sign for that context')
                 logger.error(
                     'No metadata statements for this context: {}'.format(
