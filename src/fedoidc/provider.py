@@ -5,7 +5,6 @@ import traceback
 from fedoidc import ClientMetadataStatement
 
 from oic.oauth2 import error
-from oic.oauth2 import Message
 from oic.oic import provider
 from oic.oic.message import OpenIDSchema
 from oic.oic.message import RegistrationRequest
@@ -13,6 +12,8 @@ from oic.oic.provider import STR
 from oic.utils.http_util import Created
 from oic.utils.http_util import Response
 from oic.utils.sanitize import sanitize
+
+from fedoidc.signing_service import SigningServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,15 @@ class Provider(provider.Provider):
         self.response_metadata_statements = response_metadata_statements
         self.signer = signer
 
+    def _signer(self):
+        if self.signer:
+            return self.signer
+        elif self.federation_entity:
+            if self.federation_entity.signer:
+                return self.federation_entity.signer
+
+        return None
+
     def create_signed_provider_info(self, context, fos=None, setup=None):
         """
         Collects metadata about this provider add signing keys and use the
@@ -60,8 +70,12 @@ class Provider(provider.Provider):
             'provider:{}, fos:{}, context:{}'.format(self.name, fos, context))
 
         _req = _fe.add_signing_keys(pcr)
-        return _fe.signer.create_signed_metadata_statement(
-            _req, context, fos=fos)
+        _sig = self._signer()
+        if _sig:
+            return _fe.signer.create_signed_metadata_statement(
+                _req, context, fos=fos)
+        else:
+            raise SigningServiceError('No signer')
 
     def create_fed_providerinfo(self, fos=None, pi_args=None):
         """
@@ -161,8 +175,14 @@ class Provider(provider.Provider):
         # TODO This is where the OP should sign the response
         if ms.fo:
             _fo = ms.fo
-            sms = self.signer.create_signed_metadata_statement(
-                result, 'response', [_fo], single=True)
+            _sig = self._signer()
+
+            if _sig:
+                sms = _sig.create_signed_metadata_statement(
+                    result, 'response', [_fo], single=True)
+            else:
+                raise SigningServiceError('No Signer')
+
             self.federation_entity.extend_with_ms(result, {_fo: sms})
 
         return Created(result.to_json(), content="application/json",
