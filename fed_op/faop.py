@@ -6,6 +6,8 @@ import logging
 import os
 import sys
 
+from oic.utils.keyio import build_keyjar
+
 from fedoidc.test_utils import create_federation_entity
 from oic.utils import webfinger
 from fedoidc.provider import Provider
@@ -34,6 +36,7 @@ if __name__ == '__main__':
         help="A file containing a JSON representation of the capabilities")
     parser.add_argument('-i', dest='issuer', help="issuer id of the OP",
                         nargs=1)
+    parser.add_argument('-I', dest='pinfo', action='store_true')
     parser.add_argument(dest="config")
     args = parser.parse_args()
 
@@ -72,9 +75,16 @@ if __name__ == '__main__':
     # OIDC Provider
     _op = setup.op_setup(args, config, Provider)
 
+    if args.pinfo:
+        pi = _op.create_providerinfo()
+        _kj = build_keyjar(config.SIG_DEF_KEYS)[1]
+        pi['signing_keys'] = _kj.export_jwks()
+        print(pi.to_json())
+        exit(0)
+
     fed_ent = create_federation_entity(iss=_op.baseurl, conf=config,
-                                       fos=['https://swamid.sunet.se'],
-                                       sup='https://sunet.se')
+                                       fos=config.PRIORITY,
+                                       sup=config.SUPERIOR)
     _op.federation_entity = fed_ent
     fed_ent.httpcli = _op
 

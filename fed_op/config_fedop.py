@@ -7,10 +7,10 @@ keys = [
     {"type": "EC", "crv": "P-256", "use": ["enc"]}
 ]
 
-ISSUER='https://localhost'
+ISSUER = 'https://localhost'
 SERVICE_URL = "{issuer}/verify"
 
-#Only Username and password.
+# Only Username and password.
 AUTHENTICATION = {
     "UserPassword": {"ACR": "PASSWORD", "WEIGHT": 1, "URL": SERVICE_URL,
                      "END_POINTS": ["verify"]}
@@ -22,12 +22,7 @@ PASSWD = {
     "upper": "crust"
 }
 
-SIG_DEF_KEYS = [{"type": "RSA", "key": "keys/op_key.pem", "use": ["sig"]}]
-MS_DIR = '../fed_conf/ms_dir'
-JWKS_DIR = '../fed_conf/fo_jwks'
-
 JWKS_FILE_NAME = "static/jwks.json"
-FO_PRIORITY = []
 
 MAKO_ROOT = './'
 
@@ -37,7 +32,7 @@ SYM_KEY = "SoLittleTime,Got"
 
 SERVER_CERT = "certs/cert.pem"
 SERVER_KEY = "certs/key.pem"
-#CA_BUNDLE="certs/chain.pem"
+# CA_BUNDLE="certs/chain.pem"
 CA_BUNDLE = None
 
 # =======  SIMPLE DATABASE ==============
@@ -87,3 +82,20 @@ USERDB = {
     }
 }
 
+# === These are the federation specific things ====
+
+# Key used by the OP to sign metadata stetments
+SIG_DEF_KEYS = [{"type": "RSA", "key": "keys/op_key.pem", "use": ["sig"]}]
+
+# Where the OP can find signed metadata statements
+MS_DIR = '../fed_conf/ms_dir'
+
+# Where FO keys are found
+JWKS_DIR = '../fed_conf/fo_jwks'
+
+# Priority order between the federations.
+# MUST contain all the federations this OP belongs to.
+FO_PRIORITY = ['https://swamid.sunet.se']
+
+# Superior
+SUPERIOR = 'https://sunet.se'
