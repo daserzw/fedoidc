@@ -1,8 +1,5 @@
-import copy
 import logging
 import re
-
-from oic.oauth2 import Message
 
 from fedoidc import MetadataStatement
 from fedoidc.operator import Operator
@@ -23,7 +20,7 @@ class FederationEntity(Operator):
         :param srv: A Client or Provider instance
         :param iss: A identifier assigned to this entity by the operator
         :param keyjar: Key this entity can use to sign things
-        :param signer: A signer to use for signing documents
+        :param signer: A dsigner to use for signing documents
             (client registration requests/provide info response) this
             entity produces.
         :param fo_bundle: A bundle of keys that can be used to verify
@@ -124,7 +121,8 @@ class FederationEntity(Operator):
         Update a request signed metadata statements.
         
         :param req: The request 
-        :param federations: List of Federation Operator IDs
+        :param federation: Federation Operator ID
+        :param loes: List of :py:class:`fedoidc.operator.LessOrEqual` instances
         :return: The updated request
         """
         if federation:
