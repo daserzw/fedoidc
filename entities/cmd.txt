@@ -1,0 +1,3 @@
+./create.py -i https://swamid.sunet.se swamid
+./sign.py -r request.json swamid
+./export.py swamid
