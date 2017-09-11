@@ -1,4 +1,3 @@
-import copy
 import logging
 
 from fedoidc import ClientMetadataStatement
@@ -12,7 +11,6 @@ from oic.exception import ParseError
 from oic.exception import RegistrationError
 from oic.oauth2 import ErrorResponse
 from oic.oauth2 import sanitize
-from oic.oauth2.message import Message
 from oic.oauth2.message import MissingRequiredAttribute
 from oic.oic import RegistrationResponse
 
@@ -81,7 +79,7 @@ class Client(oic.Client):
         else:
             self.provider_federations = ms_list
 
-    def parse_federation_registration(self, resp):
+    def parse_federation_registration(self, resp, issuer):
         """
         Receives a dynamic client registration response, verifies the
         signature and parses the compounded metadata statement.
@@ -94,6 +92,7 @@ class Client(oic.Client):
         attribute *registration_federations*
         
         :param resp: A MetadataStatement instance or a dictionary
+        :param issuer: Issuer ID
         """
         ms_list = self.federation_entity.get_metadata_statement(
             resp, cls=ClientMetadataStatement)
