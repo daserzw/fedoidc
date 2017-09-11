@@ -75,7 +75,9 @@ class InternalSigningService(SigningService):
 
         # Own copy
         _metadata = copy.deepcopy(req)
-        _metadata.update(self.add_ons)
+        if self.add_ons:
+            _metadata.update(self.add_ons)
+
         _jwt = JWT(keyjar, iss=iss, msgtype=_metadata.__class__,
                    lifetime=self.lifetime)
         _jwt.sign_alg = self.alg
