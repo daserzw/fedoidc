@@ -2,22 +2,23 @@ import copy
 import hashlib
 import json
 import os
-
-from urllib.parse import quote_plus, urlparse
+from urllib.parse import quote_plus
 from urllib.parse import unquote_plus
+from urllib.parse import urlparse
 
-from jwkest import as_bytes
-
-from fedoidc.entity import FederationEntity
-
-from fedoidc import MetadataStatement, unfurl
-from fedoidc.bundle import FSJWKSBundle, JWKSBundle
+from fedoidc import MetadataStatement
+from fedoidc import unfurl
+from fedoidc.bundle import FSJWKSBundle
+from fedoidc.bundle import JWKSBundle
 from fedoidc.bundle import keyjar_to_jwks_private
+from fedoidc.entity import FederationEntity
 from fedoidc.file_system import FileSystem
 from fedoidc.operator import Operator
-from fedoidc.signing_service import Signer
 from fedoidc.signing_service import InternalSigningService
+from fedoidc.signing_service import Signer
+from jwkest import as_bytes
 
+from oic.utils.keyio import KeyJar
 from oic.utils.keyio import build_keyjar
 
 
@@ -279,24 +280,32 @@ def setup(keydefs, tool_iss, liss, ms_path, csms_def=None, mds_dir='',
     return signers, _init['key_bundle']
 
 
-def create_federation_entity(iss, conf, fos, sup, entity=''):
-    _keybundle = FSJWKSBundle('', fdir=conf.JWKS_DIR,
-                              key_conv={'to': quote_plus, 'from': unquote_plus})
+def create_federation_entity(iss, jwks_dir, sup='', fo_jwks=None, ms_dir='',
+                             entity=None, sig_keys=None, sig_def_keys=None):
+    fname = os.path.join(ms_dir, quote_plus(sup))
 
-    # Organisation information
-    _kj = _keybundle[sup]
-    fname = os.path.join(conf.MS_DIR, quote_plus(sup))
-    signer = Signer(InternalSigningService(sup, _kj), fname)
+    if fo_jwks:
+        _keybundle = FSJWKSBundle('', fdir=fo_jwks,
+                                  key_conv={'to': quote_plus,
+                                            'from': unquote_plus})
 
-    # And then the FOs
-    jb = JWKSBundle('')
-    for fo in fos:
-        jb[fo] = _keybundle[fo]
+        # Organisation information
+        _kj = _keybundle[sup]
+        signer = Signer(InternalSigningService(sup, _kj), ms_dir=fname)
+    else:
+        signer = Signer(ms_dir=fname)
+
+    # And then the FOs public keys
+    _public_keybundle = FSJWKSBundle('', fdir=jwks_dir,
+                                     key_conv={'to': quote_plus,
+                                               'from': unquote_plus})
 
     # The OPs own signing keys
-    _keys = build_keyjar(conf.SIG_DEF_KEYS)[1]
-    return FederationEntity(entity, iss=iss, keyjar=_keys, signer=signer,
-                            fo_bundle=jb)
+    if sig_keys is None:
+        sig_keys = build_keyjar(sig_def_keys)[1]
+
+    return FederationEntity(entity, iss=iss, keyjar=sig_keys, signer=signer,
+                            fo_bundle=_public_keybundle)
 
 
 class MetaDataStore(FileSystem):
@@ -335,3 +344,18 @@ def unpack_using_metadata_store(url, mds):
         del _md0['metadata_statement_uris']
 
     return _md0
+
+
+def own_sign_keys(sigkey_name, issuer, sig_def_keys):
+    try:
+        jwks = json.loads(open(sigkey_name, 'r').read())
+        sign_kj = KeyJar()
+        sign_kj.import_jwks(jwks, issuer)
+    except FileNotFoundError:
+        jwks, sign_kj, _ = build_keyjar(sig_def_keys)
+        sign_kj.issuer_keys[issuer] = sign_kj.issuer_keys['']
+        fp = open(sigkey_name, 'w')
+        fp.write(json.dumps(sign_kj.export_jwks(private=True, issuer=issuer)))
+        fp.close()
+
+    return sign_kj

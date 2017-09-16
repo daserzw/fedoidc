@@ -1,12 +1,12 @@
-from oic.utils.keyio import build_keyjar
-from oic.utils.keyio import KeyJar
-
 from fedoidc import MetadataStatement
 from fedoidc.bundle import jwks_to_keyjar
 from fedoidc.utils import request_signed_by_signing_keys
 from fedoidc.utils import self_sign_jwks
 from fedoidc.utils import verify_request_signed_by_signing_keys
 from fedoidc.utils import verify_self_signed_jwks
+
+from oic.utils.keyio import KeyJar
+from oic.utils.keyio import build_keyjar
 
 KEYDEFS = [
     {"type": "RSA", "use": ["sig"]},

@@ -1,21 +1,21 @@
 import copy
 import json
 import logging
-
-from jwkest import BadSignature
-from jwkest.jws import JWSException
 import time
 
-from fedoidc import ClientMetadataStatement, MetadataStatementError
+from fedoidc import ClientMetadataStatement
 from fedoidc import DoNotCompare
 from fedoidc import IgnoreKeys
+from fedoidc import MetadataStatementError
 from fedoidc import is_lesser
 from fedoidc import unfurl
+from jwkest import BadSignature
+from jwkest.jws import JWSException
 
-from oic.oauth2.message import MissingSigningKey, Message
-
-from oic.utils.keyio import build_keyjar
+from oic.oauth2.message import Message
+from oic.oauth2.message import MissingSigningKey
 from oic.utils.jwt import JWT
+from oic.utils.keyio import build_keyjar
 
 __author__ = 'roland'
 

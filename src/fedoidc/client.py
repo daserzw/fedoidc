@@ -3,8 +3,8 @@ import logging
 from fedoidc import ClientMetadataStatement
 from fedoidc import ProviderConfigurationResponse
 
-from oic import oic
 from oic import OIDCONF_PATTERN
+from oic import oic
 from oic.exception import CommunicationError
 from oic.exception import ParameterError
 from oic.exception import ParseError
@@ -30,6 +30,7 @@ class Client(oic.Client):
     """
     Federation aware OIDC Client
     """
+
     def __init__(self, client_id=None, ca_certs=None,
                  client_prefs=None, client_authn_method=None, keyjar=None,
                  verify_ssl=True, config=None, client_cert=None,
@@ -72,7 +73,7 @@ class Client(oic.Client):
 
         # At this point in time I may not know within which
         # federation I'll be working.
-        if len(resp) == 1:
+        if len(ms_list) == 1:
             ms = ms_list[0]
             self.handle_provider_config(ms.protected_claims(), issuer)
             self.federation = ms.fo
@@ -108,6 +109,7 @@ class Client(oic.Client):
             ms = ms_list[0]
             self.store_registration_info(ms.protected_claims())
             self.federation = ms.fo
+            self.redirect_uris = self.registration_response['redirect_uris']
         else:
             self.registration_federations = ms_list
 

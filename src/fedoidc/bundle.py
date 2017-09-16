@@ -5,8 +5,8 @@ import os
 from fedoidc.file_system import FileSystem
 
 from oic.utils.jwt import JWT
-from oic.utils.keyio import build_keyjar
 from oic.utils.keyio import KeyJar
+from oic.utils.keyio import build_keyjar
 
 
 class JWKSBundle(object):
@@ -305,4 +305,3 @@ class FSJWKSBundle(JWKSBundle):
         self.bundle = FileSystem(fdir, key_conv=key_conv,
                                  value_conv={'to': keyjar_to_jwks,
                                              'from': jwks_to_keyjar})
-

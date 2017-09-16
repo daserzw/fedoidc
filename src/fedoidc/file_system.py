@@ -1,7 +1,7 @@
 import logging
 import os
-import time
 import shutil
+import time
 
 logger = logging.getLogger(__name__)
 

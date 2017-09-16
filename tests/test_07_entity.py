@@ -1,14 +1,12 @@
-from fedoidc.signing_service import InternalSigningService, Signer
-from oic.oauth2 import Message
-
 from fedoidc import MetadataStatement
-
-from fedoidc.operator import Operator
-from oic.utils.keyio import build_keyjar
-
 from fedoidc.bundle import JWKSBundle
-
 from fedoidc.entity import FederationEntity
+from fedoidc.operator import Operator
+from fedoidc.signing_service import InternalSigningService
+from fedoidc.signing_service import Signer
+
+from oic.oauth2 import Message
+from oic.utils.keyio import build_keyjar
 
 KEYDEFS = [
     {"type": "RSA", "key": '', "use": ["sig"]},

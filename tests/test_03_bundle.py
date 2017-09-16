@@ -1,4 +1,5 @@
 from fedoidc.bundle import JWKSBundle
+
 from oic.utils.keyio import build_keyjar
 
 ISS = 'https://example.com'

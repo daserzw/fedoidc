@@ -1,18 +1,19 @@
 import copy
 import json
+import logging
 import os
 from urllib.parse import quote_plus
 from urllib.parse import unquote_plus
 
-import logging
 import requests
-from jwkest import as_unicode
-from jwkest.jws import factory
-from jwkest.jws import JWSException
-from oic.oauth2 import Message
-
-from fedoidc import CONTEXTS, MIN_SET
+from fedoidc import CONTEXTS
+from fedoidc import MIN_SET
 from fedoidc.file_system import FileSystem
+from jwkest import as_unicode
+from jwkest.jws import JWSException
+from jwkest.jws import factory
+
+from oic.oauth2 import Message
 from oic.utils.jwt import JWT
 
 logger = logging.getLogger(__name__)
@@ -148,7 +149,7 @@ class Signer(object):
     Keeps a dictionary with the created signed metadata statements.
     """
 
-    def __init__(self, signing_service, ms_dir=None, def_context=''):
+    def __init__(self, signing_service=None, ms_dir=None, def_context=''):
         """
         
         :param signing_service: Which signing service this signer can use. 

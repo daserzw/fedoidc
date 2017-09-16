@@ -1,18 +1,20 @@
 import os
 
-from jwkest import jws
-from oic.oauth2.message import MissingSigningKey, Message
-from oic.utils.keyio import build_keyjar
-from oic.utils.keyio import KeyJar
-
 from fedoidc import ClientMetadataStatement
+from fedoidc import MetadataStatement
 from fedoidc import ProviderConfigurationResponse
 from fedoidc import is_lesser
 from fedoidc import unfurl
-from fedoidc import MetadataStatement
 from fedoidc.bundle import JWKSBundle
 from fedoidc.bundle import verify_signed_bundle
-from fedoidc.operator import Operator, le_dict
+from fedoidc.operator import Operator
+from fedoidc.operator import le_dict
+from jwkest import jws
+
+from oic.oauth2.message import Message
+from oic.oauth2.message import MissingSigningKey
+from oic.utils.keyio import KeyJar
+from oic.utils.keyio import build_keyjar
 
 BASE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "data/keys"))

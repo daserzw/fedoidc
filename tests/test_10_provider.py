@@ -4,24 +4,25 @@ import shutil
 from time import time
 
 import pytest
-from fedoidc.operator import Operator
-from oic.utils.http_util import Response, Created
-
-from fedoidc import test_utils, ClientMetadataStatement
-from fedoidc.file_system import FileSystem
-
+from fedoidc import ClientMetadataStatement
+from fedoidc import test_utils
 from fedoidc.entity import FederationEntity
+from fedoidc.file_system import FileSystem
+from fedoidc.operator import Operator
 from fedoidc.provider import Provider
-from jwkest import jws, as_unicode
+from jwkest import as_unicode
+from jwkest import jws
 
 from oic import rndstr
 from oic.utils.authn.authn_context import AuthnBroker
 from oic.utils.authn.client import verify_client
 from oic.utils.authn.user import UserAuthnMethod
 from oic.utils.authz import AuthzHandling
+from oic.utils.http_util import Created
+from oic.utils.http_util import Response
 from oic.utils.keyio import build_keyjar
 from oic.utils.sdb import SessionDB
-
+from oic.utils.sdb import create_session_db
 # Create JWKS bundle
 from oic.utils.userinfo import UserInfo
 
@@ -128,7 +129,8 @@ class TestProvider(object):
                                    signer=signer[OA['sunet']],
                                    fo_bundle=keybundle)
 
-        self.op = Provider(sunet_op, SessionDB(sunet_op), {},
+        _sdb = create_session_db(sunet_op, 'hemlighet', 'ordet', {})
+        self.op = Provider(sunet_op, _sdb, {},
                            AUTHN_BROKER, USERINFO,
                            AUTHZ, client_authn=verify_client, symkey=SYMKEY,
                            federation_entity=fed_ent)

@@ -3,9 +3,9 @@ import os
 from fedoidc.bundle import JWKSBundle
 from fedoidc.bundle import verify_signed_bundle
 from fedoidc.test_utils import make_jwks_bundle
-from oic.utils.keyio import build_keyjar
-from oic.utils.keyio import KeyJar
 
+from oic.utils.keyio import KeyJar
+from oic.utils.keyio import build_keyjar
 
 BASE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "data/keys"))

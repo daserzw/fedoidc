@@ -3,6 +3,7 @@ import sys
 import traceback
 
 from fedoidc import ClientMetadataStatement
+from fedoidc.signing_service import SigningServiceError
 
 from oic.oauth2 import error
 from oic.oic import provider
@@ -12,8 +13,6 @@ from oic.oic.provider import STR
 from oic.utils.http_util import Created
 from oic.utils.http_util import Response
 from oic.utils.sanitize import sanitize
-
-from fedoidc.signing_service import SigningServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +76,7 @@ class Provider(provider.Provider):
         else:
             raise SigningServiceError('No signer')
 
-    def create_fed_providerinfo(self, fos=None, pi_args=None):
+    def create_fed_providerinfo(self, fos=None, pi_args=None, signed=True):
         """
         Create federation aware provider info.
 
@@ -86,10 +85,16 @@ class Provider(provider.Provider):
         :return: oic.oic.ProviderConfigurationResponse instance 
         """
 
-        _ms = self.create_signed_provider_info('discovery', fos, pi_args)
         pcr = self.create_providerinfo(setup=pi_args)
 
-        pcr = self.federation_entity.extend_with_ms(pcr, _ms)
+        if signed:
+            _ms = self.create_signed_provider_info('discovery', fos, pi_args)
+            pcr = self.federation_entity.extend_with_ms(pcr, _ms)
+        else:
+            _ms = self.federation_entity.signer.gather_metadata_statements(
+                'discovery', fos=fos)
+            pcr.update(_ms)
+
         return pcr
 
     def providerinfo_endpoint(self, handle="", **kwargs):
@@ -166,7 +171,12 @@ class Provider(provider.Provider):
             return error(error='invalid_request',
                          descr='No signed metadata statement I could use')
 
-        request = RegistrationRequest(**ms.le)
+        _pc = ms.protected_claims()
+        if _pc:
+            request = RegistrationRequest(**_pc)
+        else:
+            request = RegistrationRequest(
+                **ms.unprotected_and_protected_claims())
         result = self.client_registration_setup(request)
 
         if isinstance(result, Response):

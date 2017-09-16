@@ -1,18 +1,18 @@
 import os
 import shutil
 
-from jwkest.jws import factory
-from oic.utils.keyio import build_keyjar
-from oic.utils.keyio import KeyJar
-
 from fedoidc import test_utils
 from fedoidc.operator import Operator
-from fedoidc.test_utils import make_fs_jwks_bundle
 from fedoidc.test_utils import MetaDataStore
-from fedoidc.test_utils import make_ms
-from fedoidc.test_utils import unpack_using_metadata_store
+from fedoidc.test_utils import make_fs_jwks_bundle
 from fedoidc.test_utils import make_jwks_bundle
+from fedoidc.test_utils import make_ms
 from fedoidc.test_utils import make_signed_metadata_statement
+from fedoidc.test_utils import unpack_using_metadata_store
+from jwkest.jws import factory
+
+from oic.utils.keyio import KeyJar
+from oic.utils.keyio import build_keyjar
 
 TEST_ISS = "https://test.example.com"
 KEYDEFS = [

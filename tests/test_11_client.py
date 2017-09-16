@@ -1,9 +1,7 @@
 import json
 import os
-from urllib.parse import quote_plus
-
 import shutil
-from oic import rndstr
+from urllib.parse import quote_plus
 
 from fedoidc import test_utils
 from fedoidc.bundle import JWKSBundle
@@ -11,11 +9,11 @@ from fedoidc.client import Client
 from fedoidc.entity import FederationEntity
 from fedoidc.operator import LessOrEqual
 from fedoidc.provider import Provider
+from fedoidc.signing_service import Signer
 
+from oic import rndstr
 from oic.utils.http_util import Created
 from oic.utils.keyio import build_keyjar
-
-from fedoidc.signing_service import Signer
 
 KEYDEFS = [
     {"type": "RSA", "key": '', "use": ["sig"]},
@@ -171,7 +169,7 @@ def test_parse_pi():
 
     assert isinstance(resp, Created)
 
-    rp.parse_federation_registration(json.loads(resp.message))
+    rp.parse_federation_registration(json.loads(resp.message), '')
     assert rp.federation == FO['feide']
     assert rp.registration_response
 

@@ -1,19 +1,17 @@
-import logging
-import traceback
-import sys
 import hashlib
-
-from jwkest import as_bytes
+import logging
+import sys
+import traceback
 
 from fedoidc import client
+from jwkest import as_bytes
 
 from oic import rndstr
 from oic.oauth2 import PBase
 from oic.oauth2.message import ErrorResponse
-
-from oic.oic.message import AuthorizationResponse
-from oic.oic.message import AuthorizationRequest
 from oic.oic.message import AccessTokenResponse
+from oic.oic.message import AuthorizationRequest
+from oic.oic.message import AuthorizationResponse
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from oic.utils.webfinger import WebFinger
 

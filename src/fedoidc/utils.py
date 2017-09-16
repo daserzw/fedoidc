@@ -1,12 +1,13 @@
 import json
 
-from jwkest import as_unicode
-from oic.oic import JasonWebToken
-from oic.utils.jwt import JWT
-
 from fedoidc import MetadataStatement
 from fedoidc.bundle import jwks_to_keyjar
-from jwkest.jws import JWS, factory
+from jwkest import as_unicode
+from jwkest.jws import JWS
+from jwkest.jws import factory
+
+from oic.oic import JasonWebToken
+from oic.utils.jwt import JWT
 
 
 def self_sign_jwks(keyjar, iss, kid='', lifetime=3600):

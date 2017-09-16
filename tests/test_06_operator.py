@@ -1,22 +1,21 @@
 import json
 import os
-import time
-from urllib.parse import quote_plus, urlparse
-from urllib.parse import unquote_plus
-
 import shutil
+import time
+from urllib.parse import quote_plus
+from urllib.parse import unquote_plus
+from urllib.parse import urlparse
 
+from fedoidc import MetadataStatement
+from fedoidc import test_utils
+from fedoidc.bundle import FSJWKSBundle
+from fedoidc.operator import FederationOperator
+from fedoidc.operator import Operator
+from fedoidc.test_utils import MetaDataStore
 from jwkest import as_unicode
 from jwkest.jws import factory
 
-from fedoidc.test_utils import MetaDataStore
-
-from fedoidc.bundle import FSJWKSBundle
 from oic.utils.keyio import build_keyjar
-
-from fedoidc import test_utils, MetadataStatement
-from fedoidc.operator import FederationOperator
-from fedoidc.operator import Operator
 
 KEYDEFS = [
     {"type": "RSA", "key": '', "use": ["sig"]},
