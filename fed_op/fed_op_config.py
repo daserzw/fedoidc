@@ -88,14 +88,15 @@ USERDB = {
 SIG_DEF_KEYS = [{"type": "RSA", "key": "keys/op_key.pem", "use": ["sig"]}]
 
 # Where the OP can find signed metadata statements
-MS_DIR = '../fed_conf/ms_dir'
+MS_DIR = 'ms_dir'
 
 # Where FO keys are found
-JWKS_DIR = '../fed_conf/fo_jwks'
+JWKS_DIR = 'jwks_dir'
+FO_JWKS = '../fo_jwks'
 
 # Priority order between the federations.
 # MUST contain all the federations this OP belongs to.
-FO_PRIORITY = ['https://swamid.sunet.se']
+PRIORITY = ['https://swamid.sunet.se']
 
 # Superior
 SUPERIOR = 'https://sunet.se'

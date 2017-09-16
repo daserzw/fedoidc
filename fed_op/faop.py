@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 
 import cherrypy
 import importlib
@@ -6,9 +7,8 @@ import logging
 import os
 import sys
 
-from oic.utils.keyio import build_keyjar
-
-from fedoidc.test_utils import create_federation_entity
+from fedoidc.signing_service import InternalSigningService
+from fedoidc.test_utils import create_federation_entity, own_sign_keys
 from oic.utils import webfinger
 from fedoidc.provider import Provider
 
@@ -21,6 +21,8 @@ base_formatter = logging.Formatter(
 hdlr.setFormatter(base_formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
+
+SIGKEY_NAME = 'sigkey.jwks'
 
 if __name__ == '__main__':
     import argparse
@@ -36,7 +38,7 @@ if __name__ == '__main__':
         help="A file containing a JSON representation of the capabilities")
     parser.add_argument('-i', dest='issuer', help="issuer id of the OP",
                         nargs=1)
-    parser.add_argument('-I', dest='pinfo', action='store_true')
+    parser.add_argument('-C', dest='context')
     parser.add_argument(dest="config")
     args = parser.parse_args()
 
@@ -75,16 +77,28 @@ if __name__ == '__main__':
     # OIDC Provider
     _op = setup.op_setup(args, config, Provider)
 
-    if args.pinfo:
-        pi = _op.create_providerinfo()
-        _kj = build_keyjar(config.SIG_DEF_KEYS)[1]
-        pi['signing_keys'] = _kj.export_jwks()
-        print(pi.to_json())
+    sign_kj = own_sign_keys(SIGKEY_NAME, _op.baseurl, config.SIG_DEF_KEYS)
+
+    if args.context:
+        if args.context == 'discovery':
+            pi = _op.create_providerinfo()
+            pi['signing_keys'] = sign_kj.export_jwks(issuer=_op.baseurl)
+            print(pi.to_json())
+        elif args.context == 'response':
+            req = {'signing_keys': sign_kj.export_jwks(issuer=_op.baseurl)}
+            print(json.dumps(req))
         exit(0)
 
-    fed_ent = create_federation_entity(iss=_op.baseurl, conf=config,
-                                       fos=config.PRIORITY,
-                                       sup=config.SUPERIOR)
+    fed_ent = create_federation_entity(iss=_op.baseurl, ms_dir=config.MS_DIR,
+                                       jwks_dir=config.JWKS_DIR,
+                                       sup=config.SUPERIOR,
+                                       fo_jwks=config.FO_JWKS,
+                                       sig_keys=sign_kj,
+                                       sig_def_keys=config.SIG_DEF_KEYS)
+
+    fed_ent.signer.signing_service = InternalSigningService(_op.baseurl,
+                                                            sign_kj)
+
     _op.federation_entity = fed_ent
     fed_ent.httpcli = _op
 

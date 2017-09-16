@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import importlib
+import json
 import logging
 import os
 import sys
@@ -7,7 +8,9 @@ import sys
 import cherrypy
 
 from fedoidc.rp_handler import FedRPHandler
-from fedoidc.test_utils import create_federation_entity
+from fedoidc.signing_service import InternalSigningService
+from fedoidc.test_utils import create_federation_entity, own_sign_keys
+from oic.utils.keyio import build_keyjar
 
 logger = logging.getLogger("")
 LOGFILE_NAME = 'farp.log'
@@ -19,6 +22,8 @@ hdlr.setFormatter(base_formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
 
+SIGKEY_NAME = 'sigkey.jwks'
+
 if __name__ == '__main__':
     import argparse
 
@@ -26,6 +31,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', dest='port', default=80, type=int)
     parser.add_argument('-t', dest='tls', action='store_true')
     parser.add_argument('-k', dest='insecure', action='store_true')
+    parser.add_argument('-I', dest='pinfo', action='store_true')
     parser.add_argument(dest="config")
     args = parser.parse_args()
 
@@ -33,7 +39,8 @@ if __name__ == '__main__':
 
     cherrypy.config.update(
         {'environment': 'production',
-         'log.error_file': 'site.log',
+         'log.error_file': 'error.log',
+         'log.access_file': 'access.log',
          'tools.trailing_slash.on': False,
          'server.socket_host': '0.0.0.0',
          'log.screen': True,
@@ -65,14 +72,28 @@ if __name__ == '__main__':
     else:
         _base_url = config.BASEURL
 
-    rp_fed_ent = create_federation_entity(iss=_base_url, conf=config,
-                                          fos=['https://swamid.sunet.se'],
-                                          sup='https://catalogix.se')
-
     rph = FedRPHandler(base_url=_base_url,
                        registration_info=config.CONSUMER_CONFIG,
-                       flow_type='code', federation_entity=rp_fed_ent,
-                       hash_seed="BabyHoldOn", scope=None)
+                       flow_type='code', hash_seed="BabyHoldOn", scope=None)
+
+    sign_kj = own_sign_keys(SIGKEY_NAME, _base_url, config.SIG_DEF_KEYS)
+
+    if args.pinfo:
+        ruri = rph.create_callback(_base_url)
+        _me = rph.registration_info.copy()
+        _me["redirect_uris"] = [ruri]
+        _me['signing_keys'] = sign_kj.export_jwks()
+        print(json.dumps(_me))
+        exit(0)
+
+    # internalized request signing server using the superiors keys
+    rp_fed_ent = create_federation_entity(iss=_base_url, ms_dir=config.MS_DIR,
+                                          jwks_dir=config.JWKS_DIR,
+                                          sup=config.SUPERIOR,
+                                          fo_jwks=config.FO_JWKS,
+                                          sig_keys=sign_kj,
+                                          sig_def_keys=config.SIG_DEF_KEYS)
+    rph.federation_entity=rp_fed_ent
 
     cherrypy.tree.mount(cprp.Consumer(rph, 'html'), '/', provider_config)
 

@@ -8,19 +8,19 @@ SERVER_CERT = 'certs/cert.pem'
 CA_BUNDLE = None
 
 CONSUMER_CONFIG = {
-    "authz_page": "/authz",
+    #"authz_page": "/authz",
     "scope": ["openid", "email", "phone", "profile"],
     "response_type": ["code"],
-    # "user_info": {
-    #     "name": None,
-    #     "email": None,
-    #     "nickname": None
-    # },
-    # "request_method": "param"
 }
 
 SIG_DEF_KEYS = [{"type": "RSA", "key": "keys/rp_key.pem", "use": ["sig"]}]
-MS_DIR = '../fed_conf/ms_dir'
-JWKS_DIR = '../fed_conf/fo_jwks'
+MS_DIR = '../ms'
+JWKS_DIR = 'jwks_dir'
+FO_JWKS = '../fo_jwks'
 
-# KEYDEFS= [{"type": "RSA", "key": "keys/sig_key.pem", "use": ["sig"]}]
+# Priority order between the federations.
+# MUST contain all the federations this OP belongs to.
+PRIORITY = ['https://swamid.sunet.se']
+
+# Superior
+SUPERIOR = 'https://sunet.se'

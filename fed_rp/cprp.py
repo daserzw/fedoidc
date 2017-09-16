@@ -131,7 +131,7 @@ class Consumer(Root):
             raise cherrypy.HTTPRedirect(resp_headers['Location'])
 
     @cherrypy.expose
-    def authz_cb(self, op_hash='', **kwargs):
+    def acb(self, op_hash='', **kwargs):
         try:
             rp = self.rph.issuer2rp[self.rph.hash2issuer[op_hash]]
         except KeyError:
@@ -163,6 +163,6 @@ class Consumer(Root):
                 return self
             elif a == 'authz_cb':
                 cherrypy.request.params['op_hash'] = b
-                return self.authz_cb
+                return self.acb
 
         return self

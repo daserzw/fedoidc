@@ -1,14 +1,6 @@
 import json
 import logging
 
-from urllib.parse import quote_plus
-from urllib.parse import unquote_plus
-
-from fedoidc.bundle import FSJWKSBundle, JWKSBundle
-from fedoidc.entity import FederationEntity
-from fedoidc.signing_service import InternalSigningService
-from fedoidc.signing_service import Signer
-
 from oic.utils import shelve_wrapper
 from oic.utils.authn.authn_context import AuthnBroker
 from oic.utils.authn.authn_context import make_auth_verify
@@ -19,8 +11,8 @@ from oic.utils.authn.multi_auth import setup_multi_auth
 from oic.utils.authn.saml import SAMLAuthnMethod
 from oic.utils.authn.user import UsernamePasswordMako
 from oic.utils.authz import AuthzHandling
-from oic.utils.keyio import keyjar_init, build_keyjar
-from oic.utils.sdb import SessionDB, create_session_db
+from oic.utils.keyio import keyjar_init
+from oic.utils.sdb import create_session_db
 from oic.utils.userinfo import UserInfo
 from oic.utils.userinfo.aa_info import AaUserInfo
 
