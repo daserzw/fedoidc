@@ -6,11 +6,9 @@ import os
 import sys
 
 import cherrypy
-
 from fedoidc.rp_handler import FedRPHandler
-from fedoidc.signing_service import InternalSigningService
-from fedoidc.test_utils import create_federation_entity, own_sign_keys
-from oic.utils.keyio import build_keyjar
+from fedoidc.test_utils import create_federation_entity
+from fedoidc.test_utils import own_sign_keys
 
 logger = logging.getLogger("")
 LOGFILE_NAME = 'farp.log'
@@ -31,7 +29,6 @@ if __name__ == '__main__':
     parser.add_argument('-p', dest='port', default=80, type=int)
     parser.add_argument('-t', dest='tls', action='store_true')
     parser.add_argument('-k', dest='insecure', action='store_true')
-    parser.add_argument('-I', dest='pinfo', action='store_true')
     parser.add_argument(dest="config")
     args = parser.parse_args()
 
@@ -77,14 +74,6 @@ if __name__ == '__main__':
                        flow_type='code', hash_seed="BabyHoldOn", scope=None)
 
     sign_kj = own_sign_keys(SIGKEY_NAME, _base_url, config.SIG_DEF_KEYS)
-
-    if args.pinfo:
-        ruri = rph.create_callback(_base_url)
-        _me = rph.registration_info.copy()
-        _me["redirect_uris"] = [ruri]
-        _me['signing_keys'] = sign_kj.export_jwks()
-        print(json.dumps(_me))
-        exit(0)
 
     # internalized request signing server using the superiors keys
     rp_fed_ent = create_federation_entity(iss=_base_url, ms_dir=config.MS_DIR,

@@ -1,13 +1,12 @@
-import re
 import base64
 import hashlib
-import os
-
-import cherrypy
 import logging
-import requests
+import os
+import re
 from html import entities as htmlentitydefs
 
+import cherrypy
+import requests
 from jwkest import as_bytes
 
 logger = logging.getLogger(__name__)
