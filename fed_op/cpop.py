@@ -1,12 +1,11 @@
+from future.backports.urllib.parse import urlparse
+
 import json
+import logging
 from http.cookies import SimpleCookie
 
 import cherrypy
 import cherrypy_cors
-import logging
-
-from future.backports.urllib.parse import urlparse
-
 from jwkest import as_bytes
 from jwkest import as_unicode
 

@@ -4,6 +4,7 @@ import time
 from urllib.parse import splitquery
 
 from jwkest import as_bytes
+
 from oic import rndstr
 from oic.oic.provider import secret
 from oic.utils import shelve_wrapper

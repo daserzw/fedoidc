@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import cherrypy
 import importlib
 import logging
 import os
 import sys
 
+import cherrypy
 import cherrypy_cors
 
 from oic.oic.provider import Provider

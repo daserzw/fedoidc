@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-import json
-
-import cherrypy
 import importlib
+import json
 import logging
 import os
 import sys
 
-from fedoidc.signing_service import InternalSigningService
-from fedoidc.test_utils import create_federation_entity, own_sign_keys
-from oic.utils import webfinger
+import cherrypy
 from fedoidc.provider import Provider
+from fedoidc.signing_service import InternalSigningService
+from fedoidc.test_utils import create_federation_entity
+from fedoidc.test_utils import own_sign_keys
+
+from oic.utils import webfinger
 
 logger = logging.getLogger("")
 LOGFILE_NAME = 'op.log'
