@@ -97,6 +97,9 @@ To verify the setup use a webbrowser and open the webpage
 https://localhost:8888 and enter ‘diana@localhost:8777’
 in the input window and press ‘Start’.
 
+Userid: diana
+Password: krall
+
 If everything worked OK you should now see a page with some information from the
 session.
 
