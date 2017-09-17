@@ -75,5 +75,5 @@ setup(
          'cherrypy-cors >= 1.5'],
     zip_safe=False,
     cmdclass={'test': PyTest},
-    scripts=['scripts/fed_oprp_setup.py']
+    scripts=['example/fed_oprp_setup.py']
 )

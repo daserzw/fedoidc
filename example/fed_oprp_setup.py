@@ -21,13 +21,16 @@ _root = sys.argv[2]
 if os.path.isdir(_root) is False:
     os.makedirs(_root)
 
+_src_dir = os.path.join(_fedoidc_dir, 'example')
+
 os.chdir(_root)
 for file in ['fed_setup.py', 'oa_sign.py', 'clear.sh', 'setup.sh', 'run.sh']:
-    shutil.copy(os.path.join(_fedoidc_dir, 'scripts', file), '.')
+    shutil.copy(os.path.join(_src_dir, file), '.')
+
 
 for _dir, func in DIR.items():
     if os.path.isdir(_dir) is False:
         os.mkdir(_dir)
     os.chdir(_dir)
-    func(_fedoidc_dir)
+    func(_src_dir)
     os.chdir('..')
