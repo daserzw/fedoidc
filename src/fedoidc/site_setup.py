@@ -27,12 +27,12 @@ def copy_if_not_same(src, dst, overwrite=False):
 
 
 def fedoidc_op_setup(distroot):
-    for _dir in ['certs', 'keys', 'ms_dir', 'jwks_dir', 'static']:
+    for _dir in ['certs', 'keys', 'ms_dir', 'jwks_dir', 'static', 'modules']:
         if os.path.isdir(_dir) is False:
             os.mkdir(_dir)
 
     _op_dir = os.path.join(distroot, 'fed_op')
-    for _dir in ['static']:
+    for _dir in ['static', 'htdocs', 'templates']:
         _src = os.path.join(_op_dir, _dir)
         if os.path.isdir(_dir):
             shutil.rmtree(_dir)
