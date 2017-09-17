@@ -21,6 +21,7 @@ Contents:
    howto/entity
    howto/op
    howto/rp
+   minifed
 
 
 Indices and tables
