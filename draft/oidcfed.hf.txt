@@ -20,8 +20,8 @@ Abstract
 
    The OpenID Connect standard specifies how a Relying Party (RP) can
    discover metadata about an OpenID Provider (OP), and then register to
-   obtain client credentials.  During discovery and registration there
-   is no automated mechanism for the OP or the RP to verify the
+   obtain relying party credentials.  During discovery and registration
+   there is no automated mechanism for the OP or the RP to verify the
    information exchanged during this process.  All the information is
    self-asserted.
 
@@ -49,7 +49,7 @@ Table of Contents
      4.3.  Constructing a Signed Metadata Statement  . . . . . . . .   8
      4.4.  Verifying the Metadata Statement  . . . . . . . . . . . .   9
      4.5.  Flattening the compounded metadata statement  . . . . . .  10
-   5.  OpenID Connect Communication  . . . . . . . . . . . . . . . .  10
+   5.  OpenID Connect Communication  . . . . . . . . . . . . . . . .  11
 
 
 
@@ -88,8 +88,8 @@ Hedberg, et al.         Expires December 28, 2017               [Page 1]
      B.3.  Recent  . . . . . . . . . . . . . . . . . . . . . . . . .  23
      B.4.  And now for the registration request  . . . . . . . . . .  24
        B.4.1.  Metadata statements about Foodle signed by UNINETT  .  25
-     B.5.  Foodle client registration  . . . . . . . . . . . . . . .  26
-     B.6.  Unpacking the client registration request . . . . . . . .  29
+     B.5.  Foodle relying party registration . . . . . . . . . . . .  26
+     B.6.  Unpacking the relying party registration request  . . . .  29
      B.7.  Unpacked and flattened metadata statement per FO  . . . .  29
        B.7.1.  ***  ***  . . . . . . . . . . . . . . . . . . . . . .  29
        B.7.2.  ***  ***  . . . . . . . . . . . . . . . . . . . . . .  29
@@ -125,7 +125,7 @@ Hedberg, et al.         Expires December 28, 2017               [Page 2]
    create what we call metadata statements.  Metadata statements
    together with the use of a trusted third party (that verifies and
    enforces some common policy), can be used to transfer verified data
-   and trust in the data between clients and servers.
+   and trust in the data between relying partys and servers.
 
 2.  Requirements Language
 
@@ -135,13 +135,13 @@ Hedberg, et al.         Expires December 28, 2017               [Page 2]
 
 3.  Metadata Statement
 
-   A metadata statement asserts metadata values about an entity (client
-   or server).
+   A metadata statement asserts metadata values about an entity (relying
+   party or provider).
 
 3.1.  Metadata Common to All Entities
 
-   These extra metadata parameters appear in both provider and client
-   metadata statements:
+   These extra metadata parameters appear in both provider and relying
+   party metadata statements:
 
    signing_keys
       OPTIONAL.  A JSON Web Key Set (JWKS) [RFC7517] representing the
@@ -151,9 +151,10 @@ Hedberg, et al.         Expires December 28, 2017               [Page 2]
       be confused with the keys that an OIDC entity is using for
       Authorization/AccessToken/RefreshToken/UserInfo requests and
       responses.  Those keys are found at "jwks_uri" or in the case of
-      client registration also possibly as values to "jwks".  The
+      relying party registration also possibly as values to "jwks".  The
       signing keys are used to sign metadata statements and can also be
-      used by an OP to sign a client registration request response.
+      used by an OP to sign a relying party registration request
+      response.
 
    signing_keys_uri
       OPTIONAL.  Location where a JWKS representing the public part of
@@ -161,7 +162,6 @@ Hedberg, et al.         Expires December 28, 2017               [Page 2]
       Content-Type "application/jose" to indicate that the JWKS is in
       the form of a JSON Web Signature (JWS) [RFC7515] using the JWS
       Compact Serialization.  The signing key used to sign the JWKS
-      belongs to the immediate superior.  That is, the entity that signs
 
 
 
@@ -170,6 +170,7 @@ Hedberg, et al.         Expires December 28, 2017               [Page 3]
                         OpenID Connect Federation              June 2017
 
 
+      belongs to the immediate superior.  That is, the entity that signs
       this entity's metadata statement also signs the JWKS stored at
       "signing_keys_uri".
 
@@ -220,7 +221,6 @@ Hedberg, et al.         Expires December 28, 2017               [Page 3]
 
 
 
-
 Hedberg, et al.         Expires December 28, 2017               [Page 4]
 
                         OpenID Connect Federation              June 2017
@@ -251,11 +251,11 @@ Hedberg, et al.         Expires December 28, 2017               [Page 4]
 
    To that list is added:
 
-   scopes
+   rp_scopes
       RECOMMENDED.  JSON array containing a list of the RFC6749
-      [RFC6749] scope values that this client expects to use.
+      [RFC6749] scope values that this relying party expects to use.
 
-   claims
+   rp_claims
       RECOMMENDED.  JSON array containing a list of the Claim Names of
       the Claims that the OpenID Client wants values for.
 
@@ -320,12 +320,12 @@ Hedberg, et al.         Expires December 28, 2017               [Page 5]
    (the federation operator) a second level entity (B) representing a
    federation member and C which could be an entity within the
    federation like an OP or an RP owned/controlled by B.  If we assume
-   that C is an RP then ms_C would typically be a client registration
-   request and SK[C] would be the signing keys that the RP used to sign
-   the JWKS placed at signed_jwks_uri.  The statement signed by A (ms_b
-   + SK[B]) would contain metadata common to all RPs owned by the member
-   (ms_B) and the signing key (SK[B]) that the member uses to sign
-   requests from the member's RPs.
+   that C is an RP then ms_C would typically be a relying party
+   registration request and SK[C] would be the signing keys that the RP
+   used to sign the JWKS placed at signed_jwks_uri.  The statement
+   signed by A (ms_b + SK[B]) would contain metadata common to all RPs
+   owned by the member (ms_B) and the signing key (SK[B]) that the
+   member uses to sign requests from the member's RPs.
 
    Note that the level N requester is the level N+1 signer.
 
@@ -437,11 +437,11 @@ Hedberg, et al.         Expires December 28, 2017               [Page 7]
    entity or a group of similar entities.
 
    1.  The "requester" constructs a signing request by collecting the
-       necessary client or provider metadata as described in Section 3.
+       necessary relying party or provider metadata as described in
+       Section 3.
 
    2.  If this is about the top most metadata statement (ms_0) then no
        metadata statement will be added to the metadata statement.  If
-       it is a more specific metadata statement (ms_1...n) then more
 
 
 
@@ -450,6 +450,7 @@ Hedberg, et al.         Expires December 28, 2017               [Page 8]
                         OpenID Connect Federation              June 2017
 
 
+       it is a more specific metadata statement (ms_1...n) then more
        general metadata statement/-s MUST be added.  Dependent on setup
        the metadata statement can be added by the requester or the
        signer.
@@ -497,7 +498,6 @@ Hedberg, et al.         Expires December 28, 2017               [Page 8]
    metadata statement.  If this is signed by a FO, you have the public
    part of the signing keys from then you can verify the signature of
    the metadata statement.  If the verification concludes that the
-   signature was correct you can now take the signing keys that was
 
 
 
@@ -506,6 +506,7 @@ Hedberg, et al.         Expires December 28, 2017               [Page 9]
                         OpenID Connect Federation              June 2017
 
 
+   signature was correct you can now take the signing keys that was
    included in the signed document and use those to verify the second
    innermost signed metadata statement.  And so on.
 
@@ -549,7 +550,6 @@ Hedberg, et al.         Expires December 28, 2017               [Page 9]
    flatten it to get a useful metadata statement.  To do this you can
    for instance use the method outlined in Appendix A
 
-5.  OpenID Connect Communication
 
 
 
@@ -561,6 +561,8 @@ Hedberg, et al.         Expires December 28, 2017              [Page 10]
 
                         OpenID Connect Federation              June 2017
 
+
+5.  OpenID Connect Communication
 
    The trust between the entities is established using the above
    described extensions in the first two steps of the communication
@@ -591,10 +593,10 @@ Hedberg, et al.         Expires December 28, 2017              [Page 10]
 
 5.2.  Client Registration
 
-   The OP MUST support dynamic client registration as described in
-   OpenID Connect Dynamic Client Registration 1.0 [OpenID.Registration].
-   The RP makes a Client Registration Request including the additional
-   metadata specified above.
+   The OP MUST support dynamic relying party registration as described
+   in OpenID Connect Dynamic Client Registration 1.0
+   [OpenID.Registration].  The RP makes a Client Registration Request
+   including the additional metadata specified above.
 
    The RP SHOULD have the complete request signed by its superior in the
    signing chain and MAY have it signed in advance.
@@ -602,14 +604,12 @@ Hedberg, et al.         Expires December 28, 2017              [Page 10]
 5.3.  Client Registration response
 
    It is unlikely that an OP can prepare a number of signed Metadata
-   statements representing client registration responses in advance.
-   Still if the OP wants to have the whole response signed it has two
-   choices.  Either the superior signer has a service that can sign
-   statements on-the-fly or the OP signs it itself.  If the later the OP
-   needs to have a blank (only containing signing_keys) metadata
+   statements representing relying party registration responses in
+   advance.  Still if the OP wants to have the whole response signed it
+   has two choices.  Either the superior signer has a service that can
+   sign statements on-the-fly or the OP signs it itself.  If the later
+   the OP needs to have a blank (only containing signing_keys) metadata
    statement signed by the superior.  Once it has that it can sign the
-   response plus the signed metadata statement and construct a
-
 
 
 
@@ -618,6 +618,7 @@ Hedberg, et al.         Expires December 28, 2017              [Page 11]
                         OpenID Connect Federation              June 2017
 
 
+   response plus the signed metadata statement and construct a
    compounded metadata statement that can be verified using the method
    described in Section 4.4.
 
@@ -626,11 +627,11 @@ Hedberg, et al.         Expires December 28, 2017              [Page 11]
 6.1.  Choosing federation
 
    This draft allows any entity to belong to more than one federation.
-   During the provider discovery and client registration process, the
-   parties have to agree on which federation to use.  Ultimately, the OP
-   decides.
+   During the provider discovery and relying party registration process,
+   the parties have to agree on which federation to use.  Ultimately,
+   the OP decides.
 
-      The client asks for the provider information
+      The relying party asks for the provider information
 
       The OP, using some rule, may publish one or several
       "metadata_statements".  If it publishes more than one
@@ -642,7 +643,7 @@ Hedberg, et al.         Expires December 28, 2017              [Page 11]
       belongs to.
 
       If the RP published more than one "metadata_statements", then the
-      OP should/must choose one and make that known in the client
+      OP should/must choose one and make that known in the relying party
       registration response.  One way of doing this is described in
       Section 5.3
 
@@ -668,14 +669,13 @@ Hedberg, et al.         Expires December 28, 2017              [Page 11]
 
 
 
-
 Hedberg, et al.         Expires December 28, 2017              [Page 12]
 
                         OpenID Connect Federation              June 2017
 
 
    The following is a non-normative example of an absolutely minimal
-   client registration request sent to an OP:
+   relying party registration request sent to an OP:
 
    {
      "redirect_uris": ["https://example.com/rp2/callback"],
@@ -694,7 +694,7 @@ Hedberg, et al.         Expires December 28, 2017              [Page 12]
    response.
 
    The following is a non-normative example of an OPs response on the
-   client registration request above:
+   relying party registration request above:
 
    {
      "client_id": "abcdefgh",
@@ -757,10 +757,10 @@ Hedberg, et al.         Expires December 28, 2017              [Page 13]
 
       Each signature has a timeout.
 
-      A client registration has a timeout.
+      A relying party registration has a timeout.
 
    Taking this into consideration, an OP MUST NOT assign a lifetime to a
-   client registration that exceeds the lifetime of the metadata
+   relying party registration that exceeds the lifetime of the metadata
    statement signatures.
 
 8.  Acknowledgements
@@ -821,16 +821,16 @@ Hedberg, et al.         Expires December 28, 2017              [Page 14]
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
-              DOI 10.17487/RFC2119, March 1997,
-              <http://www.rfc-editor.org/info/rfc2119>.
+              DOI 10.17487/RFC2119, March 1997, <https://www.rfc-
+              editor.org/info/rfc2119>.
 
    [RFC6749]  Hardt, D., Ed., "The OAuth 2.0 Authorization Framework",
               RFC 6749, DOI 10.17487/RFC6749, October 2012,
-              <http://www.rfc-editor.org/info/rfc6749>.
+              <https://www.rfc-editor.org/info/rfc6749>.
 
    [RFC6962]  Laurie, B., Langley, A., and E. Kasper, "Certificate
               Transparency", RFC 6962, DOI 10.17487/RFC6962, June 2013,
-              <http://www.rfc-editor.org/info/rfc6962>.
+              <https://www.rfc-editor.org/info/rfc6962>.
 
 
 
@@ -844,11 +844,11 @@ Hedberg, et al.         Expires December 28, 2017              [Page 15]
 
    [RFC7515]  Jones, M., Bradley, J., and N. Sakimura, "JSON Web
               Signature (JWS)", RFC 7515, DOI 10.17487/RFC7515, May
-              2015, <http://www.rfc-editor.org/info/rfc7515>.
+              2015, <https://www.rfc-editor.org/info/rfc7515>.
 
    [RFC7517]  Jones, M., "JSON Web Key (JWK)", RFC 7517,
-              DOI 10.17487/RFC7517, May 2015,
-              <http://www.rfc-editor.org/info/rfc7517>.
+              DOI 10.17487/RFC7517, May 2015, <https://www.rfc-
+              editor.org/info/rfc7517>.
 
 Appendix A.  Constructing Entity Metadata
 
@@ -883,9 +883,9 @@ Appendix A.  Constructing Entity Metadata
       A dictionary A is a subset of a dictionary B if every key in A is
       in B and the value of A[x] is a subset of B[x].
 
-   The following is a non-normative example of a set of client-specific
-   metadata statements who together form the metadata for an entity:
-
+   The following is a non-normative example of a set of relying party-
+   specific metadata statements who together form the metadata for an
+   entity:
 
 
 
@@ -1278,9 +1278,9 @@ B.3.  Recent
    Time to create the Foodle (RP) metadata statement
 
    We take a road similar to the request/request_uri path.  That is, we
-   include all the information about the client that needs to be protect
-   from tampering by a MITM and places it in the metadata statement
-   signing request.
+   include all the information about the relying party that needs to be
+   protect from tampering by a MITM and places it in the metadata
+   statement signing request.
 
 
 
@@ -1439,14 +1439,14 @@ Hedberg, et al.         Expires December 28, 2017              [Page 25]
      "sub": "https://foodle.uninett.no"
    }
 
-B.5.  Foodle client registration
+B.5.  Foodle relying party registration
 
-   Now, when Foodle wants to register as a client with an OP it adds the
-   signed Metadata statement it received from UNINETT to the client
-   registration request.  Note that 'redirect_uri' MUST be in the
-   registration request as this is required by the OIDC standard.  If
-   the 'redirect_uris' values that are transferred unprotected were to
-   differ from what's in the signed metadata statement, the OP MUST
+   Now, when Foodle wants to register as a relying party with an OP it
+   adds the signed Metadata statement it received from UNINETT to the
+   relying party registration request.  Note that 'redirect_uri' MUST be
+   in the registration request as this is required by the OIDC standard.
+   If the 'redirect_uris' values that are transferred unprotected were
+   to differ from what's in the signed metadata statement, the OP MUST
    refuse the registration.
 
    Registration Request published by RP
@@ -1570,7 +1570,7 @@ Hedberg, et al.         Expires December 28, 2017              [Page 28]
                         OpenID Connect Federation              June 2017
 
 
-B.6.  Unpacking the client registration request
+B.6.  Unpacking the relying party registration request
 
    An OP that has the public part of the signing keys for both the
    SWAMID and Feide federations can now verify the signature chains all

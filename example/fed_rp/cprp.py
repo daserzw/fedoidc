@@ -51,7 +51,7 @@ def create_result_page(userinfo, access_token, client):
     """
     Display information from the Authentication.
     """
-    element = ["<h2>You have successfully loged in!</h2>",
+    element = ["<h2>You have successfully logged in!</h2>",
                "<dl><dt>Accesstoken</dt><dd>{}</dd>".format(access_token),
                "<h3>Endpoints</h3>"]
 

@@ -2,6 +2,8 @@ import logging
 import sys
 import traceback
 
+from jwkest.jws import JWS
+
 from fedoidc import ClientMetadataStatement
 from fedoidc.signing_service import SigningServiceError
 
@@ -25,7 +27,8 @@ class Provider(provider.Provider):
                  verify_ssl=True, capabilities=None, schema=OpenIDSchema,
                  jwks_uri='', jwks_name='', baseurl=None, client_cert=None,
                  federation_entity=None, fo_priority=None,
-                 response_metadata_statements=None, signer=None):
+                 response_metadata_statements=None, signer=None,
+                 signed_jwks_uri=''):
         provider.Provider.__init__(
             self, name, sdb, cdb, authn_broker, userinfo, authz,
             client_authn, symkey, urlmap=urlmap, ca_certs=ca_certs,
@@ -38,6 +41,7 @@ class Provider(provider.Provider):
         self.fo_priority = fo_priority
         self.response_metadata_statements = response_metadata_statements
         self.signer = signer
+        self.signed_jwks_uri = signed_jwks_uri
 
     def _signer(self):
         if self.signer:
@@ -76,6 +80,21 @@ class Provider(provider.Provider):
         else:
             raise SigningServiceError('No signer')
 
+    def store_signed_jwks_uri(self):
+        """
+        
+        :return: 
+        """
+        file_name = 'static/signed_jwks'
+        _jwks = self.keyjar.export_jwks()
+        _jws = JWS(_jwks)
+        _jwt = _jws.sign_compact(
+            self.federation_entity.keyjar.get_signing_key())
+        fp = open(file_name, 'w')
+        fp.write(_jwt)
+        fp.close()
+        return ''.join([self.baseurl, file_name])
+
     def create_fed_providerinfo(self, fos=None, pi_args=None, signed=True):
         """
         Create federation aware provider info.
@@ -87,7 +106,9 @@ class Provider(provider.Provider):
 
         pcr = self.create_providerinfo(setup=pi_args)
 
-        if signed:
+        if self.federation_entity.signer.signing_service:
+            # Add signed_jwks_uri
+            pcr['signed_jwks_uri'] = self.signed_jwks_uri
             _ms = self.create_signed_provider_info('discovery', fos, pi_args)
             pcr = self.federation_entity.extend_with_ms(pcr, _ms)
         else:

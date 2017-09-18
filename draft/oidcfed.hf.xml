@@ -25,7 +25,7 @@
   <front>
 
     <title abbrev="OpenID Connect Federation">OpenID Connect Federation 1.0
-      - draft 03
+      - draft 04
     </title>
 
     <author fullname="Roland Hedberg" role="editor" surname="Hedberg"
@@ -61,7 +61,7 @@
       </address>
     </author>
 
-    <date day="26" month="June" year="2017"/>
+    <date day="18" month="September" year="2017"/>
 
     <workgroup>OpenID Connect Working Group</workgroup>
 
@@ -70,7 +70,7 @@
     <abstract>
       <t>The OpenID Connect standard specifies how a Relying Party (RP)
         can discover metadata about an OpenID Provider (OP), and then
-        register to obtain client credentials. During discovery and
+        register to obtain relying party credentials. During discovery and
         registration
         there is no automated mechanism for the OP or the RP to verify
         the
@@ -106,8 +106,7 @@
         the sole protection against attacks on the transferred
         information.
         These last couple of years a number of problems with OpenSSL,
-        which
-        is probably the most widely used TLS library, have been
+        which is probably the most widely used TLS library, have been
         discovered that put reasonable doubt into this dependency.
       </t>
       <t>
@@ -118,7 +117,7 @@
         metadata statements. Metadata statements together with the
         use of a trusted third party (that verifies and enforces some
         common policy), can be used to transfer verified data and trust
-        in the data between clients and servers.
+        in the data between relying parties and provider.
       </t>
     </section>
 
@@ -132,13 +131,12 @@
     <section title="Metadata Statement" anchor="entity_metadata">
       <t>
         A metadata statement asserts metadata values about an entity
-        (client or
-        server).
+        (relying party or provider).
       </t>
       <section title="Metadata Common to All Entities">
         <t>
           These extra metadata parameters appear in both provider
-          and client metadata statements:
+          and relying party metadata statements:
         </t>
         <t>
           <list style="hanging">
@@ -157,12 +155,12 @@
               requests and responses. Those keys are found at
               <spanx style="verb">jwks_uri</spanx>
               or in the
-              case of client registration
+              case of relying party registration
               also possibly as values to
               <spanx style="verb">jwks</spanx>.
               The signing keys are used to sign metadata
               statements and can also be used by an
-              OP to sign a client registration request response.
+              OP to sign a relying party registration request response.
             </t>
             <t hangText="signing_keys_uri">
               <vspace/>
@@ -307,15 +305,15 @@
         <t>
           To that list is added:
           <list style="hanging">
-            <t hangText="scopes">
+            <t hangText="rp_scopes">
               <vspace/>
               RECOMMENDED.
               JSON array containing a list of the
               <xref target="RFC6749">RFC6749</xref>
               scope values that
-              this client expects to use.
+              this relying party expects to use.
             </t>
-            <t hangText="claims">
+            <t hangText="rp_claims">
               <vspace/>
               RECOMMENDED.
               JSON array containing a list of the Claim Names of
@@ -393,7 +391,7 @@
             which could be an entity within the federation like
             an OP or an RP owned/controlled by B.
             If we assume that C is an RP then ms_C
-            would typically be a client registration request and
+            would typically be a relying party registration request and
             SK[C] would be the signing keys that the RP used to
             sign the JWKS placed at signed_jwks_uri. The statement
             signed by A (ms_b + SK[B]) would contain metadata
@@ -534,7 +532,7 @@
               The
               <spanx style="verb">requester</spanx>
               constructs a signing request by collecting the
-              necessary client or provider metadata as described
+              necessary relying party or provider metadata as described
               in <xref target='entity_metadata'/>.
             </t>
             <t>
@@ -708,7 +706,7 @@ def unpack(jwt, sign_keys):
       </section>
       <section title="Client Registration" anchor="Clireg">
         <t>
-          The OP MUST support dynamic client registration
+          The OP MUST support dynamic relying party registration
           as described in
           <xref target="OpenID.Registration">OpenID Connect Dynamic
             Client
@@ -727,7 +725,7 @@ def unpack(jwt, sign_keys):
         <t>
           It is unlikely that an OP can prepare a number of signed
           Metadata
-          statements representing client registration responses in
+          statements representing relying party registration responses in
           advance. Still if the OP wants to have the whole response
           signed it has two choices. Either the superior signer has
           a service that can sign statements on-the-fly or the
@@ -745,14 +743,13 @@ def unpack(jwt, sign_keys):
         <t>
           This draft allows any entity to belong to more than one
           federation.
-          During the provider discovery and client registration
-          process, the
-          parties have to agree on which federation to use.
+          During the provider discovery and relying party registration
+          process, the parties have to agree on which federation to use.
           Ultimately, the OP decides.
         </t>
         <t>
           <list style="number">
-            <t>The client asks for the provider information</t>
+            <t>The relying party asks for the provider information</t>
             <t>The OP, using some rule, may publish one or several
               <spanx style="verb">metadata_statements</spanx>.
               If it publishes more than one
@@ -768,7 +765,7 @@ def unpack(jwt, sign_keys):
               <spanx style="verb">metadata_statements</spanx>,
               then the OP should/must choose one and make that
               known
-              in the client registration response. One way of
+              in the relying party registration response. One way of
               doing
               this is described in
               <xref target='cliregresp'/>
@@ -802,7 +799,7 @@ def unpack(jwt, sign_keys):
         <t>
           <figure>
             <preamble>The following is a non-normative example of an
-              absolutely minimal client registration request sent
+              absolutely minimal relying party registration request sent
               to an OP:
             </preamble>
 
@@ -833,7 +830,7 @@ def unpack(jwt, sign_keys):
           <figure>
             <preamble>The following is a non-normative example of an
               OPs
-              response on the client registration request above:
+              response on the relying party registration request above:
             </preamble>
 
             <artwork><![CDATA[
@@ -895,11 +892,11 @@ def unpack(jwt, sign_keys):
       <t>There are a number of timeouts that MUST considered:
         <list style="empty">
           <t>Each signature has a timeout.</t>
-          <t>A client registration has a timeout.</t>
+          <t>A relying party registration has a timeout.</t>
         </list>
       </t>
       <t>Taking this into consideration, an OP MUST NOT assign a
-        lifetime to a client registration that exceeds the lifetime of
+        lifetime to a relying party registration that exceeds the lifetime of
         the metadata statement signatures.
       </t>
     </section>
@@ -1130,7 +1127,7 @@ def unpack(jwt, sign_keys):
       </t>
       <t>
         The following is a non-normative example of
-        a set of client-specific metadata statements
+        a set of relying party-specific metadata statements
         who together form the metadata for an entity:
         <figure>
           <preamble>
@@ -1443,7 +1440,7 @@ IMUiAwxRWXd71omQ",
         </t>
         <t>
           We take a road similar to the request/request_uri path. That is, we
-          include all the information about the client that needs to be
+          include all the information about the relying party that needs to be
           protect from tampering by a MITM and places it in the
           metadata statement signing request.
         </t>
@@ -1598,11 +1595,11 @@ eUKCTlK6eW2WuBQ"
           </figure>
         </section>
       </section>
-      <section title="Foodle client registration">
+      <section title="Foodle relying party registration">
         <t>
-          Now, when Foodle wants to register as a client with an OP it adds
+          Now, when Foodle wants to register as a relying party with an OP it adds
           the signed Metadata statement it received from UNINETT to
-          the client registration request.
+          the relying party registration request.
           Note that 'redirect_uri' MUST be in the registration request as
           this is required by the OIDC standard. If the 'redirect_uris' values
           that are transferred unprotected
@@ -1706,7 +1703,7 @@ Qu2jiG6rZQ"
 ]]></artwork>
         </figure>
       </section>
-      <section title="Unpacking the client registration request">
+      <section title="Unpacking the relying party registration request">
         <t>
           An OP that has the public part of the signing keys for both the
           SWAMID and Feide federations can now verify the signature chains all

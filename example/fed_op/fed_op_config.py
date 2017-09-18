@@ -100,3 +100,6 @@ PRIORITY = ['https://swamid.sunet.se']
 
 # Superior
 SUPERIOR = 'https://sunet.se'
+
+# Where a signed version of the JWKS is kept
+SIGNED_JWKS_FILE_NAME = 'static/signed_jwks'
