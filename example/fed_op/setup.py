@@ -263,7 +263,13 @@ def op_setup(args, config, provider_cls):
         f.close()
 
         _op.jwks_uri = "%s%s" % (_op.baseurl, config.JWKS_FILE_NAME)
-        _op.signed_jwks_uri = "%s%s" % (_op.baseurl, config.SIGNED_JWKS_PATH)
+
+        try:
+            _op.signed_jwks_uri = "%s%s" % (_op.baseurl,
+                                            config.SIGNED_JWKS_PATH)
+        except AttributeError:
+            pass
+
         _op.keyjar.verify_ssl = kwargs["verify_ssl"]
 
     for b in _op.keyjar[""]:
