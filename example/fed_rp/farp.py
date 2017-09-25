@@ -9,6 +9,8 @@ import cherrypy
 from fedoidc.rp_handler import FedRPHandler
 from fedoidc.test_utils import create_federation_entity
 from fedoidc.test_utils import own_sign_keys
+from jwkest.jws import JWS
+from oic.utils.keyio import build_keyjar, KeyJar
 
 logger = logging.getLogger("")
 LOGFILE_NAME = 'farp.log'
@@ -21,6 +23,36 @@ logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
 
 SIGKEY_NAME = 'sigkey.jwks'
+
+
+def get_jwks(path, private_path):
+    if os.path.isfile(private_path):
+        _jwks = open(path, 'r').read()
+        _kj = KeyJar()
+        _kj.import_jwks(json.loads(_jwks), '')
+    else:
+        _kj = build_keyjar(config.ENT_KEYS)[1]
+        jwks = _kj.export_jwks(private=True)
+        fp = open(private_path, 'w')
+        fp.write(json.dumps(jwks))
+        fp.close()
+
+    jwks = _kj.export_jwks()  # public part
+    fp = open(path, 'w')
+    fp.write(json.dumps(jwks))
+    fp.close()
+
+    return _kj
+
+
+def store_signed_jwks_uri(keyjar, sign_keyjar, path, alg):
+    _jwks = keyjar.export_jwks()
+    _jws = JWS(_jwks, alg=alg)
+    _jwt = _jws.sign_compact(sign_keyjar.get_signing_key())
+    fp = open(path, 'w')
+    fp.write(_jwt)
+    fp.close()
+
 
 if __name__ == '__main__':
     import argparse
@@ -56,6 +88,11 @@ if __name__ == '__main__':
             'tools.staticdir.dir': os.path.join(folder, 'static'),
             'tools.staticdir.debug': True,
             'tools.staticdir.on': True,
+            'tools.staticdir.content_types': {
+                'json': 'application/json',
+                'jwks': 'application/json',
+                'jose': 'application/jose'
+            },
             'log.screen': True,
             'cors.expose_public.on': True
         }}
@@ -69,12 +106,20 @@ if __name__ == '__main__':
     else:
         _base_url = config.BASEURL
 
+
+    _kj = get_jwks(config.JWKS_PATH, 'keys/jwks.json')
+
     rph = FedRPHandler(base_url=_base_url,
                        registration_info=config.CONSUMER_CONFIG,
                        flow_type='code', hash_seed="BabyHoldOn",
-                       scope=config.CONSUMER_CONFIG['scope'])
+                       scope=config.CONSUMER_CONFIG['scope'],
+                       keyjar=_kj,
+                       jwks_path=config.JWKS_PATH,
+                       signed_jwks_path=config.SIGNED_JWKS_PATH)
 
     sign_kj = own_sign_keys(SIGKEY_NAME, _base_url, config.SIG_DEF_KEYS)
+    store_signed_jwks_uri(_kj, sign_kj, config.SIGNED_JWKS_PATH,
+                          config.SIGNED_JWKS_ALG)
 
     # internalized request signing server using the superiors keys
     rp_fed_ent = create_federation_entity(iss=_base_url, ms_dir=config.MS_DIR,

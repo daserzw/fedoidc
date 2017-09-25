@@ -66,6 +66,11 @@ if __name__ == '__main__':
             'tools.staticdir.dir': os.path.join(folder, 'static'),
             'tools.staticdir.debug': True,
             'tools.staticdir.on': True,
+            'tools.staticdir.content_types': {
+                'json': 'application/json',
+                'jose': 'application/jose',
+                'jwks': 'application/json'
+            },
             'log.screen': True,
             'cors.expose_public.on': True
         }}
