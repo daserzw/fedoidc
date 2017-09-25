@@ -3,6 +3,8 @@ import logging
 import sys
 import traceback
 
+from oic.utils.keyio import key_export
+
 from fedoidc import client
 from jwkest import as_bytes
 
@@ -34,8 +36,8 @@ CLIENT_CONFIG = {}
 
 class FedRPHandler(object):
     def __init__(self, base_url='', registration_info=None, flow_type='code',
-                 federation_entity=None, hash_seed="", scope=None,
-                 verify_ssl=False, **kwargs):
+            federation_entity=None, hash_seed="", scope=None,
+            verify_ssl=False, keyjar=None, **kwargs):
         self.federation_entity = federation_entity
         self.flow_type = flow_type
         self.registration_info = registration_info
@@ -43,6 +45,23 @@ class FedRPHandler(object):
         self.hash_seed = as_bytes(hash_seed)
         self.scope = scope or ['openid']
         self.verify_ssl = verify_ssl
+        self.keyjar = keyjar
+
+        if self.base_url.endswith('/'):
+            _int = ''
+        else:
+            _int = '/'
+
+        try:
+            self.jwks_uri = '{}{}{}'.format(self.base_url, _int,
+                                            kwargs['jwks_path'])
+        except KeyError:
+            self.jwks_uri = ''
+        try:
+            self.signed_jwks_uri = '{}{}{}'.format(self.base_url, _int,
+                                                  kwargs['signed_jwks_path'])
+        except KeyError:
+            self.signed_jwks_uri = ''
 
         self.extra = kwargs
 
@@ -62,16 +81,23 @@ class FedRPHandler(object):
             client.redirect_uris = [callback]
             client.post_logout_redirect_uris = [logout_callback]
             client.federation_entity = self.federation_entity
-
-            _me = self.registration_info.copy()
-            _me["redirect_uris"] = [callback]
+            client.keyjar = self.keyjar
+            client.jwks_uri = self.jwks_uri
+            client.signed_jwks_uri = self.signed_jwks_uri
 
             provider_conf = client.provider_config(issuer)
 
             logger.debug("Got provider config: %s", provider_conf)
 
             logger.debug("Registering RP")
+            _me = self.registration_info.copy()
+            _me["redirect_uris"] = [callback]
+            if self.jwks_uri:
+                _me['jwks_uri'] = self.jwks_uri
+
             if client.federation:
+                if self.signed_jwks_uri:
+                    _me['signed_jwks_uri'] = self.signed_jwks_uri
                 reg_info = client.register(
                     provider_conf["registration_endpoint"], **_me)
             else:
@@ -234,7 +260,7 @@ class FedRPHandler(object):
         else:
             access_token = authresp["access_token"]
 
-        #userinfo = self.verify_token(client, access_token)
+        # userinfo = self.verify_token(client, access_token)
 
         inforesp = self.get_userinfo(client, authresp, access_token)
 

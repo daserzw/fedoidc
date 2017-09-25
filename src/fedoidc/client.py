@@ -1,4 +1,11 @@
+import json
 import logging
+
+import fedoidc
+from jwkest.jws import factory
+from jwkest.jws import JWS
+from oic.utils.keyio import KeyBundle
+from oic.utils.keyio import KeyJar
 
 from fedoidc import ClientMetadataStatement
 from fedoidc import ProviderConfigurationResponse
@@ -32,9 +39,9 @@ class Client(oic.Client):
     """
 
     def __init__(self, client_id=None, ca_certs=None,
-                 client_prefs=None, client_authn_method=None, keyjar=None,
-                 verify_ssl=True, config=None, client_cert=None,
-                 federation_entity=None, fo_priority=None):
+            client_prefs=None, client_authn_method=None, keyjar=None,
+            verify_ssl=True, config=None, client_cert=None,
+            federation_entity=None, fo_priority=None):
         oic.Client.__init__(
             self, client_id=client_id, ca_certs=ca_certs,
             client_prefs=client_prefs, client_authn_method=client_authn_method,
@@ -46,6 +53,20 @@ class Client(oic.Client):
         self.federation = ''
         self.provider_federations = None
         self.registration_federations = None
+
+    def get_signed_keys(self, uri, signing_keys):
+        """
+
+        :param uri: Where the signed JWKS can be found
+        :param signing_keys: Dictionary representation of a JWKS
+        :return: list of KeyBundle instances or None
+        """
+        r = self.http_request(uri, allow_redirects=True)
+        if r.status_code == 200:
+
+            return _kb
+        else:
+            return None
 
     def parse_federation_provider_info(self, resp, issuer):
         """
@@ -63,22 +84,28 @@ class Client(oic.Client):
         :param issuer: The OpenID Provider ID
         """
 
-        ms_list = self.federation_entity.get_metadata_statement(
+        les = self.federation_entity.get_metadata_statement(
             resp, cls=ProviderConfigurationResponse)
 
-        if not ms_list:  # No metadata statement that I can use
+        if not les:  # No metadata statement that I can use
             raise ParameterError('No trusted metadata')
 
         # response is a list of metadata statements
 
         # At this point in time I may not know within which
         # federation I'll be working.
-        if len(ms_list) == 1:
-            ms = ms_list[0]
+        if len(les) == 1:
+            ms = les[0]
+            _claims = ms.protected_claims()
             self.handle_provider_config(ms.protected_claims(), issuer)
+            if 'signed_jwks_uri' in _claims:
+                _kb = fedoidc.KeyBundle(source=_claims['signed_jwks_uri'],
+                                        verify_keys=les.sup.signing_keys,
+                                        verify_ssl=False)
+                _kb.do_remote()
             self.federation = ms.fo
         else:
-            self.provider_federations = ms_list
+            self.provider_federations = les
 
     def parse_federation_registration(self, resp, issuer):
         """
@@ -202,8 +229,8 @@ class Client(oic.Client):
         return ClientMetadataStatement(**_leo.protected_claims())
 
     def provider_config(self, issuer, keys=True, endpoints=True,
-                        response_cls=ProviderConfigurationResponse,
-                        serv_pattern=OIDCONF_PATTERN):
+            response_cls=ProviderConfigurationResponse,
+            serv_pattern=OIDCONF_PATTERN):
         """
         The high level method that should be used, by an application, to get 
         the provider info.
@@ -262,6 +289,21 @@ class Client(oic.Client):
             return self.chose_provider_federation(_issuer)
         else:  # Otherwise there should be exactly one metadata statement I
             return self.provider_info
+
+    def store_signed_jwks_uri(self):
+        """
+
+        :return:
+        """
+        file_name = 'static/signed_jwks'
+        _jwks = self.keyjar.export_jwks()
+        _jws = JWS(_jwks)
+        _jwt = _jws.sign_compact(
+            self.federation_entity.keyjar.get_signing_key())
+        fp = open(file_name, 'w')
+        fp.write(_jwt)
+        fp.close()
+        return ''.join([self.baseurl, file_name])
 
     def federated_client_registration_request(self, **kwargs):
         """

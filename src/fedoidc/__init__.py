@@ -3,6 +3,7 @@ import logging
 
 from jwkest import as_unicode
 from jwkest.jws import factory
+from oic.utils import keyio
 from six import PY2
 from six import string_types
 
@@ -185,5 +186,57 @@ def is_lesser(a, b):
 IgnoreKeys = list(JasonWebToken.c_param.keys())
 
 #: When comparing metadata statement these claims should be ignored.
-DoNotCompare = list(set(MetadataStatement.c_param.keys()).difference(IgnoreKeys))
+DoNotCompare = list(
+    set(MetadataStatement.c_param.keys()).difference(IgnoreKeys))
 DoNotCompare.append('kid')
+# These 2 should definitely not be modifiedQ
+DoNotCompare.remove('signed_jwks_uri')
+DoNotCompare.remove('federation_usage')
+
+
+class KeyBundle(keyio.KeyBundle):
+    def __init__(self, keys=None, source="", cache_time=300, verify_ssl=True,
+            fileformat="jwk", keytype="RSA", keyusage=None,
+            verify_keys=None):
+        super(KeyBundle, self).__init__(keys=keys, source=source,
+                                        cache_time=cache_time,
+                                        verify_ssl=verify_ssl,
+                                        fileformat=fileformat,
+                                        keytype=keytype, keyusage=keyusage)
+        if verify_keys is not None:
+            if isinstance(verify_keys, KeyJar):
+                self.verify_keys = verify_keys
+            else:
+                self.verify_keys = KeyJar()
+                self.verify_keys.import_jwks(verify_keys, '')
+
+    def _parse_remote_response(self, response):
+        """
+        Parse simple JWKS or signed JWKS from the HTTP response.
+
+        :param response: HTTP response from the 'jwks_uri' or 'signed_jwks_uri'
+            endpoint
+        :return: response parsed as JSON
+        """
+        # Check if the content type is the right one.
+        try:
+            if response.headers["Content-Type"] == 'application/json':
+                logger.debug(
+                    "Loaded JWKS: %s from %s" % (response.text, self.source))
+                try:
+                    return json.loads(response.text)
+                except ValueError:
+                    return None
+            elif response.headers["Content-Type"] == 'application/jose':
+                logger.debug(
+                    "Signed JWKS: %s from %s" % (response.text, self.source))
+                _jws = factory(response.text)
+                _resp = _jws.verify_compact(
+                    response.text, keys=self.verify_keys.get_signing_key())
+                return _resp
+            else:
+                logger.error('Wrong content type: {}'.format(
+                    response.headers['Content-Type']))
+                return None
+        except KeyError:
+            pass

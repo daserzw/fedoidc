@@ -34,6 +34,8 @@ class ParseInfo(object):
         self.result = None
         self.branch = {}
         self.expires = 0
+        self.keyjar = None
+        self.signing_keys = None
 
 
 class LessOrEqual(object):
@@ -41,7 +43,8 @@ class LessOrEqual(object):
     Class in which to store the parse result from flattening a compounded
     metadata statement.
     """
-    def __init__(self, iss='', sup=None, exp=0):
+
+    def __init__(self, iss='', sup=None, exp=0, skeys=None):
         """
         :param iss: Issuer ID
         :param sup: Superior
@@ -58,6 +61,7 @@ class LessOrEqual(object):
         self.err = {}
         self.le = {}
         self.exp = exp
+        self.signing_keys = skeys
 
     def __setitem__(self, key, value):
         self.le[key] = value
@@ -163,8 +167,9 @@ class Operator(object):
     """
     An operator in a OIDC federation.
     """
+
     def __init__(self, keyjar=None, jwks_bundle=None, httpcli=None, iss=None,
-                 lifetime=0):
+            lifetime=0):
         """
 
         :param keyjar: Contains the operators signing keys
@@ -207,6 +212,7 @@ class Operator(object):
             pr.branch[meta_s] = _pi
             if _pi.result:
                 pr.parsed_statement.append(_pi.result)
+                pr.signing_keys = _pi.signing_keys
         return pr
 
     def _unpack(self, json_ms, keyjar, cls, jwt_ms=None, liss=None):
@@ -301,7 +307,7 @@ class Operator(object):
         return _pr
 
     def unpack_metadata_statement(self, json_ms=None, jwt_ms='', keyjar=None,
-                                  cls=ClientMetadataStatement, liss=None):
+            cls=ClientMetadataStatement, liss=None):
         """
         Starting with a signed JWT or a JSON document unpack and verify all
         the separate metadata statements.
@@ -331,7 +337,7 @@ class Operator(object):
             raise AttributeError('Need one of json_ms or jwt_ms')
 
     def pack_metadata_statement(self, metadata, keyjar=None, iss=None, alg='',
-                                jwt_args=None, lifetime=-1, **kwargs):
+            jwt_args=None, lifetime=-1, **kwargs):
         """
         Given a MetadataStatement instance create a signed JWT.
 
@@ -372,7 +378,7 @@ class Operator(object):
         else:
             return _jwt.pack(cls_instance=_metadata, owner=owner)
 
-    def evaluate_metadata_statement(self, metadata):
+    def evaluate_metadata_statement(self, metadata, keyjar=None):
         """
         Computes the resulting metadata statement from a compounded metadata
         statement.
@@ -387,8 +393,9 @@ class Operator(object):
 
         res = dict([(k, v) for k, v in metadata.items() if k not in IgnoreKeys])
 
+        les = []
+
         if 'metadata_statements' in metadata:
-            les = []
             for fo, ms in metadata['metadata_statements'].items():
                 if isinstance(ms, str):
                     ms = json.loads(ms)
@@ -398,6 +405,10 @@ class Operator(object):
                     except KeyError:
                         _sign = ''
                     le = LessOrEqual(sup=_le, iss=_sign, exp=ms['exp'])
+                    try:
+                        le.signing_keys = ms['signing_keys']
+                    except KeyError:
+                        pass
                     le.eval(res, _sign)
                     les.append(le)
             return les
@@ -410,7 +421,8 @@ class Operator(object):
             else:
                 le = LessOrEqual(iss=_iss, exp=metadata['exp'])
                 le.eval(res, _iss)
-            return [le]
+            les.append(le)
+            return les
 
     def correct_usage(self, metadata, federation_usage):
         """
@@ -467,8 +479,8 @@ class Operator(object):
 
 class FederationOperator(Operator):
     def __init__(self, keyjar=None, jwks_bundle=None, httpcli=None,
-                 iss=None, keyconf=None, bundle_sign_alg='RS256',
-                 remove_after=86400):
+            iss=None, keyconf=None, bundle_sign_alg='RS256',
+            remove_after=86400):
 
         Operator.__init__(self, keyjar=keyjar, jwks_bundle=jwks_bundle,
                           httpcli=httpcli, iss=iss)

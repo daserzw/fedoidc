@@ -1,10 +1,14 @@
+import json
 import logging
 import sys
 import traceback
 
+from jwkest.jws import factory
 from jwkest.jws import JWS
+from oic.utils.keyio import KeyJar
 
 from fedoidc import ClientMetadataStatement
+from fedoidc import KeyBundle
 from fedoidc.signing_service import SigningServiceError
 
 from oic.oauth2 import error
@@ -21,14 +25,15 @@ logger = logging.getLogger(__name__)
 
 class Provider(provider.Provider):
     """ OIDC OP class """
+
     def __init__(self, name, sdb, cdb, authn_broker, userinfo, authz,
-                 client_authn, symkey, urlmap=None, ca_certs="", keyjar=None,
-                 hostname="", template_lookup=None, template=None,
-                 verify_ssl=True, capabilities=None, schema=OpenIDSchema,
-                 jwks_uri='', jwks_name='', baseurl=None, client_cert=None,
-                 federation_entity=None, fo_priority=None,
-                 response_metadata_statements=None, signer=None,
-                 signed_jwks_uri=''):
+            client_authn, symkey, urlmap=None, ca_certs="", keyjar=None,
+            hostname="", template_lookup=None, template=None,
+            verify_ssl=True, capabilities=None, schema=OpenIDSchema,
+            jwks_uri='', jwks_name='', baseurl=None, client_cert=None,
+            federation_entity=None, fo_priority=None,
+            response_metadata_statements=None, signer=None,
+            signed_jwks_uri=''):
         provider.Provider.__init__(
             self, name, sdb, cdb, authn_broker, userinfo, authz,
             client_authn, symkey, urlmap=urlmap, ca_certs=ca_certs,
@@ -42,6 +47,27 @@ class Provider(provider.Provider):
         self.response_metadata_statements = response_metadata_statements
         self.signer = signer
         self.signed_jwks_uri = signed_jwks_uri
+        self.federation = ''
+
+    def get_signed_keys(self, uri, signing_keys):
+        """
+
+        :param uri: Where the signed JWKS can be found
+        :param signing_keys: Dictionary representation of a JWKS
+        :return: list of KeyBundle instances or None
+        """
+        r = self.server.http_request(uri, allow_redirects=True)
+        if r.status_code == 200:
+            _skj = KeyJar()
+            _skj.import_jwks(signing_keys, '')
+
+            _jws = factory(r.text)
+            _jwks = _jws.verify_compact(r.text, Keys=_skj.get_signing_key())
+            _kj = KeyJar()
+            _kj.import_jwks(json.loads(_jwks), '')
+            return _kj.issuer_keys['']
+        else:
+            return None
 
     def _signer(self):
         if self.signer:
@@ -182,11 +208,11 @@ class Provider(provider.Provider):
         logger.info(
             "registration_request:{}".format(sanitize(request.to_dict())))
 
-        ms_list = self.federation_entity.get_metadata_statement(request,
-                                                                'registration')
+        les = self.federation_entity.get_metadata_statement(request,
+                                                            'registration')
 
-        if ms_list:
-            ms = self.federation_entity.pick_by_priority(ms_list)
+        if les:
+            ms = self.federation_entity.pick_by_priority(les)
             self.federation = ms.fo
         else:  # Nothing I can use
             return error(error='invalid_request',
@@ -199,6 +225,12 @@ class Provider(provider.Provider):
             request = RegistrationRequest(
                 **ms.unprotected_and_protected_claims())
         result = self.client_registration_setup(request)
+        if 'signed_jwks_uri' in _pc:
+            _kb = KeyBundle(source=_pc['signed_jwks_uri'],
+                            verify_keys=ms.sup.signing_keys,
+                            verify_ssl=False)
+            _kb.do_remote()
+            result['signed_jwks_uri'] = _pc['signed_jwks_uri']
 
         if isinstance(result, Response):
             return result

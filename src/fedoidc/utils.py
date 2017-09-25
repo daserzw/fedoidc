@@ -126,3 +126,22 @@ def verify_request_signed_by_signing_keys(smsreq):
         pass
 
     return {'ms': MetadataStatement(**_ver), 'iss': iss}
+
+
+def get_signing_keys(claims, keyjar, httpcli):
+    if 'signed_jwks_uri' not in claims:
+        return None
+
+    res = httpcli.get(claims['signed_jwks_uri'])
+
+    if res.status == 200:
+        _jws = JWS()
+
+
+def store_signed_jwks_uri(keyjar, sign_keyjar, path, alg):
+    _jwks = keyjar.export_jwks()
+    _jws = JWS(_jwks, alg=alg)
+    _jwt = _jws.sign_compact(sign_keyjar.get_signing_key())
+    fp = open(path, 'w')
+    fp.write(_jwt)
+    fp.close()
