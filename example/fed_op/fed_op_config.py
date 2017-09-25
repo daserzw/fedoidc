@@ -102,4 +102,5 @@ PRIORITY = ['https://swamid.sunet.se']
 SUPERIOR = 'https://sunet.se'
 
 # Where a signed version of the JWKS is kept
-SIGNED_JWKS_FILE_NAME = 'static/signed_jwks'
+SIGNED_JWKS_PATH = 'static/signed_jwks.jose'
+SIGNED_JWKS_ALG = 'RS256'
