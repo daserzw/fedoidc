@@ -3,7 +3,7 @@ import json
 from fedoidc import MetadataStatement
 from fedoidc.bundle import jwks_to_keyjar
 from jwkest import as_unicode
-from jwkest.jws import JWS
+from jwkest.jws import JWS, alg2keytype
 from jwkest.jws import factory
 
 from oic.oic import JasonWebToken
@@ -138,10 +138,24 @@ def get_signing_keys(claims, keyjar, httpcli):
         _jws = JWS()
 
 
-def store_signed_jwks_uri(keyjar, sign_keyjar, path, alg):
+def store_signed_jwks(keyjar, sign_keyjar, path, alg, iss=''):
     _jwks = keyjar.export_jwks()
     _jws = JWS(_jwks, alg=alg)
-    _jwt = _jws.sign_compact(sign_keyjar.get_signing_key())
+    _jwt = _jws.sign_compact(
+        sign_keyjar.get_signing_key(owner=iss, key_type=alg2keytype(alg)))
     fp = open(path, 'w')
     fp.write(_jwt)
     fp.close()
+
+
+def replace_jwks_key_bundle(keyjar, owner, new_kb):
+    try:
+        kbl = keyjar.issuer_keys[owner]
+    except KeyError:
+        pass
+    else:
+        res = [new_kb]
+        for kb in kbl:
+            if kb.imp_jwks is None:
+                res.append(kb)
+        keyjar.issuer_keys[owner] = res

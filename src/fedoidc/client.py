@@ -21,6 +21,8 @@ from oic.oauth2 import sanitize
 from oic.oauth2.message import MissingRequiredAttribute
 from oic.oic import RegistrationResponse
 
+from fedoidc.utils import replace_jwks_key_bundle
+
 try:
     from json import JSONDecodeError
 except ImportError:  # Only works for >= 3.5
@@ -100,9 +102,11 @@ class Client(oic.Client):
             self.handle_provider_config(ms.protected_claims(), issuer)
             if 'signed_jwks_uri' in _claims:
                 _kb = fedoidc.KeyBundle(source=_claims['signed_jwks_uri'],
-                                        verify_keys=les.sup.signing_keys,
+                                        verify_keys=les.signing_keys,
                                         verify_ssl=False)
                 _kb.do_remote()
+                replace_jwks_key_bundle(self.keyjar, issuer, _kb)
+
             self.federation = ms.fo
         else:
             self.provider_federations = les

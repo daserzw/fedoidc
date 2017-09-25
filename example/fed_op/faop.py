@@ -13,6 +13,8 @@ from fedoidc.test_utils import own_sign_keys
 
 from oic.utils import webfinger
 
+from fedoidc.utils import store_signed_jwks
+
 logger = logging.getLogger("")
 LOGFILE_NAME = 'op.log'
 hdlr = logging.FileHandler(LOGFILE_NAME)
@@ -84,6 +86,8 @@ if __name__ == '__main__':
     _op = setup.op_setup(args, config, Provider)
 
     sign_kj = own_sign_keys(SIGKEY_NAME, _op.baseurl, config.SIG_DEF_KEYS)
+    store_signed_jwks(_op.keyjar, sign_kj, config.SIGNED_JWKS_PATH,
+                      config.SIGNED_JWKS_ALG, iss=_op.baseurl)
 
     if args.context:
         if args.context == 'discovery':

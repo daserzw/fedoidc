@@ -20,6 +20,8 @@ from oic.utils.http_util import Created
 from oic.utils.http_util import Response
 from oic.utils.sanitize import sanitize
 
+from fedoidc.utils import replace_jwks_key_bundle
+
 logger = logging.getLogger(__name__)
 
 
@@ -227,9 +229,10 @@ class Provider(provider.Provider):
         result = self.client_registration_setup(request)
         if 'signed_jwks_uri' in _pc:
             _kb = KeyBundle(source=_pc['signed_jwks_uri'],
-                            verify_keys=ms.sup.signing_keys,
+                            verify_keys=ms.signing_keys,
                             verify_ssl=False)
             _kb.do_remote()
+            replace_jwks_key_bundle(self.keyjar, result['client_id'], _kb)
             result['signed_jwks_uri'] = _pc['signed_jwks_uri']
 
         if isinstance(result, Response):
