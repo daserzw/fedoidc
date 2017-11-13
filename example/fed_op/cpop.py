@@ -276,8 +276,12 @@ class Provider(Root):
             except KeyError:
                 authn = None
             logger.debug('Authorization: {}'.format(authn))
-            resp = self.op.token_endpoint(kwargs, authn, 'dict')
-            return conv_response(resp)
+            try:
+                resp = self.op.token_endpoint(kwargs, authn, 'dict')
+            except Exception as err:
+                raise cherrypy.HTTPError(message=str(err))
+            else:
+                return conv_response(resp)
 
     @cherrypy.expose
     @cherrypy_cors.tools.expose_public()
