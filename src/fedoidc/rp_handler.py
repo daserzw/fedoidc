@@ -36,8 +36,8 @@ CLIENT_CONFIG = {}
 
 class FedRPHandler(object):
     def __init__(self, base_url='', registration_info=None, flow_type='code',
-            federation_entity=None, hash_seed="", scope=None,
-            verify_ssl=False, keyjar=None, **kwargs):
+                 federation_entity=None, hash_seed="", scope=None,
+                 verify_ssl=False, keyjar=None, **kwargs):
         self.federation_entity = federation_entity
         self.flow_type = flow_type
         self.registration_info = registration_info
@@ -59,7 +59,7 @@ class FedRPHandler(object):
             self.jwks_uri = ''
         try:
             self.signed_jwks_uri = '{}{}{}'.format(self.base_url, _int,
-                                                  kwargs['signed_jwks_path'])
+                                                   kwargs['signed_jwks_path'])
         except KeyError:
             self.signed_jwks_uri = ''
 
@@ -147,6 +147,30 @@ class FedRPHandler(object):
             raise HandlerError(
                 "Cannot find the OP! Please view your configuration.")
 
+    def get_response_type(self, client):
+        """
+        Registration info provided at the init of this instance gives the
+        choices in preferred order. The registration response should give the
+        possible set of response_types to use.
+        
+        :param client: 
+        :return: A response_type that the OP accepts or None if none exists       
+        """
+
+        for rtyp in self.registration_info['response_types']:
+            if rtyp in client.registration_response['response_types']:
+                return rtyp
+        return None
+
+    def get_scopes(self, client):
+        ris = self.registration_info['scope']
+        try:
+            pcss = client.provider_info['scopes_supported']
+        except KeyError:  # No expressed support assume it accepts anything
+            return ris
+        else:
+            return [s for s in ris if s in pcss]
+
     # noinspection PyUnusedLocal
     def create_authnrequest(self, client, state):
         """
@@ -158,12 +182,14 @@ class FedRPHandler(object):
         """
         try:
             request_args = {
-                "response_type": self.flow_type,
-                "scope": self.scope,
+                "response_type": self.get_response_type(client),
+                "scope": self.get_scopes(client),
                 "state": state,
             }
 
-            if self.flow_type == "token":
+            # every response type but 'token' can eventually lead to a ID token
+            # being issued
+            if request_args['response_type'] != "token":
                 request_args["nonce"] = rndstr(16)
             else:
                 use_nonce = getattr(self, "use_nonce", None)
