@@ -314,7 +314,7 @@ Hedberg, et al.         Expires December 28, 2017               [Page 5]
 
    This is the resulting compounded metadata statement:
 
-   B(ms_C + SK[C) + A(ms_B + SK[B]))
+   B(ms_C + SK[C] + A(ms_B + SK[B]))
 
    Here we have three entities involved: A which is the top level entity
    (the federation operator) a second level entity (B) representing a
