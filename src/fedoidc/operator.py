@@ -169,7 +169,7 @@ class Operator(object):
     """
 
     def __init__(self, keyjar=None, jwks_bundle=None, httpcli=None, iss=None,
-            lifetime=0):
+                 lifetime=0):
         """
 
         :param keyjar: Contains the operators signing keys
@@ -257,11 +257,16 @@ class Operator(object):
                     keyjar.import_jwks(_ms['signing_keys'], json_ms['iss'])
                 except KeyError:
                     pass
+                else:
+                    logger.debug(
+                        'Loaded signing keys belonging to {} into the '
+                        'keyjar'.format(json_ms['iss']))
 
         if ms_flag is True and not _pr.parsed_statement:
             return _pr
 
         if jwt_ms:
+            logger.debug("verifying signed JWT: {}".format(jwt_ms))
             try:
                 _pr.result = cls().from_jwt(jwt_ms, keyjar=keyjar)
             except (JWSException, BadSignature, MissingSigningKey,
@@ -301,13 +306,13 @@ class Operator(object):
                         else:
                             _res[get_fo(_pr.parsed_statement[0])] = x
 
-            _pr.result['metadata_statements'] = Message(**_res)
-            # _pr.result['metadata_statements'] = [
-            #     x.to_json() for x in _pr.parsed_statement if x]
+            _msg  = Message(**_res)
+            logger.debug('Resulting metadata statement: {}'.format(_msg))
+            _pr.result['metadata_statements'] = _msg
         return _pr
 
     def unpack_metadata_statement(self, json_ms=None, jwt_ms='', keyjar=None,
-            cls=ClientMetadataStatement, liss=None):
+                                  cls=ClientMetadataStatement, liss=None):
         """
         Starting with a signed JWT or a JSON document unpack and verify all
         the separate metadata statements.
@@ -328,7 +333,8 @@ class Operator(object):
         if jwt_ms:
             try:
                 json_ms = unfurl(jwt_ms)
-            except JWSException:
+            except JWSException as err:
+                logger.error('Could not unfurl jwt_ms due to {}'.format(err))
                 raise
 
         if json_ms:
@@ -337,7 +343,7 @@ class Operator(object):
             raise AttributeError('Need one of json_ms or jwt_ms')
 
     def pack_metadata_statement(self, metadata, keyjar=None, iss=None, alg='',
-            jwt_args=None, lifetime=-1, **kwargs):
+                                jwt_args=None, lifetime=-1, **kwargs):
         """
         Given a MetadataStatement instance create a signed JWT.
 
@@ -479,8 +485,8 @@ class Operator(object):
 
 class FederationOperator(Operator):
     def __init__(self, keyjar=None, jwks_bundle=None, httpcli=None,
-            iss=None, keyconf=None, bundle_sign_alg='RS256',
-            remove_after=86400):
+                 iss=None, keyconf=None, bundle_sign_alg='RS256',
+                 remove_after=86400):
 
         Operator.__init__(self, keyjar=keyjar, jwks_bundle=jwks_bundle,
                           httpcli=httpcli, iss=iss)

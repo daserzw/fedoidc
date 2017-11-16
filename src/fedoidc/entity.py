@@ -96,10 +96,14 @@ class FederationEntity(Operator):
         if not _pi.result:
             return []
 
+        logger.debug('Managed to unpack the metadata statement')
+
         if context:
             _cms = self.correct_usage(_pi.result, context)
         else:
             _cms = _pi.result
+
+        logger.debug('After filtering for correct usage: {}'.format(_cms))
 
         if _cms:
             return self.evaluate_metadata_statement(_cms)

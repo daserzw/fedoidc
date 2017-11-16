@@ -65,7 +65,8 @@ class Client(oic.Client):
         """
         r = self.http_request(uri, allow_redirects=True)
         if r.status_code == 200:
-
+            _keys = json.loads(r.text)['keys']
+            _kb = KeyBundle(keys=_keys)
             return _kb
         else:
             return None
