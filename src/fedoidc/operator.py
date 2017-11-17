@@ -3,6 +3,8 @@ import json
 import logging
 import time
 
+from oic.utils.time_util import utc_time_sans_frac
+
 from fedoidc import ClientMetadataStatement
 from fedoidc import DoNotCompare
 from fedoidc import IgnoreKeys
@@ -33,7 +35,6 @@ class ParseInfo(object):
         self.error = {}
         self.result = None
         self.branch = {}
-        self.expires = 0
         self.keyjar = None
         self.signing_keys = None
 
@@ -44,7 +45,7 @@ class LessOrEqual(object):
     metadata statement.
     """
 
-    def __init__(self, iss='', sup=None, exp=0, skeys=None):
+    def __init__(self, iss='', sup=None, exp=0, signing_keys=None, **kwargs):
         """
         :param iss: Issuer ID
         :param sup: Superior
@@ -61,7 +62,7 @@ class LessOrEqual(object):
         self.err = {}
         self.le = {}
         self.exp = exp
-        self.signing_keys = skeys
+        self.signing_keys = signing_keys
 
     def __setitem__(self, key, value):
         self.le[key] = value
@@ -87,7 +88,7 @@ class LessOrEqual(object):
         else:
             return {}
 
-    def eval(self, orig, signer):
+    def eval(self, orig):
         """
         Apply the less or equal algorithm on the ordered list of metadata
         statements
@@ -106,7 +107,7 @@ class LessOrEqual(object):
                     _le[k] = v
                 else:
                     _err.append({'claim': k, 'policy': orig[k], 'err': v,
-                                 'signer': signer})
+                                 'signer': self.iss})
             else:
                 _le[k] = v
 
@@ -141,6 +142,15 @@ class LessOrEqual(object):
             return res
         else:
             return self.le
+
+    def is_expired(self):
+        now = utc_time_sans_frac()
+        if self.exp < now:
+            return True
+        if self.sup:
+            if self.sup.is_expired:
+                return True
+        return False
 
 
 def le_dict(les):
@@ -273,11 +283,6 @@ class Operator(object):
                     KeyError) as err:
                 logger.error('Encountered: {}'.format(err))
                 _pr.error[jwt_ms] = err
-            else:
-                try:
-                    _pr.result.expires = _pr.result['exp']
-                except KeyError:
-                    pass
         else:
             _pr.result = json_ms
 
@@ -287,26 +292,12 @@ class Operator(object):
             _res = {}
             for x in _pr.parsed_statement:
                 if x:
-                    try:
-                        _exp = x['exp']
-                    except KeyError:
-                        continue
+                    if isinstance(_prr, Message):
+                        _res[get_fo(x)] = x
                     else:
-                        if isinstance(_prr, Message):
-                            try:
-                                _expires = _prr.expires
-                            except AttributeError:
-                                _prr.expires = _exp
-                            else:
-                                if _expires == 0:
-                                    _prr.expires = _exp
-                                elif _exp < _expires:
-                                    _prr.expires = _exp
-                            _res[get_fo(x)] = x
-                        else:
-                            _res[get_fo(_pr.parsed_statement[0])] = x
+                        _res[get_fo(_pr.parsed_statement[0])] = x
 
-            _msg  = Message(**_res)
+            _msg = Message(**_res)
             logger.debug('Resulting metadata statement: {}'.format(_msg))
             _pr.result['metadata_statements'] = _msg
         return _pr
@@ -406,16 +397,12 @@ class Operator(object):
                 if isinstance(ms, str):
                     ms = json.loads(ms)
                 for _le in self.evaluate_metadata_statement(ms):
-                    try:
-                        _sign = metadata['iss']
-                    except KeyError:
-                        _sign = ''
-                    le = LessOrEqual(sup=_le, iss=_sign, exp=ms['exp'])
-                    try:
-                        le.signing_keys = ms['signing_keys']
-                    except KeyError:
-                        pass
-                    le.eval(res, _sign)
+                    le = LessOrEqual(sup=_le, **ms.to_dict())
+                    if le.is_expired():
+                        logger.error(
+                            'This metadata statement has expired: {}'.format(ms))
+                        continue
+                    le.eval(res)
                     les.append(le)
             return les
         else:  # this is the innermost
@@ -423,10 +410,10 @@ class Operator(object):
                 _iss = metadata['iss']
             except:
                 le = LessOrEqual()
-                le.eval(res, '')
+                le.eval(res)
             else:
                 le = LessOrEqual(iss=_iss, exp=metadata['exp'])
-                le.eval(res, _iss)
+                le.eval(res)
             les.append(le)
             return les
 
@@ -441,9 +428,11 @@ class Operator(object):
 
         if 'metadata_statements' in metadata:
             _msl = {}
-            for fo, ms in metadata['metadata_statements']:
-                if self.correct_usage(json.loads(ms),
-                                      federation_usage=federation_usage):
+            for fo, ms in metadata['metadata_statements'].items():
+                if not isinstance(ms, Message):
+                    ms = json.loads(ms)
+
+                if self.correct_usage(ms, federation_usage=federation_usage):
                     _msl[fo] = ms
             if _msl:
                 metadata['metadata_statements'] = Message(**_msl)
