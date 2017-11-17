@@ -92,6 +92,8 @@ class FederationEntity(Operator):
         :param context: In which context the metadata statement should be used.
         :return: A list of :py:class:`fedoidc.operator.LessOrEqual` instances
         """
+        logger.debug('Incoming metadata statement: {}'.format(json_ms))
+
         _pi = self.unpack_metadata_statement(json_ms=json_ms, cls=cls)
         if not _pi.result:
             return []
