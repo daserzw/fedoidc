@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def handle_error():
     cherrypy.response.status = 500
     cherrypy.response.body = [
-        "<html><body>Sorry, an error occured</body></html>"
+        b"<html><body>Sorry, an error occured</body></html>"
     ]
 
 
