@@ -197,7 +197,7 @@ def make_signed_metadata_statements(smsdef, operator, mds_dir='', base_uri=''):
     return res
 
 
-def init(keydefs, tool_iss, liss):
+def init(keydefs, tool_iss, liss, lifetime):
     sig_keys = build_keyjar(keydefs)[1]
     key_bundle = make_fs_jwks_bundle(tool_iss, liss, sig_keys, keydefs, './')
 
@@ -212,7 +212,8 @@ def init(keydefs, tool_iss, liss):
     operator = {}
 
     for entity, _keyjar in key_bundle.items():
-        operator[entity] = Operator(iss=entity, keyjar=_keyjar)
+        operator[entity] = Operator(iss=entity, keyjar=_keyjar,
+                                    lifetime=lifetime)
 
     return {'jb': jb, 'operator': operator, 'key_bundle': key_bundle}
 
@@ -260,7 +261,7 @@ def setup_ms(csms_def, ms_path, mds_dir, base_url, operators):
 
 
 def setup(keydefs, tool_iss, liss, ms_path, csms_def=None, mds_dir='',
-          base_url=''):
+          base_url='', lifetime=86400):
     """
 
     :param keydefs: Definition of which signing keys to create/load
@@ -273,7 +274,7 @@ def setup(keydefs, tool_iss, liss, ms_path, csms_def=None, mds_dir='',
     :return: A tuple of (Signer dictionary and FSJWKSBundle instance)
     """
 
-    _init = init(keydefs, tool_iss, liss)
+    _init = init(keydefs, tool_iss, liss, lifetime)
 
     signers = setup_ms(csms_def, ms_path, mds_dir, base_url, _init['operator'])
 
