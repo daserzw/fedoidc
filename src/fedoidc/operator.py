@@ -148,9 +148,9 @@ class LessOrEqual(object):
         if self.exp < now:
             return True
         if self.sup:
-            if self.sup.is_expired:
-                return True
-        return False
+            return self.sup.is_expired()
+        else:
+            return False
 
 
 def le_dict(les):
