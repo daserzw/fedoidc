@@ -5,10 +5,10 @@ from oic.utils import shelve_wrapper
 from oic.utils.authn.authn_context import AuthnBroker
 from oic.utils.authn.authn_context import make_auth_verify
 from oic.utils.authn.client import verify_client
-from oic.utils.authn.javascript_login import JavascriptFormMako
+#from oic.utils.authn.javascript_login import JavascriptFormMako
 from oic.utils.authn.multi_auth import AuthnIndexedEndpointWrapper
-from oic.utils.authn.multi_auth import setup_multi_auth
-from oic.utils.authn.saml import SAMLAuthnMethod
+#from oic.utils.authn.multi_auth import setup_multi_auth
+#from oic.utils.authn.saml import SAMLAuthnMethod
 from oic.utils.authn.user import UsernamePasswordMako
 from oic.utils.authz import AuthzHandling
 from oic.utils.keyio import keyjar_init
@@ -38,10 +38,10 @@ class AuthSetup(object):
 
         self.auth_methods = {
             "UserPassword": self.user_password,
-            "JavascriptLogin": self.javascript_login,
-            "SAML": self.saml_login,
-            "SamlPass": self.saml_pass_login,
-            "JavascriptPass": self.javascript_passw_login
+            # "JavascriptLogin": self.javascript_login,
+            # "SAML": self.saml_login,
+            # "SamlPass": self.saml_pass_login,
+            # "JavascriptPass": self.javascript_passw_login
         }
 
     def init_mako(self):
@@ -71,104 +71,104 @@ class AuthSetup(object):
         self.urls.append((r'^' + end_point, make_auth_verify(authn.verify)))
         return authn
 
-    def javascript_login(self, info):
-        if self.javascript_login_authn is None:
-            self.init_mako()
-
-            end_points = self.config.AUTHENTICATION[
-                "JavascriptLogin"]["END_POINTS"]
-            full_end_point_paths = [
-                "{}{}".format(self.issuer, ep) for ep in end_points]
-
-            self.javascript_login_authn = JavascriptFormMako(
-                None, "javascript_login.mako", self.lookup, self.config.PASSWD,
-                "{}authorization".format(self.issuer), None,
-                full_end_point_paths)
-
-        self.ac.add("", self.javascript_login_authn, "", "")
-        JAVASCRIPT_END_POINT_INDEX = 0
-        end_point = info["END_POINTS"][JAVASCRIPT_END_POINT_INDEX]
-        authn = AuthnIndexedEndpointWrapper(self.javascript_login_authn,
-                                            JAVASCRIPT_END_POINT_INDEX)
-        self.urls.append((r'^' + end_point, make_auth_verify(authn.verify)))
-        return authn
-
-    def saml_login(self, info):
-        from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
-
-        if self.saml_authn is None:
-            self.init_mako()
-
-            self.saml_authn = SAMLAuthnMethod(
-                None, self.lookup, self.config.SAML, self.config.SP_CONFIG,
-                self.issuer, "{}authorization".format(self.issuer),
-                userinfo=self.config.USERINFO)
-
-        self.ac.add("", self.saml_authn, "", "")
-        SAML_END_POINT_INDEX = 0
-        end_point = info["END_POINTS"][SAML_END_POINT_INDEX]
-        end_point_indexes = {BINDING_HTTP_REDIRECT: 0, BINDING_HTTP_POST: 0,
-                             "disco_end_point_index": 0}
-        authn = AuthnIndexedEndpointWrapper(self.saml_authn, end_point_indexes)
-        self.urls.append((r'^' + end_point, make_auth_verify(authn.verify)))
-        return authn
-
-    def saml_pass_login(self, info):
-        from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
-
-        if self.saml_authn is None:
-            self.init_mako()
-
-            self.saml_authn = SAMLAuthnMethod(
-                None, self.lookup, self.config.SAML, self.config.SP_CONFIG,
-                self.issuer, "{}authorization".format(self.issuer),
-                userinfo=self.config.USERINFO)
-
-        PASSWORD_END_POINT_INDEX = 1
-        SAML_END_POINT_INDEX = 1
-        password_end_point = self.config.AUTHENTICATION['UserPassword'][
-            "END_POINTS"][PASSWORD_END_POINT_INDEX]
-        saml_endpoint = info["END_POINTS"][SAML_END_POINT_INDEX]
-
-        end_point_indexes = {BINDING_HTTP_REDIRECT: 1, BINDING_HTTP_POST: 1,
-                             "disco_end_point_index": 1}
-        multi_saml = AuthnIndexedEndpointWrapper(self.saml_authn,
-                                                 end_point_indexes)
-        multi_password = AuthnIndexedEndpointWrapper(
-            self.username_password_authn, PASSWORD_END_POINT_INDEX)
-
-        auth_modules = [(multi_saml, r'^' + saml_endpoint),
-                        (multi_password, r'^' + password_end_point)]
-        return setup_multi_auth(self.ac, self.urls, auth_modules)
-
-    def javascript_passw_login(self, info):
-        if self.javascript_login_authn is None:
-            self.init_mako()
-
-            end_points = self.config.AUTHENTICATION[
-                "JavascriptLogin"]["END_POINTS"]
-            full_end_point_paths = [
-                "{}{}".format(self.issuer, ep) for ep in end_points]
-            self.javascript_login_authn = JavascriptFormMako(
-                None, "javascript_login.mako", self.lookup, self.config.PASSWD,
-                "{}authorization".format(self.issuer), None,
-                full_end_point_paths)
-
-        PASSWORD_END_POINT_INDEX = 2
-        JAVASCRIPT_POINT_INDEX = 1
-
-        password_end_point = self.config.AUTHENTICATION["UserPassword"][
-            "END_POINTS"][PASSWORD_END_POINT_INDEX]
-        javascript_end_point = info["END_POINTS"][JAVASCRIPT_POINT_INDEX]
-
-        multi_password = AuthnIndexedEndpointWrapper(
-            self.username_password_authn, PASSWORD_END_POINT_INDEX)
-        multi_javascript = AuthnIndexedEndpointWrapper(
-            self.javascript_login_authn, JAVASCRIPT_POINT_INDEX)
-
-        auth_modules = [(multi_password, r'^' + password_end_point),
-                        (multi_javascript, r'^' + javascript_end_point)]
-        return setup_multi_auth(self.ac, self.urls, auth_modules)
+    # def javascript_login(self, info):
+    #     if self.javascript_login_authn is None:
+    #         self.init_mako()
+    #
+    #         end_points = self.config.AUTHENTICATION[
+    #             "JavascriptLogin"]["END_POINTS"]
+    #         full_end_point_paths = [
+    #             "{}{}".format(self.issuer, ep) for ep in end_points]
+    #
+    #         self.javascript_login_authn = JavascriptFormMako(
+    #             None, "javascript_login.mako", self.lookup, self.config.PASSWD,
+    #             "{}authorization".format(self.issuer), None,
+    #             full_end_point_paths)
+    #
+    #     self.ac.add("", self.javascript_login_authn, "", "")
+    #     JAVASCRIPT_END_POINT_INDEX = 0
+    #     end_point = info["END_POINTS"][JAVASCRIPT_END_POINT_INDEX]
+    #     authn = AuthnIndexedEndpointWrapper(self.javascript_login_authn,
+    #                                         JAVASCRIPT_END_POINT_INDEX)
+    #     self.urls.append((r'^' + end_point, make_auth_verify(authn.verify)))
+    #     return authn
+    #
+    # def saml_login(self, info):
+    #     from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
+    #
+    #     if self.saml_authn is None:
+    #         self.init_mako()
+    #
+    #         self.saml_authn = SAMLAuthnMethod(
+    #             None, self.lookup, self.config.SAML, self.config.SP_CONFIG,
+    #             self.issuer, "{}authorization".format(self.issuer),
+    #             userinfo=self.config.USERINFO)
+    #
+    #     self.ac.add("", self.saml_authn, "", "")
+    #     SAML_END_POINT_INDEX = 0
+    #     end_point = info["END_POINTS"][SAML_END_POINT_INDEX]
+    #     end_point_indexes = {BINDING_HTTP_REDIRECT: 0, BINDING_HTTP_POST: 0,
+    #                          "disco_end_point_index": 0}
+    #     authn = AuthnIndexedEndpointWrapper(self.saml_authn, end_point_indexes)
+    #     self.urls.append((r'^' + end_point, make_auth_verify(authn.verify)))
+    #     return authn
+    #
+    # def saml_pass_login(self, info):
+    #     from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
+    #
+    #     if self.saml_authn is None:
+    #         self.init_mako()
+    #
+    #         self.saml_authn = SAMLAuthnMethod(
+    #             None, self.lookup, self.config.SAML, self.config.SP_CONFIG,
+    #             self.issuer, "{}authorization".format(self.issuer),
+    #             userinfo=self.config.USERINFO)
+    #
+    #     PASSWORD_END_POINT_INDEX = 1
+    #     SAML_END_POINT_INDEX = 1
+    #     password_end_point = self.config.AUTHENTICATION['UserPassword'][
+    #         "END_POINTS"][PASSWORD_END_POINT_INDEX]
+    #     saml_endpoint = info["END_POINTS"][SAML_END_POINT_INDEX]
+    #
+    #     end_point_indexes = {BINDING_HTTP_REDIRECT: 1, BINDING_HTTP_POST: 1,
+    #                          "disco_end_point_index": 1}
+    #     multi_saml = AuthnIndexedEndpointWrapper(self.saml_authn,
+    #                                              end_point_indexes)
+    #     multi_password = AuthnIndexedEndpointWrapper(
+    #         self.username_password_authn, PASSWORD_END_POINT_INDEX)
+    #
+    #     auth_modules = [(multi_saml, r'^' + saml_endpoint),
+    #                     (multi_password, r'^' + password_end_point)]
+    #     return setup_multi_auth(self.ac, self.urls, auth_modules)
+    #
+    # def javascript_passw_login(self, info):
+    #     if self.javascript_login_authn is None:
+    #         self.init_mako()
+    #
+    #         end_points = self.config.AUTHENTICATION[
+    #             "JavascriptLogin"]["END_POINTS"]
+    #         full_end_point_paths = [
+    #             "{}{}".format(self.issuer, ep) for ep in end_points]
+    #         self.javascript_login_authn = JavascriptFormMako(
+    #             None, "javascript_login.mako", self.lookup, self.config.PASSWD,
+    #             "{}authorization".format(self.issuer), None,
+    #             full_end_point_paths)
+    #
+    #     PASSWORD_END_POINT_INDEX = 2
+    #     JAVASCRIPT_POINT_INDEX = 1
+    #
+    #     password_end_point = self.config.AUTHENTICATION["UserPassword"][
+    #         "END_POINTS"][PASSWORD_END_POINT_INDEX]
+    #     javascript_end_point = info["END_POINTS"][JAVASCRIPT_POINT_INDEX]
+    #
+    #     multi_password = AuthnIndexedEndpointWrapper(
+    #         self.username_password_authn, PASSWORD_END_POINT_INDEX)
+    #     multi_javascript = AuthnIndexedEndpointWrapper(
+    #         self.javascript_login_authn, JAVASCRIPT_POINT_INDEX)
+    #
+    #     auth_modules = [(multi_password, r'^' + password_end_point),
+    #                     (multi_javascript, r'^' + javascript_end_point)]
+    #     return setup_multi_auth(self.ac, self.urls, auth_modules)
 
     def __call__(self):
         for authkey, value in self.config.AUTHENTICATION.items():
