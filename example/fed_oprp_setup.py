@@ -24,7 +24,8 @@ if os.path.isdir(_root) is False:
 _src_dir = os.path.join(_fedoidc_dir, 'example')
 
 os.chdir(_root)
-for file in ['fed_setup.py', 'oa_sign.py', 'clear.sh', 'setup.sh', 'run.sh']:
+for file in ['fed_setup.py', 'oa_sign.py', 'clear.sh', 'setup.sh', 'run.sh',
+             'fo_conf.py', 'update.sh', 'ms_update.py']:
     shutil.copy(os.path.join(_src_dir, file), '.')
 
 
