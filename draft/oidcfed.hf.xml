@@ -182,7 +182,7 @@
               <vspace/>
               OPTIONAL.
               JSON object where the names are federation
-              identifiers and the values a signed JSON documents
+              identifiers and the values are signed JSON documents
               containing compounded metadata statements rooted in
               that federation. There is one value per name.
             </t>
@@ -346,7 +346,7 @@
               </t>
               <t hangText="SK[X]">
                 <vspace/>
-                Signing keys that belongs to X
+                Signing keys that belong to X
               </t>
               <t hangText="X(MS)">
                 <vspace/>
@@ -419,7 +419,7 @@
             that belongs to one specific entity like
             <spanx style="verb">authorization_endpoint</spanx>
             for an OP
-            or <spanx style="verb">redirect_uris</spanx> for a RP.
+            or <spanx style="verb">redirect_uris</spanx> for an RP.
           </t>
           <t>
             <figure>
@@ -427,7 +427,7 @@
                 The following is a non-normative example of a
                 compounded metadata statement. Also note that
                 the metadata_statement MUST be a signed
-                JWT. In this example, the only the parts of the
+                JWT. In this example, only the parts of the
                 signed JWT payload pertinent to the example are
                 shown.
               </preamble>
@@ -477,7 +477,7 @@
           to the identifier.
           It will publish a JWKS, containing the signing keys
           that the FO will use for signing metadata submitted to it,
-          at a HTTPS URL which server certificate MUST appear in a
+          at an HTTPS URL which server certificate MUST appear in a
           well-known
           <xref target="RFC6962">Certificate Transparency log</xref>.
           The key IDs of the FO's signing keys MUST be globally
@@ -492,7 +492,7 @@
           requests on behalf of the member to the federation. Below
           such a representative is called a Level 0 Requester (L0Req).
           Within each member unless all entities belonging to the
-          member are handled directly by the L0Req there may exists
+          member are handled directly by the L0Req there may exist
           parties that are responsible for single
           or groups of entities. Within these parties we may have
           further subdivisions such that we end up with Level 0, 1,
@@ -521,7 +521,7 @@
       </section>
       <section title="Constructing a Signed Metadata Statement">
         <t>
-          These are the steps that are preformed to construct a signed
+          These are the steps that are performed to construct a signed
           metadata statement.
           A metadata signing request may be about one specific entity
           or a group of similar entities.
@@ -549,7 +549,7 @@
               The metadata statement is transported to the signing
               party.
               In the case of ms_0 this MUST be the FO. If it is
-              ms_1 it is the <spanx style="verb">LOReq</spanx>.
+              ms_1 it is the <spanx style="verb">L0Req</spanx>.
               If it is ms_2 it is the L1Req and so on.
             </t>
             <t>
@@ -577,7 +577,7 @@ L0Req -- (ms_L0Req + SK[L0Req]) --> FO
           </figure>
           The FO verifies the information and if the federations
           policy so demands may add extra information.
-          After signing with the FOs signing key the signed metadata
+          After signing with the FO's signing key the signed metadata
           statement is returned to the L0Req.
           <figure>
             <artwork><![CDATA[
@@ -585,8 +585,8 @@ L0Req <-- FO(ms_L0Req + SK[L0Req]) --- FO
                     ]]></artwork>
           </figure>
           Next step that happens some time later is that the
-          L1Req sends a Metadata Statement signing requests
-          to the L0Reg.
+          L1Req sends a Metadata Statement signing request
+          to the L0Req.
           <figure>
             <artwork><![CDATA[
 L1Req -- (ms_L1Req + SK[L1Req]) --> L0Req
@@ -613,7 +613,7 @@ L1Req <- L0Req(ms_L1Req + SK[L1Req] + FO(ms_L0Req+SK[L0Req])) - L0Req
           have the public part of the signing keys from then you
           can verify the signature of the metadata statement.
           If the verification concludes that the signature was correct
-          you can now take the signing keys that was included in
+          you can now take the signing keys that were included in
           the signed document and use those to verify the second
           innermost signed metadata statement. And so on.
         </t>
@@ -650,7 +650,7 @@ def unpack(jwt, sign_keys):
                        ]]></artwork>
           </figure>
           where the function get_payload unpacks the payload from the
-          JWS without verify the signature. The function
+          JWS without verifying the signature. The function
           verify_signature, on the other hand, does verify the
           signature of the JWS and if everything is correct returns
           the JWS payload.
@@ -744,7 +744,7 @@ def unpack(jwt, sign_keys):
           This draft allows any entity to belong to more than one
           federation.
           During the provider discovery and relying party registration
-          process, the parties have to agree on which federation to use.
+          processes, the parties have to agree on which federation to use.
           Ultimately, the OP decides.
         </t>
         <t>
@@ -818,7 +818,7 @@ def unpack(jwt, sign_keys):
         </t>
         <t>
           As described above, when the OP receives a request like this
-          it will chose which federation it will work within and then
+          it will choose which federation it will work within and then
           signal that by only returning that corresponding information
           in the
           <spanx style="verb">metadata_statements</spanx>
@@ -829,7 +829,7 @@ def unpack(jwt, sign_keys):
         <t>
           <figure>
             <preamble>The following is a non-normative example of an
-              OPs
+              OP's
               response on the relying party registration request above:
             </preamble>
 
