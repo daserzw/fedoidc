@@ -10,7 +10,8 @@ CA_BUNDLE = None
 CONSUMER_CONFIG = {
     #"authz_page": "/authz",
     "scope": ["openid", "email", "phone", "profile"],
-    "response_type": ["code"],
+    "response_types": ["code", "id_token", "id_token token", "code id_token",
+                       "code id_token token", "code token"],
 }
 
 ENT_KEYS = [
@@ -20,6 +21,7 @@ ENT_KEYS = [
     {"type": "EC", "crv": "P-256", "use": ["enc"]}
 ]
 
+# Don't touch these unless you know what you are doing
 SIG_DEF_KEYS = [{"type": "RSA", "key": "keys/rp_key.pem", "use": ["sig"]}]
 MS_DIR = '../ms'
 JWKS_DIR = 'jwks_dir'
