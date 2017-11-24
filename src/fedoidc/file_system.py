@@ -12,6 +12,8 @@ class FileSystem(object):
     It has a dictionary like interface.
     Each key maps one-to-one to a file on disc, where the content of the
     file is the value.
+    ONLY goes one level deep.
+    Not directories in directories.
     """
 
     def __init__(self, fdir, key_conv=None, value_conv=None, c_size=0):
@@ -87,6 +89,16 @@ class FileSystem(object):
 
         self.db[_key] = value
         self.fmtime[_key] = self.get_mtime(fname)
+
+    def __delitem__(self, key):
+        fname = os.path.join(self.fdir, key)
+        if os.path.isfile(fname):
+            os.unlink(fname)
+
+        try:
+            del self.db[key]
+        except KeyError:
+            pass
 
     def keys(self):
         """
@@ -201,8 +213,8 @@ class FileSystem(object):
 
         for f in os.listdir(self.fdir):
             fname = os.path.join(self.fdir, f)
-            if os.path.isdir(fname):
-                shutil.rmtree(fname)
+            if os.path.isfile(fname):
+                os.unlink(fname)
 
             try:
                 del self.db[f]
