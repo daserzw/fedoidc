@@ -2,10 +2,8 @@ import json
 import logging
 
 import fedoidc
-from jwkest.jws import factory
 from jwkest.jws import JWS
 from oic.utils.keyio import KeyBundle
-from oic.utils.keyio import KeyJar
 
 from fedoidc import ClientMetadataStatement
 from fedoidc import ProviderConfigurationResponse

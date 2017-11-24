@@ -21,7 +21,7 @@ from oic.oic.message import RegistrationRequest
 logger = logging.getLogger(__name__)
 
 __author__ = 'roland'
-__version__ = '0.5.1'
+__version__ = '0.5.2a'
 
 #: Contexts in which metadata statements can be used
 CONTEXTS = ['registration', 'discovery', 'response']
@@ -30,6 +30,10 @@ MIN_SET = dict([(k, {}) for k in CONTEXTS])
 
 
 class MetadataStatementError(Exception):
+    pass
+
+
+class NoSuitableFederation(MetadataStatementError):
     pass
 
 

@@ -88,6 +88,16 @@ class FileSystem(object):
         self.db[_key] = value
         self.fmtime[_key] = self.get_mtime(fname)
 
+    def __delitem__(self, key):
+        fname = os.path.join(self.fdir, key)
+        if os.path.isfile(fname):
+            os.unlink(fname)
+
+        try:
+            del self.db[key]
+        except KeyError:
+            pass
+
     def keys(self):
         """
         Implements the dict.keys() method
@@ -200,14 +210,7 @@ class FileSystem(object):
             return
 
         for f in os.listdir(self.fdir):
-            fname = os.path.join(self.fdir, f)
-            if os.path.isdir(fname):
-                shutil.rmtree(fname)
-
-            try:
-                del self.db[f]
-            except KeyError:
-                pass
+            del self[f]
 
     def update(self, ava):
         """

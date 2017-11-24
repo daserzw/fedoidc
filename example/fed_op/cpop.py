@@ -196,7 +196,7 @@ class Provider(Root):
                 if _request:
                     resp = self.op.registration_endpoint(_request)
                 else:
-                    resp = self.op.registration_endpoint(kwargs)
+                    resp = self.op.registration_endpoint(json.dumps(kwargs))
             except Exception as err:
                 logger.error(err)
                 raise cherrypy.HTTPError(message=str(err))
