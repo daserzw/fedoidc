@@ -305,3 +305,6 @@ class FSJWKSBundle(JWKSBundle):
         self.bundle = FileSystem(fdir, key_conv=key_conv,
                                  value_conv={'to': keyjar_to_jwks,
                                              'from': jwks_to_keyjar})
+
+    def clear(self):
+        self.bundle.clear()

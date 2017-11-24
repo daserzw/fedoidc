@@ -99,6 +99,7 @@ def test_make_fs_jwks_bundle():
 
 def test_make_signed_metadata_statements():
     mds = MetaDataStore('mds')
+    mds.clear()
     liss = list(FO.values())
     liss.extend(list(OA.values()))
 
@@ -129,6 +130,7 @@ def test_make_signed_metadata_statements():
 
 def test_metadatastore():
     mds = MetaDataStore('mds')
+    mds.clear()
     desc = SMS_DEF[OA['sunet']]["discovery"][FO['swamid']][0]
     operator = {}
 
@@ -182,12 +184,9 @@ def test_make_signed_metadata_statement_mixed():
 def test_setup_ms():
     liss = list(FO.values())
     liss.extend(list(OA.values()))
-    for path in ['ms_dir', 'mds']:
-        if os.path.isdir(path):
-            shutil.rmtree(path)
 
     # keydefs, tool_iss, liss, ms_path
-    res = test_utils.setup(KEYDEFS, 'iss', liss, 'ms_dir', csms_def=SMS_DEF,
+    res = test_utils.setup(KEYDEFS, 'iss', liss, 'ms', csms_def=SMS_DEF,
                            mds_dir='mds', base_url='http://example.org')
 
     assert res

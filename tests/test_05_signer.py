@@ -36,17 +36,14 @@ SMS_DEF = {
     }
 }
 
-# Clear out old stuff
-for d in ['mds', 'ms_dir', 'ms_path']:
-    if os.path.isdir(d):
-        shutil.rmtree(d)
-
 liss = list(FO.values())
 liss.extend(list(OA.values()))
 
+shutil.rmtree('ms', ignore_errors=True)
+
 signer, keybundle = test_utils.setup(
-    KEYDEFS, TOOL_ISS, liss, ms_path='ms_dir_10', csms_def=SMS_DEF,
-    mds_dir='mds_10', base_url='https://localhost')
+    KEYDEFS, TOOL_ISS, liss, ms_path='ms', csms_def=SMS_DEF,
+    mds_dir='mds', base_url='https://localhost')
 
 
 def test_signer():

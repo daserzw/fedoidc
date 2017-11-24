@@ -66,11 +66,11 @@ SMS_DEF = {
 }
 
 # Clear out old stuff
-for d in ['mds', 'ms_dir', 'ms_path']:
+for d in ['mds', 'ms']:
     if os.path.isdir(d):
         shutil.rmtree(d)
 
-MS_DIR = 'ms_dir'
+MS_DIR = 'ms'
 
 liss = list(FO.values())
 liss.extend(list(OA.values()))

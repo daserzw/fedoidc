@@ -5,7 +5,7 @@ import shutil
 from oicmsg.message import Message
 from oicmsg.oic import ProviderConfigurationResponse
 
-from fedoidc import test_utils
+from fedoidc import test_utils, MetadataStatement
 from fedoidc.bundle import JWKSBundle
 from fedoidc.entity import FederationEntity
 from fedoidc.requests import factory
@@ -103,7 +103,7 @@ SMS_DEF = {
 }
 
 # Clear out old stuff
-for d in ['mds', 'ms_dir', 'ms_path']:
+for d in ['mds', 'ms']:
     if os.path.isdir(d):
         shutil.rmtree(d)
 
@@ -111,8 +111,8 @@ liss = list(FO.values())
 liss.extend(list(OA.values()))
 liss.extend(list(EO.values()))
 
-signer, keybundle = test_utils.setup(KEYDEFS, TOOL_ISS, liss, ms_path='ms_path',
-                                     csms_def=SMS_DEF, mds_dir='ms_dir')
+signer, keybundle = test_utils.setup(KEYDEFS, TOOL_ISS, liss, ms_path='ms',
+                                     csms_def=SMS_DEF, mds_dir='mds')
 
 fo_keybundle = JWKSBundle('https://example.com')
 for iss in FO.values():
@@ -233,48 +233,50 @@ class TestProviderInfoRequest(object):
         assert self.cli_info.federation == FO['swamid']
 
 
-# class TestRegistrationRequest(object):
-#     @pytest.fixture(autouse=True)
-#     def create_request(self):
-#         # RP
-#         foodle_rp = EO['foodle.rp']
-#
-#         _kj = signer[foodle_rp].signing_service.signing_keys
-#         fed_ent = FederationEntity(None, keyjar=_kj, iss=foodle_rp,
-#                                    signer=signer[OA['uninett']],
-#                                    fo_bundle=fo_keybundle)
-#
-#         self.req = factory('FedRegistrationRequest',
-#                            client_authn_method=CLIENT_AUTHN_METHOD,
-#                            federation_entity=fed_ent)
-#         self._iss = 'https://example.com/as'
-#         client_config = {'client_id': 'client_id', 'client_secret':
-# 'password',
-#                          'redirect_uris': [
-# 'https://example.com/cli/authz_cb'],
-#                          'issuer': self._iss, 'requests_dir': 'requests',
-#                          'base_url': 'https://example.com/cli/'}
-#         self.cli_info = ClientInfo(config=client_config)
-#         self.cli_info.service = build_services(
-#             ['FedProviderInfoDiscovery', 'FedRegistrationRequest'],
-#             factory, None, None, CLIENT_AUTHN_METHOD)
-#
-#     def test_construct(self):
-#         _req = self.req.construct(self.cli_info)
-#         assert isinstance(_req, MetadataStatement)
-#         assert len(_req) == 3
-#
-#     def test_config_with_post_logout(self):
-#         self.cli_info.post_logout_redirect_uris = [
-#             'https://example.com/post_logout']
-#         _req = self.req.construct(self.cli_info)
-#         assert isinstance(_req, MetadataStatement)
-#         assert len(_req) == 4
-#         assert 'post_logout_redirect_uris' in _req
-#
-#     def test_config_with_required_request_uri(self):
-#         self.cli_info.provider_info['require_request_uri_registration'] = True
-#         _req = self.req.construct(self.cli_info)
-#         assert isinstance(_req, MetadataStatement)
-#         assert len(_req) == 4
-#         assert 'request_uris' in _req
+class TestRegistrationRequest(object):
+    @pytest.fixture(autouse=True)
+    def create_request(self):
+        # RP
+        foodle_rp = EO['foodle.rp']
+
+        _kj = signer[foodle_rp].signing_service.signing_keys
+        fed_ent = FederationEntity(None, keyjar=_kj, iss=foodle_rp,
+                                   signer=signer[OA['uninett']],
+                                   fo_bundle=fo_keybundle)
+
+        self.req = factory('FedRegistrationRequest',
+                           client_authn_method=CLIENT_AUTHN_METHOD,
+                           federation_entity=fed_ent)
+        self._iss = 'https://example.com/as'
+        client_config = {'client_id': 'client_id',
+                         'client_secret': 'password',
+                         'redirect_uris': [
+                             'https://example.com/cli/authz_cb'],
+                         'issuer': self._iss, 'requests_dir': 'requests',
+                         'base_url': 'https://example.com/cli/'}
+        self.cli_info = ClientInfo(config=client_config)
+        self.cli_info.service = build_services(
+            ['FedProviderInfoDiscovery', 'FedRegistrationRequest'],
+            factory, None, None, CLIENT_AUTHN_METHOD)
+        self.cli_info.federation = FO['feide']
+
+    def test_construct(self):
+        _req = self.req.construct(self.cli_info)
+        assert isinstance(_req, MetadataStatement)
+        assert len(_req) == 2
+        assert set(_req['metadata_statements'].keys()) == {FO['feide']}
+
+    def test_config_with_post_logout(self):
+        self.cli_info.post_logout_redirect_uris = [
+            'https://example.com/post_logout']
+        _req = self.req.construct(self.cli_info)
+        assert isinstance(_req, MetadataStatement)
+        assert len(_req) == 3
+        assert 'post_logout_redirect_uris' in _req
+
+    def test_config_with_required_request_uri(self):
+        self.cli_info.provider_info['require_request_uri_registration'] = True
+        _req = self.req.construct(self.cli_info)
+        assert isinstance(_req, MetadataStatement)
+        assert len(_req) == 3
+        assert 'request_uris' in _req

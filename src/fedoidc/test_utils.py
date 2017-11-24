@@ -39,6 +39,8 @@ def make_fs_jwks_bundle(iss, fo_liss, sign_keyjar, keydefs, base_path=''):
     jb = FSJWKSBundle(iss, sign_keyjar, 'fo_jwks',
                       key_conv={'to': quote_plus, 'from': unquote_plus})
 
+    jb.clear()  # start from scratch
+
     # Need to save the private parts on disc
     jb.bundle.value_conv['to'] = keyjar_to_jwks_private
 
@@ -201,13 +203,7 @@ def init(keydefs, tool_iss, liss, lifetime):
     sig_keys = build_keyjar(keydefs)[1]
     key_bundle = make_fs_jwks_bundle(tool_iss, liss, sig_keys, keydefs, './')
 
-    sig_keys = build_keyjar(keydefs)[1]
-    jb = FSJWKSBundle(tool_iss, sig_keys, 'fo_jwks',
-                      key_conv={'to': quote_plus, 'from': unquote_plus})
-
-    # Need to save the private parts
-    jb.bundle.value_conv['to'] = keyjar_to_jwks_private
-    jb.bundle.sync()
+    #sig_keys = build_keyjar(keydefs)[1]
 
     operator = {}
 
@@ -215,7 +211,7 @@ def init(keydefs, tool_iss, liss, lifetime):
         operator[entity] = Operator(iss=entity, keyjar=_keyjar,
                                     lifetime=lifetime)
 
-    return {'jb': jb, 'operator': operator, 'key_bundle': key_bundle}
+    return {'operator': operator, 'key_bundle': key_bundle}
 
 
 def setup_ms(csms_def, ms_path, mds_dir, base_url, operators):
@@ -231,6 +227,7 @@ def setup_ms(csms_def, ms_path, mds_dir, base_url, operators):
     """
 
     mds = MetaDataStore(mds_dir)
+    mds.clear()
 
     for iss, sms_def in csms_def.items():
         ms_dir = os.path.join(ms_path, quote_plus(iss))
@@ -238,6 +235,7 @@ def setup_ms(csms_def, ms_path, mds_dir, base_url, operators):
             _dir = os.path.join(ms_dir, context)
             metadata_statements = FileSystem(
                 _dir, key_conv={'to': quote_plus, 'from': unquote_plus})
+            metadata_statements.clear()
             for fo, _desc in spec.items():
                 res = make_signed_metadata_statement(_desc, operators, mds,
                                                      base_url)

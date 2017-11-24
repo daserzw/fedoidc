@@ -133,7 +133,7 @@ class FederationEntity(Operator):
         """
         if federation:
             if self.signer.signing_service:
-                self.ace(req, [federation], 'registration')
+                req = self.ace(req, [federation], 'registration')
             else:
                 req.update(
                     self.signer.gather_metadata_statements(
@@ -165,7 +165,7 @@ class FederationEntity(Operator):
         _cms = self.add_signing_keys(_cms)
         sms = self.signer.create_signed_metadata_statement(_cms, context,
                                                            fos=fos)
-        self.extend_with_ms(req, sms)
+        return self.extend_with_ms(req, sms)
 
     def get_signed_metadata_statements(self, context, fo=None):
         """
