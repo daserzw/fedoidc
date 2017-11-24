@@ -179,7 +179,7 @@ class Operator(object):
     """
 
     def __init__(self, keyjar=None, jwks_bundle=None, httpcli=None, iss=None,
-                 lifetime=0):
+                 lifetime=3600):
         """
 
         :param keyjar: Contains the operators signing keys
@@ -189,7 +189,8 @@ class Operator(object):
         :param httpcli: A http client to use when information has to be
             fetched from somewhere else
         :param iss: Issuer ID
-        :param lifetime: Default lifetime of the signed statements
+        :param lifetime: Default lifetime of signed statements produced
+            by this signer.
         """
         self.keyjar = keyjar
         self.jwks_bundle = jwks_bundle
@@ -287,6 +288,8 @@ class Operator(object):
             _pr.result = json_ms
 
         if _pr.result and _pr.parsed_statement:
+            _prr = _pr.result
+
             _res = {}
             for x in _pr.parsed_statement:
                 if x:

@@ -189,7 +189,7 @@ class TestProvider(object):
 
     def test_registration_endpoint_no_fed(self):
         request = {'redirect_uris': ['https://example.com/rp']}
-        resp = self.op.registration_endpoint(request)
+        resp = self.op.registration_endpoint(json.dumps(request))
         assert isinstance(resp, Created)
         assert resp.status == "201 Created"
         clresp = json.loads(resp.message)

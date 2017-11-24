@@ -292,7 +292,7 @@ def test_evaluate_metadata_statement_1():
 
     res = receiver.evaluate_metadata_statement(ri.result)
     assert len(res) == 1
-    assert res[0].iss == ISSUER['inter']
+    assert res[0].iss == ISSUER['org']
     assert sorted(list(res[0].keys())) == sorted(
         ['contacts', 'tos_uri', 'redirect_uris', 'scope'])
 
@@ -333,7 +333,7 @@ def test_evaluate_metadata_statement_2():
 
     res = receiver.evaluate_metadata_statement(ri.result)
     assert len(res) == 1
-    assert res[0].iss == ISSUER['inter']
+    assert res[0].iss == ISSUER['org']
     assert res[0].fo == ISSUER['fo']
     assert sorted(list(res[0].keys())) == sorted(
         ['contacts', 'tos_uri', 'redirect_uris', 'scope'])
