@@ -176,7 +176,7 @@ def test_make_signed_metadata_statement_mixed():
 
     op = Operator()
     _res = op.evaluate_metadata_statement(_md0)
-    assert _res[0].le == {}
+    assert _res[0].le == {'federation_usage': 'discovery'}
 
 
 def test_setup_ms():

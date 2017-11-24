@@ -181,6 +181,12 @@ class Provider(provider.Provider):
 
         return resp
 
+    def is_federation_request(self, req):
+        if 'metadata_statements' in req or 'metadata_statement_uris' in req:
+            return True
+        else:
+            return False
+
     def registration_endpoint(self, request, authn=None, **kwargs):
         """
         Registration endpoint. This is where a registration request should
@@ -201,6 +207,11 @@ class Provider(provider.Provider):
                 request = ClientMetadataStatement().deserialize(request, "json")
             except ValueError:
                 request = ClientMetadataStatement().deserialize(request)
+
+        if not self.is_federation_request(request):
+            return provider.Provider.registration_endpoint(self,
+                                                           request.to_json(),
+                                                           authn=None, **kwargs)
 
         try:
             request.verify()
