@@ -66,11 +66,11 @@ SMS_DEF = {
 }
 
 # Clear out old stuff
-for d in ['mds', 'ms_dir', 'ms_path']:
+for d in ['mds', 'ms']:
     if os.path.isdir(d):
         shutil.rmtree(d)
 
-MS_DIR = 'ms_dir'
+MS_DIR = 'ms'
 
 liss = list(FO.values())
 liss.extend(list(OA.values()))
@@ -189,7 +189,7 @@ class TestProvider(object):
 
     def test_registration_endpoint_no_fed(self):
         request = {'redirect_uris': ['https://example.com/rp']}
-        resp = self.op.registration_endpoint(request)
+        resp = self.op.registration_endpoint(json.dumps(request))
         assert isinstance(resp, Created)
         assert resp.status == "201 Created"
         clresp = json.loads(resp.message)

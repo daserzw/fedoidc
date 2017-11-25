@@ -148,9 +148,9 @@ class LessOrEqual(object):
         if self.exp < now:
             return True
         if self.sup:
-            if self.sup.is_expired:
-                return True
-        return False
+            return self.sup.is_expired()
+        else:
+            return False
 
 
 def le_dict(les):
@@ -179,7 +179,7 @@ class Operator(object):
     """
 
     def __init__(self, keyjar=None, jwks_bundle=None, httpcli=None, iss=None,
-                 lifetime=0):
+                 lifetime=3600):
         """
 
         :param keyjar: Contains the operators signing keys
@@ -189,7 +189,8 @@ class Operator(object):
         :param httpcli: A http client to use when information has to be
             fetched from somewhere else
         :param iss: Issuer ID
-        :param lifetime: Default lifetime of the signed statements
+        :param lifetime: Default lifetime of signed statements produced
+            by this signer.
         """
         self.keyjar = keyjar
         self.jwks_bundle = jwks_bundle
@@ -292,10 +293,7 @@ class Operator(object):
             _res = {}
             for x in _pr.parsed_statement:
                 if x:
-                    if isinstance(_prr, Message):
-                        _res[get_fo(x)] = x
-                    else:
-                        _res[get_fo(_pr.parsed_statement[0])] = x
+                    _res[get_fo(x)] = x
 
             _msg = Message(**_res)
             logger.debug('Resulting metadata statement: {}'.format(_msg))
@@ -397,10 +395,16 @@ class Operator(object):
                 if isinstance(ms, str):
                     ms = json.loads(ms)
                 for _le in self.evaluate_metadata_statement(ms):
-                    le = LessOrEqual(sup=_le, **ms.to_dict())
+                    if isinstance(ms, Message):
+                        le = LessOrEqual(sup=_le, **ms.to_dict())
+                    else:  # Must be a dict
+                        le = LessOrEqual(sup=_le, **ms)
+
                     if le.is_expired():
                         logger.error(
-                            'This metadata statement has expired: {}'.format(ms))
+                            'This metadata statement has expired: {}'.format(ms)
+                        )
+                        logger.info('My time: {}'.format(utc_time_sans_frac()))
                         continue
                     le.eval(res)
                     les.append(le)

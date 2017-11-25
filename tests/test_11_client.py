@@ -104,7 +104,7 @@ SMS_DEF = {
 
 
 # Clear out old stuff
-for d in ['mds', 'ms_dir', 'ms_path']:
+for d in ['mds', 'ms']:
     if os.path.isdir(d):
         shutil.rmtree(d)
 
@@ -112,8 +112,8 @@ liss = list(FO.values())
 liss.extend(list(OA.values()))
 liss.extend(list(EO.values()))
 
-signer, keybundle = test_utils.setup(KEYDEFS, TOOL_ISS, liss, ms_path='ms_path',
-                                     csms_def=SMS_DEF, mds_dir='ms_dir')
+signer, keybundle = test_utils.setup(KEYDEFS, TOOL_ISS, liss, ms_path='ms',
+                                     csms_def=SMS_DEF, mds_dir='mds')
 
 fo_keybundle = JWKSBundle('https://example.com')
 for iss in FO.values():
@@ -177,7 +177,7 @@ def test_parse_pi():
 def test_no_signing_federation():
     # UNINETT RP
     uninett_rp = 'https://foodle.uninett.no'
-    _path = os.path.join('ms_path', quote_plus(OA['sunet']))
+    _path = os.path.join('ms', quote_plus(OA['sunet']))
 
     signer = Signer(None, _path, 'register')
     _kj = build_keyjar(KEYDEFS)[1]
@@ -198,7 +198,7 @@ def test_no_signing_federation():
 def test_no_signing_provider():
     # UNINETT RP
     uninett_rp = 'https://foodle.uninett.no'
-    _path = os.path.join('ms_path', quote_plus(OA['sunet']))
+    _path = os.path.join('ms', quote_plus(OA['sunet']))
 
     signer = Signer(None, _path, 'register')
     _kj = build_keyjar(KEYDEFS)[1]

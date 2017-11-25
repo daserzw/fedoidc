@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+import os
+import shutil
 from urllib.parse import quote_plus, unquote_plus
 
 from fedoidc.bundle import FSJWKSBundle
@@ -12,8 +15,12 @@ jb = FSJWKSBundle('', fdir='fo_jwks',
 operator = {}
 
 for entity, _keyjar in jb.items():
-    operator[entity] = Operator(iss=entity, keyjar=_keyjar)
+    operator[entity] = Operator(iss=entity, keyjar=_keyjar, lifetime=86400)
 
+# Clear out old stuff
+for d in ['mds', 'ms']:
+    if os.path.isdir(d):
+        shutil.rmtree(d)
 
-signers = setup_ms(fo_conf.SMS_DEF, fo_conf.MS_PATH, fo_conf.MDS_DIR,
-                   fo_conf.BASE_URL, operator)
+setup_ms(fo_conf.SMS_DEF, fo_conf.MS_PATH, fo_conf.MDS_DIR, fo_conf.BASE_URL,
+         operator)

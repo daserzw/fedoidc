@@ -36,4 +36,5 @@ for iss, kj in keybundle.items():
     fp = open(fn, 'w')
     fp.write(json.dumps(kj.export_jwks(issuer=iss)))
     fp.close()
+os.rmdir('fo_jwks')
 os.chdir('..')

@@ -99,6 +99,7 @@ def test_make_fs_jwks_bundle():
 
 def test_make_signed_metadata_statements():
     mds = MetaDataStore('mds')
+    mds.clear()
     liss = list(FO.values())
     liss.extend(list(OA.values()))
 
@@ -129,6 +130,7 @@ def test_make_signed_metadata_statements():
 
 def test_metadatastore():
     mds = MetaDataStore('mds')
+    mds.clear()
     desc = SMS_DEF[OA['sunet']]["discovery"][FO['swamid']][0]
     operator = {}
 
@@ -165,7 +167,7 @@ def test_make_signed_metadata_statement_mixed():
     assert sms
 
     _spec = SMS_DEF[OA['sunet']]["discovery"][FO['edugain']]
-    mds.clear()
+
     sms = make_signed_metadata_statement(_spec, operator, mds=mds,
                                         base_uri='https:/example.org/ms')
     assert list(sms['ms_uri'].keys()) == [FO['edugain']]
@@ -176,18 +178,15 @@ def test_make_signed_metadata_statement_mixed():
 
     op = Operator()
     _res = op.evaluate_metadata_statement(_md0)
-    assert _res[0].le == {}
+    assert _res[0].le =={'federation_usage':'discovery'}
 
 
 def test_setup_ms():
     liss = list(FO.values())
     liss.extend(list(OA.values()))
-    for path in ['ms_dir', 'mds']:
-        if os.path.isdir(path):
-            shutil.rmtree(path)
 
     # keydefs, tool_iss, liss, ms_path
-    res = test_utils.setup(KEYDEFS, 'iss', liss, 'ms_dir', csms_def=SMS_DEF,
+    res = test_utils.setup(KEYDEFS, 'iss', liss, 'ms', csms_def=SMS_DEF,
                            mds_dir='mds', base_url='http://example.org')
 
     assert res

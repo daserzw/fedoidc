@@ -212,14 +212,7 @@ class FileSystem(object):
             return
 
         for f in os.listdir(self.fdir):
-            fname = os.path.join(self.fdir, f)
-            if os.path.isfile(fname):
-                os.unlink(fname)
-
-            try:
-                del self.db[f]
-            except KeyError:
-                pass
+            del self[f]
 
     def update(self, ava):
         """

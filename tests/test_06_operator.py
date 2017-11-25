@@ -63,7 +63,7 @@ SMS_DEF = {
 }
 
 # Clear out old stuff
-for d in ['mds', 'ms_dir', 'ms_path']:
+for d in ['mds', 'ms']:
     if os.path.isdir(d):
         shutil.rmtree(d)
 
@@ -71,8 +71,8 @@ liss = list(FO.values())
 liss.extend(list(OA.values()))
 
 signer, keybundle = test_utils.setup(
-    KEYDEFS, TOOL_ISS, liss, ms_path='ms_path_6', csms_def=SMS_DEF,
-    mds_dir='mds_dir_6', base_url='https://localhost')
+    KEYDEFS, TOOL_ISS, liss, ms_path='ms', csms_def=SMS_DEF,
+    mds_dir='msd', base_url='https://localhost')
 
 
 class Response(object):
@@ -158,7 +158,7 @@ def test_unpack_metadata_statement_uri():
     jb = FSJWKSBundle('', None, 'fo_jwks',
                       key_conv={'to': quote_plus, 'from': unquote_plus})
 
-    mds = MetaDataStore('mds_dir_6')
+    mds = MetaDataStore('msd')
     op = Operator(jwks_bundle=jb)
     op.httpcli = MockHTTPClient(mds)
     res = op.unpack_metadata_statement(jwt_ms=ms)

@@ -27,7 +27,7 @@ def copy_if_not_same(src, dst, overwrite=False):
 
 
 def fedoidc_op_setup(distroot):
-    for _dir in ['certs', 'keys', 'ms_dir', 'jwks_dir', 'static', 'modules']:
+    for _dir in ['certs', 'keys', 'ms', 'jwks_dir', 'static', 'modules']:
         if os.path.isdir(_dir) is False:
             os.mkdir(_dir)
 
@@ -44,7 +44,7 @@ def fedoidc_op_setup(distroot):
 
 
 def fedoidc_rp_setup(distroot):
-    for _dir in ['certs', 'keys', 'ms_dir', 'jwks_dir', 'static']:
+    for _dir in ['certs', 'keys', 'ms', 'jwks_dir', 'static']:
         if os.path.isdir(_dir) is False:
             os.mkdir(_dir)
 

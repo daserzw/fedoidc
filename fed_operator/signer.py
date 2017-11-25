@@ -14,7 +14,7 @@ KEYDEFS= [{"type": "RSA", "key": "keys/{}.key", "use": ["sig"]}]
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', dest='iss')
-parser.add_argument('-m', dest='ms_dir', default='ms_dir')
+parser.add_argument('-m', dest='ms_dir', default='ms')
 parser.add_argument(dest="statement")
 args = parser.parse_args()
 
