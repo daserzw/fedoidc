@@ -1,12 +1,13 @@
 import json
 import logging
 
-import fedoidc
-from jwkest.jws import JWS
-from oic.utils.keyio import KeyBundle
 
+import fedoidc
 from fedoidc import ClientMetadataStatement
 from fedoidc import ProviderConfigurationResponse
+from fedoidc.utils import replace_jwks_key_bundle
+
+from jwkest.jws import JWS
 
 from oic import OIDCONF_PATTERN
 from oic import oic
@@ -18,8 +19,8 @@ from oic.oauth2 import ErrorResponse
 from oic.oauth2 import sanitize
 from oic.oauth2.message import MissingRequiredAttribute
 from oic.oic import RegistrationResponse
+from oic.utils.keyio import KeyBundle
 
-from fedoidc.utils import replace_jwks_key_bundle
 
 try:
     from json import JSONDecodeError
@@ -137,7 +138,10 @@ class Client(oic.Client):
         # federation I'll be working.
         if len(ms_list) == 1:
             ms = ms_list[0]
-            self.store_registration_info(ms.protected_claims())
+            _trusted_claims = ms.protected_claims()
+            if not _trusted_claims:
+                raise fedoidc.NoTrustedClaims()
+            self.store_registration_info(_trusted_claims)
             self.federation = ms.fo
             self.redirect_uris = self.registration_response['redirect_uris']
         else:

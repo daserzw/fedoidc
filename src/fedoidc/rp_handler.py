@@ -3,8 +3,6 @@ import logging
 import sys
 import traceback
 
-from oic.utils.keyio import key_export
-
 from fedoidc import client
 from jwkest import as_bytes
 
