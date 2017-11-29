@@ -111,7 +111,7 @@ if __name__ == '__main__':
 
     sign_kj = own_sign_keys(SIGKEY_NAME, _base_url, config.SIG_DEF_KEYS)
     store_signed_jwks(_kj, sign_kj, config.SIGNED_JWKS_PATH,
-                      config.SIGNED_JWKS_ALG)
+                      config.SIGNED_JWKS_ALG, iss=_base_url)
 
     # internalized request signing server using the superiors keys
     rp_fed_ent = create_federation_entity(iss=_base_url, ms_dir=config.MS_DIR,
