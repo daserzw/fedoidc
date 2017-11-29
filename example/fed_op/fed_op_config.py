@@ -88,7 +88,7 @@ USERDB = {
 SIG_DEF_KEYS = [{"type": "RSA", "key": "keys/op_key.pem", "use": ["sig"]}]
 
 # Where the OP can find signed metadata statements
-MS_DIR = 'ms'
+MS_DIR = 'ms_dir'
 
 # Where FO keys are found
 JWKS_DIR = 'jwks_dir'
