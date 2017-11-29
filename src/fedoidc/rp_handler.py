@@ -120,6 +120,7 @@ class FedRPHandler(object):
     def create_callback(self, issuer):
         _hash = hashlib.sha256()
         _hash.update(self.hash_seed)
+        #_hash.update(rndstr(32))
         _hash.update(as_bytes(issuer))
         _hex = _hash.hexdigest()
         self.hash2issuer[_hex] = issuer
@@ -240,7 +241,7 @@ class FedRPHandler(object):
         logger.debug("resp_headers: %s", resp_headers)
         return resp_headers
 
-    def get_accesstoken(self, client, authresp):
+    def get_accesstoken(self, client, authresp, request_args=None):
         issuer = client.provider_info["issuer"]
         key = client.keyjar.get_verify_key(owner=issuer)
         kwargs = {"key": key}
@@ -253,7 +254,7 @@ class FedRPHandler(object):
         # get the access token
         return client.do_access_token_request(
             state=authresp["state"], response_cls=self.access_token_response,
-            **kwargs)
+            request_args=request_args, **kwargs)
 
     # noinspection PyUnusedLocal
     def verify_token(self, client, access_token):
@@ -289,14 +290,17 @@ class FedRPHandler(object):
         except KeyError:
             pass
 
-        response_type = client.state2request[authresp['state']]['response_type']
+        _req = client.state2request[authresp['state']]
+        response_type = _req['response_type']
 
         if 'token' in response_type:
             access_token = authresp["access_token"]
         elif 'code' in response_type:
             # get the access token
             try:
-                tokenresp = self.get_accesstoken(client, authresp)
+                tokenresp = self.get_accesstoken(
+                    client, authresp,
+                    request_args={'redirect_uri': _req['redirect_uri']})
             except Exception as err:
                 logger.error("%s", err)
                 raise
