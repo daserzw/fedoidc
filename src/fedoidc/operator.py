@@ -364,7 +364,7 @@ class Operator(object):
         if alg:
             _jwt.sign_alg = alg
 
-        if iss in keyjar.keys():
+        if iss in keyjar:
             owner = iss
         else:
             owner = ''

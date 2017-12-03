@@ -12,7 +12,7 @@ parser.add_argument(
     '-r', dest='req',
     help="The basic message to which should be added the signing keys and metadata statements")
 parser.add_argument('-m', dest='ms', action='append',
-                    help="Metadata statements to add the basic message")
+                    help="Metadata statements to add to the basic message")
 args = parser.parse_args()
 
 kj = read_jwks_file(args.jwks)
