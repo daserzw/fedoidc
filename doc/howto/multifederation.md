@@ -63,13 +63,36 @@ Note: processes are described as if they were always performed in a reactive way
                 "FB": JWT signed by OP {
                     OP's claims,
                     "signing_key": "OP_key",
-                    "metadata_statements_uris": {
-                        "FB": "https://SS_FB/getms/OP"
+                    "metadata_statements": {
+                        "FB": JWT signed by SS_FB {
+                            "signing_keys": "OP_key",
+                            SS_FB introduced claims,
+                            "metadata_statements": {
+                                "FB": JWT signed by SS_FB {
+                                    "signing_keys": "SS_FB_key",
+                                }
+                            }
+                        }
                     }                     
                 }
             }
         }
         ```
+        Or the same with URI references:
+        ```
+        {
+            OP's claims,
+            "metadata_statements": {
+                "FB": JWT signed by OP {
+                    OP's claims,
+                    "signing_key": "OP_key",
+                    "metadata_statement_uris": {
+                        "FB": "https://SS_FB/getms/OP"
+                    }                     
+                }
+            }
+        }
+        ```        
     1. Since FB is not in RP's federation list, registration is not attempted.
 1. After some time, SS_FA and SS_FB enrol to become part of Edugain.
 1. SS_FA then gets its signed MS from Edugain.
@@ -148,7 +171,7 @@ Note: processes are described as if they were always performed in a reactive way
         }
         ```
    1. RP verifies and parses the signed JWT and learns which Federations are included (FA and FE).
-1. Similarly, OP decides to refresh its signed MS, and it gets:
+1. Similarly, OP decides to refresh its signed MS from https://SS_FB/getms/OP), and it gets:
     ```
     JWT signed by SS_FB {
         "signing_keys": "OP_key",
@@ -178,22 +201,114 @@ Note: processes are described as if they were always performed in a reactive way
                 "FB": JWT signed by OP {
                     OP's claims,
                     "signing_key": "OP_key",
+                    "metadata_statements": {
+                        "FB": JWT signed by SS_FB {
+                            "signing_keys": "OP_key",
+                            SS_FB introduced claims,
+                            "metadata_statements": {
+                                "FB": JWT signed by SS_FB {
+                                    "signing_keys": "SS_FB_key",
+                                },
+                                "FE": JWT signed by SS_FE {
+                                    "signing_keys": "SS_FB_key",
+                                    SS_FE introduced claims,
+                                    "metadata_statements": {
+                                        "FE": JWT signed by SS_FE {
+                                            "signing_keys": "SS_FE_key",
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "FE": JWT signed by SS_FB {
+                            "signing_keys": "OP_key",
+                            SS_FB introduced claims,
+                            "metadata_statements": {
+                                "FB": JWT signed by SS_FB {
+                                    "signing_keys": "SS_FB_key",
+                                },
+                                "FE": JWT signed by SS_FE {
+                                    "signing_keys": "SS_FB_key",
+                                    SS_FE introduced claims,
+                                    "metadata_statements": {
+                                        "FE": JWT signed by SS_FE {
+                                            "signing_keys": "SS_FE_key",
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }                     
+                },
+                "FE": JWT signed by OP {
+                    OP's claims,
+                    "signing_key": "OP_key",
+                    "metadata_statements": {
+                        "FB": JWT signed by SS_FB {
+                            "signing_keys": "OP_key",
+                            SS_FB introduced claims,
+                            "metadata_statements": {
+                                "FB": JWT signed by SS_FB {
+                                    "signing_keys": "SS_FB_key",
+                                },
+                                "FE": JWT signed by SS_FE {
+                                    "signing_keys": "SS_FB_key",
+                                    SS_FE introduced claims,
+                                    "metadata_statements": {
+                                        "FE": JWT signed by SS_FE {
+                                            "signing_keys": "SS_FE_key",
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "FE": JWT signed by SS_FB {
+                            "signing_keys": "OP_key",
+                            SS_FB introduced claims,
+                            "metadata_statements": {
+                                "FB": JWT signed by SS_FB {
+                                    "signing_keys": "SS_FB_key",
+                                },
+                                "FE": JWT signed by SS_FE {
+                                    "signing_keys": "SS_FB_key",
+                                    SS_FE introduced claims,
+                                    "metadata_statements": {
+                                        "FE": JWT signed by SS_FE {
+                                            "signing_keys": "SS_FE_key",
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }                     
+                }
+            }
+        }
+        ```
+        Or just with references:
+        ```
+        {
+            OP's claims,
+            "metadata_statements": {
+                "FB": JWT signed by OP {
+                    OP's claims,
+                    "signing_key": "OP_key",
                     "metadata_statement_uris": {
                         "FB": "https://SS_FB/getms/OP",
-                        "FE": "https://SS_FB/getms/OP",
-                    }                     
+                        "FE": "https://SS_FB/getms/OP"
+                    }
                 },
                 "FE": JWT signed by OP {
                     OP's claims,
                     "signing_key": "OP_key",
                     "metadata_statement_uris": {
                         "FB": "https://SS_FB/getms/OP",
-                        "FE": "https://SS_FB/getms/OP",
+                        "FE": "https://SS_FB/getms/OP"
                     }                     
                 }
             }
         }
-        ```
+        ```        
     1. Since RP is in FE, it validates the MS making use of the known FE public key (found in the inner-most part of its own MS for FE).
     1. Then RP can proceed with the registration, sending a registration request:
         ```
@@ -203,22 +318,114 @@ Note: processes are described as if they were always performed in a reactive way
                 "FA": JWT signed by RP {
                     RP's claims,
                     "signing_key": "RP_key",
+                    "metadata_statements": {
+                        "FA": JWT signed by SS_FA {
+                            "signing_keys": "RP_key",
+                            SS_FA introduced claims,
+                            "metadata_statements": {
+                                "FA": JWT signed by SS_FA {
+                                    "signing_keys": "SS_FA_key",
+                                },
+                                "FE": JWT signed by SS_FE {
+                                    "signing_keys": "SS_FA_key",
+                                    SS_FE introduced claims,
+                                    "metadata_statements": {
+                                        "FE": JWT signed by SS_FE {
+                                            "signing_keys": "SS_FE_key",
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "FE": JWT signed by SS_FA {
+                            "signing_keys": "RP_key",
+                            SS_FA introduced claims,
+                            "metadata_statements": {
+                                "FA": JWT signed by SS_FA {
+                                    "signing_keys": "SS_FA_key",
+                                },
+                                "FE": JWT signed by SS_FE {
+                                    "signing_keys": "SS_FA_key",
+                                    SS_FE introduced claims,
+                                    "metadata_statements": {
+                                        "FE": JWT signed by SS_FE {
+                                            "signing_keys": "SS_FE_key",
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }                     
+                },
+                "FE": JWT signed by RP {
+                    RP's claims,
+                    "signing_key": "RP_key",
+                    "metadata_statements": {
+                        "FA": JWT signed by SS_FA {
+                            "signing_keys": "RP_key",
+                            SS_FA introduced claims,
+                            "metadata_statements": {
+                                "FA": JWT signed by SS_FA {
+                                    "signing_keys": "SS_FA_key",
+                                },
+                                "FE": JWT signed by SS_FE {
+                                    "signing_keys": "SS_FA_key",
+                                    SS_FE introduced claims,
+                                    "metadata_statements": {
+                                        "FE": JWT signed by SS_FE {
+                                            "signing_keys": "SS_FE_key",
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "FE": JWT signed by SS_FA {
+                            "signing_keys": "RP_key",
+                            SS_FA introduced claims,
+                            "metadata_statements": {
+                                "FA": JWT signed by SS_FA {
+                                    "signing_keys": "SS_FA_key",
+                                },
+                                "FE": JWT signed by SS_FE {
+                                    "signing_keys": "SS_FA_key",
+                                    SS_FE introduced claims,
+                                    "metadata_statements": {
+                                        "FE": JWT signed by SS_FE {
+                                            "signing_keys": "SS_FE_key",
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ```
+        Or the same with URI references.
+        ```
+        {
+            RP's claims,
+            "metadata_statements": {
+                "FA": JWT signed by RP {
+                    RP's claims,
+                    "signing_key": "RP_key",
                     "metadata_statement_uris": {
                         "FB": "https://SS_FA/getms/RP",
-                        "FE": "https://SS_FA/getms/RP",
-                    }                     
+                        "FE": "https://SS_FA/getms/RP"
+                    }
                 },
                 "FE": JWT signed by RP {
                     RP's claims,
                     "signing_key": "RP_key",
                     "metadata_statement_uris": {
                         "FB": "https://SS_FA/getms/RP",
-                        "FE": "https://SS_FA/getms/RP",
+                        "FE": "https://SS_FA/getms/RP"
                     }                     
                 }
             }
         }
-        ```
+        ```  
     1. Similarly, OP verifies RP's MS using FE's key found inside its own signed MS for FE.
 
 
