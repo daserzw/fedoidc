@@ -13,8 +13,6 @@ The description of the steps is based on the diagram that Steffen draw in the bo
 * SS_FB. The Signing Service for Federation B (FB).
 * SS_FE. The Signing Service for the EduGAIN federation (FE).
 
-Note that in this document, organizations, federations and clubs/associations/groups/communities are technologically identical. They all have to deploy a Signing Service able to sign their members' metadata statements.
-
 ## Sequence of steps
 Note: processes are described as if they were always performed in a reactive way. Caches and proactive behaviour MUST be in-place to avoid delays in the processes.
 
