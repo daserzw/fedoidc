@@ -12,7 +12,7 @@ The description of the steps is based on the diagram that Steffen draw in the bo
 * `OP1`. A OpenID Provider.
 * `MSS_FA`. The Metadata Signing Service for Federation A (`FA`).
 * `MSS_FB`. The Metadata Signing Service for Federation B (`FB`).
-* `MSS_CE`. The Metadata Signing Service for the community of federations E (`CE`). This might be eduGAIN-OIDC..
+* `MSS_CE`. The Metadata Signing Service for the community of federations E (`CE`). This might be eduGAIN-OIDC.
 
 
 ## Remarks
