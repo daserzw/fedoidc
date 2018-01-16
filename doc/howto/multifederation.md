@@ -9,58 +9,58 @@ The description of the steps is based on the diagram that Steffen draw in the bo
 ## Entities
 * `RP`. A Relying Party.
 * `OP`. A OpenID Provider.
-* `SS_FA`. The Signing Service for Federation A (`FA`).
-* `SS_FB`. The Signing Service for Federation B (`FB`).
-* `SS_FE`. The Signing Service for the EduGAIN federation (`FE`).
+* `MSS_FA`. The Metadata Signing Service for Federation A (`FA`).
+* `MSS_FB`. The Metadata Signing Service for Federation B (`FB`).
+* `MSS_FE`. The Metadata Signing Service for the EduGAIN federation (`FE`).
 
 ## The Signing Service
 The Signing Service is a key part of the architecture. Each federation MUST deploy one.
-A Signing Service (SS) has control over the private part of the Federation Key. Entities (RP/OP/SS) can enrol to become part of the federation. The SS gets access to the public parts of the signing_key of the enrolled entities and use them to generate signed MS for them.
+A Metadata Signing Service (MSS) has control over the private part of the Federation Key. Entities (RP/OP/MSS) can enrol to become part of the federation. The MSS gets access to the public parts of the signing_key of the enrolled entities and use them to generate signed Metadata Statement (`MS`) for them.
 
-The SS MUST be notified every time the `RP` does key rotation of its signing keys.
+The MSS MUST be notified every time the `RP` does key rotation of its signing keys.
 
-A SS has the following API calls available:
+A MSS has the following API calls available:
 * `/getms/{entity}`. Returns a signed JWT containing a collection of signed MS for `entity`. This collection is a JSON object whose keys are federation IDs and the values are the corresponding signed MS.
 * `/getms/{entity}/{FO}`. Returns the signed MS for `entity` in the federation `FO`.
 
 ## Sequence of steps
 Note: processes are described as if they were always performed in a reactive way. Caches and proactive behaviour MUST be in-place to avoid delays in the processes.
 
-1. `RP` enrols to become part of `FA`. This process is out of the scope of this document, but as a result, `SS_FA` gets access to the public parts of `RP`'s signing key.
-1. Once this has been completed, `RP` decides to retrieve its signed MS from `SS_FA`.
-    1. `RP` sends a query to `SS_FA` API to get the collection of signed MS (https://SS_FA/getms/RP).
-    1. `SS_FA` generates and/or gets its own signed MSs first. Note that these are not specific to the requesting `RP`, and will be used for any other RP member of `FA` if cached. A Signing Service will always have a self-signed MS. Additionally, it will have a signed MS per any superior Signing Service (federation) it has enrolled into. In this example, only the self-signed one is available.
+1. `RP` enrols to become part of `FA`. This process is out of the scope of this document, but as a result, `MSS_FA` gets access to the public parts of `RP`'s signing key.
+1. Once this has been completed, `RP` decides to retrieve its signed MS from `MSS_FA`.
+    1. `RP` sends a query to `MSS_FA` API to get the collection of signed MS (https://MSS_FA/getms/RP).
+    1. `MSS_FA` generates and/or gets its own signed MSs first. Note that these are not specific to the requesting `RP`, and will be used for any other RP member of `FA` if cached. A Signing Service will always have a self-signed MS. Additionally, it will have a signed MS per any superior Signing Service (federation) it has enrolled into. In this example, only the self-signed one is available.
         ```
         {
-            "FA": JWT signed by SS_FA {
-                "signing_keys": "SS_FA_key",
+            "FA": JWT signed by MSS_FA {
+                "signing_keys": "MSS_FA_key",
             }
         }
         ```
-    1. For each one of `SS_FA` signed MS, `SS_FA` generates a corresponding signed MS for  `RP`, consisting of the public parts of `RP`'s signing_key, any additional claim `SS_FA` wants to introduce, and `SS_FA`'s signed MS as the `metadata_statements` claim. The collection of signed MS are packed into a JSON object keyed by federation name. Finally, the response to the `RP` consists of a signed JWT of such JSON object:
+    1. For each one of `MSS_FA` signed MS, `MSS_FA` generates a corresponding signed MS for  `RP`, consisting of the public parts of `RP`'s signing_key, any additional claim `MSS_FA` wants to introduce, and `MSS_FA`'s signed MS as the `metadata_statements` claim. The collection of signed MS are packed into a JSON object keyed by federation name. Finally, the response to the `RP` consists of a signed JWT of such JSON object:
         ```
-        JWT signed by SS_FA {
-            "FA": JWT signed by SS_FA {
+        JWT signed by MSS_FA {
+            "FA": JWT signed by MSS_FA {
                 "signing_keys": "RP_key",
-                SS_FA introduced claims,
+                MSS_FA introduced claims,
                 "metadata_statements": {
-                    "FA": JWT signed by SS_FA {
-                        "signing_keys": "SS_FA_key",
+                    "FA": JWT signed by MSS_FA {
+                        "signing_keys": "MSS_FA_key",
                     }
                 }
             }
         }
         ```
     1. `RP` verifies the response and learns the supported federations: `FA`
-1. In a similar way, `OP` enrols to become part of `FB` and gets its signed MS from `SS_FB` (https://SS_FB/getms/OP).
+1. In a similar way, `OP` enrols to become part of `FB` and gets its signed MS from `MSS_FB` (https://MSS_FB/getms/OP).
     ```
-    JWT signed by SS_FB {
-        "FB": JWT signed by SS_FB {
+    JWT signed by MSS_FB {
+        "FB": JWT signed by MSS_FB {
             "signing_keys": "OP_key",
-            SS_FB introduced claims,
+            MSS_FB introduced claims,
             "metadata_statements": {
-                "FB": JWT signed by SS_FB {
-                    "signing_keys": "SS_FB_key",
+                "FB": JWT signed by MSS_FB {
+                    "signing_keys": "MSS_FB_key",
                 }
             }
         }
@@ -76,12 +76,12 @@ Note: processes are described as if they were always performed in a reactive way
                     OP's claims,
                     "signing_key": "OP_key",
                     "metadata_statements": {
-                        "FB": JWT signed by SS_FB {
+                        "FB": JWT signed by MSS_FB {
                             "signing_keys": "OP_key",
-                            SS_FB introduced claims,
+                            MSS_FB introduced claims,
                             "metadata_statements": {
-                                "FB": JWT signed by SS_FB {
-                                    "signing_keys": "SS_FB_key",
+                                "FB": JWT signed by MSS_FB {
+                                    "signing_keys": "MSS_FB_key",
                                 }
                             }
                         }
@@ -99,94 +99,94 @@ Note: processes are described as if they were always performed in a reactive way
                     OP's claims,
                     "signing_key": "OP_key",
                     "metadata_statement_uris": {
-                        "FB": "https://SS_FB/getms/OP/FB"
+                        "FB": "https://MSS_FB/getms/OP/FB"
                     }
                 }
             }
         }
         ```
     1. Since `FB` is not in `RP`'s federation list, registration is not even attempted.
-1. After some time, `SS_FA` and `SS_FB` enrol to become part of Edugain.
-1. `SS_FA` then gets its signed MS from Edugain.
-   1. `SS_FA` sends a GET query to `SS_FE` (https://SS_FE/getms/SS_FA).
-   1. `SS_FE` generates its self-signed MS.
+1. After some time, `MSS_FA` and `MSS_FB` enrol to become part of Edugain.
+1. `MSS_FA` then gets its signed MS from Edugain.
+   1. `MSS_FA` sends a GET query to `MSS_FE` (https://MSS_FE/getms/MSS_FA).
+   1. `MSS_FE` generates its self-signed MS.
         ```
         {
-            "FE": JWT signed by SS_FE {
-                "signing_keys": "SS_FE_key",
+            "FE": JWT signed by MSS_FE {
+                "signing_keys": "MSS_FE_key",
             }
         }
         ```
-   1. And then generates the response for `SS_FA`.
+   1. And then generates the response for `MSS_FA`.
         ```
-        JWT signed by SS_FE {
-            "FE": JWT signed by SS_FE {
-                "signing_keys": "SS_FA_key",
-                SS_FE introduced claims,
+        JWT signed by MSS_FE {
+            "FE": JWT signed by MSS_FE {
+                "signing_keys": "MSS_FA_key",
+                MSS_FE introduced claims,
                 "metadata_statements": {
-                    "FE": JWT signed by SS_FE {
-                        "signing_keys": "SS_FE_key",
+                    "FE": JWT signed by MSS_FE {
+                        "signing_keys": "MSS_FE_key",
                     }
                 }
             }
         }
         ```
-   1. `SS_FA` verifies, parses and caches the response.
-1. `SS_FB` gets its signed MS from Edugain, following a similar process:
+   1. `MSS_FA` verifies, parses and caches the response.
+1. `MSS_FB` gets its signed MS from Edugain, following a similar process:
     ```
-    JWT signed by SS_FE {
-        "FE": JWT signed by SS_FE {
-            "signing_keys": "SS_FB_key",
-            SS_FE introduced claims,
+    JWT signed by MSS_FE {
+        "FE": JWT signed by MSS_FE {
+            "signing_keys": "MSS_FB_key",
+            MSS_FE introduced claims,
             "metadata_statements": {
-                "FE": JWT signed by SS_FE {
-                    "signing_keys": "SS_FE_key",
+                "FE": JWT signed by MSS_FE {
+                    "signing_keys": "MSS_FE_key",
                 }
             }
         }
     }
     ```
 1. After some more time, `RP` decides to refresh its signed MS (e.g. because they are about to expire).
-   1. `RP` queries `SS_FA` (e.g. https://SS_FA/getms/RP).
-   1. `SS_FA` generates/gets its signed MSs. In this case, SS_FA has the self-signed MS and the one signed by Edugain.
+   1. `RP` queries `MSS_FA` (e.g. https://MSS_FA/getms/RP).
+   1. `MSS_FA` generates/gets its signed MSs. In this case, MSS_FA has the self-signed MS and the one signed by Edugain.
         ```
         {
-            "FA": JWT signed by SS_FA {
-                "signing_keys": "SS_FA_key",
+            "FA": JWT signed by MSS_FA {
+                "signing_keys": "MSS_FA_key",
             },
-            "FE": JWT signed by SS_FE {
-                "signing_keys": "SS_FA_key",
-                SS_FE introduced claims,
+            "FE": JWT signed by MSS_FE {
+                "signing_keys": "MSS_FA_key",
+                MSS_FE introduced claims,
                 "metadata_statements": {
-                    "FE": JWT signed by SS_FE {
-                        "signing_keys": "SS_FE_key",
+                    "FE": JWT signed by MSS_FE {
+                        "signing_keys": "MSS_FE_key",
                     }
                 }
             }
         }
         ```
-   1. `SS_FA` generates the collection of signed MSs for `RP`:
+   1. `MSS_FA` generates the collection of signed MSs for `RP`:
         ```
-        JWT signed by SS_FA {
-            "FA": JWT signed by SS_FA {
+        JWT signed by MSS_FA {
+            "FA": JWT signed by MSS_FA {
                 "signing_keys": "RP_key",
-                SS_FA introduced claims,
+                MSS_FA introduced claims,
                 "metadata_statements": {
-                    "FA": JWT signed by SS_FA {
-                        "signing_keys": "SS_FA_key",
+                    "FA": JWT signed by MSS_FA {
+                        "signing_keys": "MSS_FA_key",
                     }
                 }
             },
-            "FE": JWT signed by SS_FA {
+            "FE": JWT signed by MSS_FA {
                 "signing_keys": "RP_key",
-                SS_FA introduced claims,
+                MSS_FA introduced claims,
                 "metadata_statements": {
-                    "FE": JWT signed by SS_FE {
-                        "signing_keys": "SS_FA_key",
-                        SS_FE introduced claims,
+                    "FE": JWT signed by MSS_FE {
+                        "signing_keys": "MSS_FA_key",
+                        MSS_FE introduced claims,
                         "metadata_statements": {
-                            "FE": JWT signed by SS_FE {
-                                "signing_keys": "SS_FE_key",
+                            "FE": JWT signed by MSS_FE {
+                                "signing_keys": "MSS_FE_key",
                             }
                         }
                     }
@@ -195,28 +195,28 @@ Note: processes are described as if they were always performed in a reactive way
         }
         ```
    1. `RP` verifies and parses the signed response, and learns which Federations are included (`FA` and `FE`).
-1. Similarly, `OP` decides to refresh its signed MS from https://SS_FB/getms/OP), and it gets:
+1. Similarly, `OP` decides to refresh its signed MS from https://MSS_FB/getms/OP), and it gets:
     ```
-    JWT signed by SS_FB {
-        "FB": JWT signed by SS_FB {
+    JWT signed by MSS_FB {
+        "FB": JWT signed by MSS_FB {
             "signing_keys": "OP_key",
-            SS_FB introduced claims,
+            MSS_FB introduced claims,
             "metadata_statements": {
-                "FB": JWT signed by SS_FB {
-                    "signing_keys": "SS_FB_key",
+                "FB": JWT signed by MSS_FB {
+                    "signing_keys": "MSS_FB_key",
                 }
             }
         },
-        "FE": JWT signed by SS_FB {
+        "FE": JWT signed by MSS_FB {
             "signing_keys": "OP_key",
-            SS_FB introduced claims,
+            MSS_FB introduced claims,
             "metadata_statements": {
-                "FE": JWT signed by SS_FE {
-                    "signing_keys": "SS_FB_key",
-                    SS_FE introduced claims,
+                "FE": JWT signed by MSS_FE {
+                    "signing_keys": "MSS_FB_key",
+                    MSS_FE introduced claims,
                     "metadata_statements": {
-                        "FE": JWT signed by SS_FE {
-                            "signing_keys": "SS_FE_key",
+                        "FE": JWT signed by MSS_FE {
+                            "signing_keys": "MSS_FE_key",
                         }
                     }
                 }
@@ -234,12 +234,12 @@ Note: processes are described as if they were always performed in a reactive way
                     OP's claims,
                     "signing_key": "OP_key",
                     "metadata_statements": {
-                        "FB": JWT signed by SS_FB {
+                        "FB": JWT signed by MSS_FB {
                             "signing_keys": "OP_key",
-                            SS_FB introduced claims,
+                            MSS_FB introduced claims,
                             "metadata_statements": {
-                                "FB": JWT signed by SS_FB {
-                                    "signing_keys": "SS_FB_key",
+                                "FB": JWT signed by MSS_FB {
+                                    "signing_keys": "MSS_FB_key",
                                 }
                             }
                         }
@@ -249,16 +249,16 @@ Note: processes are described as if they were always performed in a reactive way
                     OP's claims,
                     "signing_key": "OP_key",
                     "metadata_statements": {
-                        "FE": JWT signed by SS_FB {
+                        "FE": JWT signed by MSS_FB {
                             "signing_keys": "OP_key",
-                            SS_FB introduced claims,
+                            MSS_FB introduced claims,
                             "metadata_statements": {
-                                "FE": JWT signed by SS_FE {
-                                    "signing_keys": "SS_FB_key",
-                                    SS_FE introduced claims,
+                                "FE": JWT signed by MSS_FE {
+                                    "signing_keys": "MSS_FB_key",
+                                    MSS_FE introduced claims,
                                     "metadata_statements": {
-                                        "FE": JWT signed by SS_FE {
-                                            "signing_keys": "SS_FE_key",
+                                        "FE": JWT signed by MSS_FE {
+                                            "signing_keys": "MSS_FE_key",
                                         }
                                     }
                                 }
@@ -278,14 +278,14 @@ Note: processes are described as if they were always performed in a reactive way
                     OP's claims,
                     "signing_key": "OP_key",
                     "metadata_statement_uris": {
-                        "FB": "https://SS_FB/getms/OP/FB",
+                        "FB": "https://MSS_FB/getms/OP/FB",
                     }
                 },
                 "FE": JWT signed by OP {
                     OP's claims,
                     "signing_key": "OP_key",
                     "metadata_statement_uris": {
-                        "FE": "https://SS_FB/getms/FE"
+                        "FE": "https://MSS_FB/getms/FE"
                     }
                 }
             }
@@ -301,12 +301,12 @@ Note: processes are described as if they were always performed in a reactive way
                     RP's claims,
                     "signing_key": "RP_key",
                     "metadata_statements": {
-                        "FA": JWT signed by SS_FA {
+                        "FA": JWT signed by MSS_FA {
                             "signing_keys": "RP_key",
-                            SS_FA introduced claims,
+                            MSS_FA introduced claims,
                             "metadata_statements": {
-                                "FA": JWT signed by SS_FA {
-                                    "signing_keys": "SS_FA_key",
+                                "FA": JWT signed by MSS_FA {
+                                    "signing_keys": "MSS_FA_key",
                                 }
                             }
                         }
@@ -316,16 +316,16 @@ Note: processes are described as if they were always performed in a reactive way
                     RP's claims,
                     "signing_key": "RP_key",
                     "metadata_statements": {
-                        "FE": JWT signed by SS_FA {
+                        "FE": JWT signed by MSS_FA {
                             "signing_keys": "RP_key",
-                            SS_FA introduced claims,
+                            MSS_FA introduced claims,
                             "metadata_statements": {
-                                "FE": JWT signed by SS_FE {
-                                    "signing_keys": "SS_FA_key",
-                                    SS_FE introduced claims,
+                                "FE": JWT signed by MSS_FE {
+                                    "signing_keys": "MSS_FA_key",
+                                    MSS_FE introduced claims,
                                     "metadata_statements": {
-                                        "FE": JWT signed by SS_FE {
-                                            "signing_keys": "SS_FE_key",
+                                        "FE": JWT signed by MSS_FE {
+                                            "signing_keys": "MSS_FE_key",
                                         }
                                     }
                                 }
@@ -345,14 +345,14 @@ Note: processes are described as if they were always performed in a reactive way
                     RP's claims,
                     "signing_key": "RP_key",
                     "metadata_statement_uris": {
-                        "FA": "https://SS_FA/getms/RP/FA"
+                        "FA": "https://MSS_FA/getms/RP/FA"
                     }
                 },
                 "FE": JWT signed by RP {
                     RP's claims,
                     "signing_key": "RP_key",
                     "metadata_statement_uris": {
-                        "FE": "https://SS_FA/getms/RP/FE"
+                        "FE": "https://MSS_FA/getms/RP/FE"
                     }
                 }
             }
