@@ -6,7 +6,6 @@ This document provides an initial step by step description of the technical solu
 
 The description of the steps is based on the diagram that Steffen draw in the board.
 
-
 ## Entities
 * `RP1`. A Relying Party.
 * `OP1`. A OpenID Provider.
@@ -370,3 +369,9 @@ Note: processes are described as if they were always performed in a reactive way
         }
         ```
     1. Similarly, `OP1` verifies `RP1`'s MS using `CE`'s key found inside its own signed MS for `CE`.
+
+## Diagram
+The following diagram shows a simplification of the sequence described in the previous section.
+![](multifederation.png)
+
+It has been genereated using PlantUML (http://plantuml.com/). You might also be interested in checking the source: [multifederation.plantuml](multifederation.plantuml).
