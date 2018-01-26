@@ -1,0 +1,37 @@
+RP1      -> MSS_FA:  Enrolment request (RP1_key)
+MSS_FA   -> RP1:     OK
+RP1      -> MSS_FA:  GET to https://MSS_FA/getms/RP1
+MSS_FA   -> RP1:     SMS={"FA": [RP1_key signed by MSS_FA_key]}
+
+OP1      -> MSS_FB:  Enrolment request (OP1_key)
+MSS_FB   -> OP1:     OK
+OP1      -> MSS_FB:  GET to https://MSS_FB/getms/OP1
+MSS_FB   -> OP1:     SMS={"FB": [OP1_key signed by MSS_FB_key]}
+
+RP1      -> OP1:     GET to https://OP1/.well-known/openid-configuration
+OP1      -> RP1:     Provider info with SMS={"FB": [OP1_key signed by MSS_FB_key]}
+RP1      -> RP1:     Checks federations. Does not continue.
+
+MSS_FA   -> MSS_CE:  Enrolment request (MSS_FA_key)
+MSS_CE   -> MSS_FA:  OK
+MSS_FA   -> MSS_CE:  GET to https://MSS_CE/getms/MSS_FA
+MSS_CE   -> MSS_FA:  SMS={"CE": [MSS_FA_key signed by MSS_CE_key]}
+
+MSS_FB   -> MSS_CE:  Enrolment request (MSS_FB_key)
+MSS_CE   -> MSS_FB:  OK
+MSS_FB   -> MSS_CE:  GET to https://MSS_CE/getms/MSS_FB
+MSS_CE   -> MSS_FB:  SMS={"CE": [MSS_FB_key signed by MSS_CE_key]}
+
+RP1      -> MSS_FA:  GET to https://MSS_FA/getms/RP1
+MSS_FA   -> RP1:     SMS={"FA": [RP1_key signed by MSS_FA_key], \n"CE": [RP1_key signed by MSS_FA_key signed by MSS_CE_key]}
+
+OP1      -> MSS_FB:  GET to https://MSS_FB/getms/OP1
+MSS_FB   -> OP1:     SMS={"FB": [OP1_key signed by MSS_FB_key], \n"CE": [OP1_key signed by MSS_FB_key signed by MSS_CE_key]}
+
+RP1      -> OP1:     GET to https://OP1/.well-known/openid-configuration
+OP1      -> RP1:     Provider info with SMS={"FB": [OP1_key signed by MSS_FB_key], \n"CE": [OP1_key signed by MSS_FB_key signed by MSS_CE_key]}
+RP1      -> RP1:     Checks federations. CE matches.
+RP1      -> OP1:     Registration request with SMS={"FA": [RP1_key signed by MSS_FA_key], \n"CE": [RP1_key signed by MSS_FA_key signed by MSS_CE_key]}
+OP1      -> OP1:     Checks federations. CE matches.
+OP1      -> RP1:     Registration response with SMS={"FB": [OP1_key signed by MSS_FB_key], \n"CE": [OP1_key signed by MSS_FB_key signed by MSS_CE_key]}
+
