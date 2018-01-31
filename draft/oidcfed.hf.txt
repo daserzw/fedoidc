@@ -10,7 +10,7 @@
                                                                Microsoft
                                                               J. Bradley
                                                            Ping Identity
-                                                        January 28, 2018
+                                                        January 31, 2018
 
 
                 OpenID Connect Federation 1.0 - draft 04
@@ -53,7 +53,7 @@ Table of Contents
 
 
 
-Hedberg, et al.          Expires August 1, 2018                 [Page 1]
+Hedberg, et al.          Expires August 4, 2018                 [Page 1]
 
                         OpenID Connect Federation           January 2018
 
@@ -94,8 +94,9 @@ Hedberg, et al.          Expires August 1, 2018                 [Page 1]
        B.7.1.  ***  ***  . . . . . . . . . . . . . . . . . . . . . .  29
        B.7.2.  ***  ***  . . . . . . . . . . . . . . . . . . . . . .  29
    Appendix C.  Open Issues  . . . . . . . . . . . . . . . . . . . .  30
-   Appendix D.  Document History . . . . . . . . . . . . . . . . . .  31
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  31
+   Appendix D.  Notices  . . . . . . . . . . . . . . . . . . . . . .  31
+   Appendix E.  Document History . . . . . . . . . . . . . . . . . .  31
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  32
 
 1.  Introduction
 
@@ -108,8 +109,7 @@ Hedberg, et al.          Expires August 1, 2018                 [Page 1]
 
 
 
-
-Hedberg, et al.          Expires August 1, 2018                 [Page 2]
+Hedberg, et al.          Expires August 4, 2018                 [Page 2]
 
                         OpenID Connect Federation           January 2018
 
@@ -165,7 +165,7 @@ Hedberg, et al.          Expires August 1, 2018                 [Page 2]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                 [Page 3]
+Hedberg, et al.          Expires August 4, 2018                 [Page 3]
 
                         OpenID Connect Federation           January 2018
 
@@ -221,7 +221,7 @@ Hedberg, et al.          Expires August 1, 2018                 [Page 3]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                 [Page 4]
+Hedberg, et al.          Expires August 4, 2018                 [Page 4]
 
                         OpenID Connect Federation           January 2018
 
@@ -277,7 +277,7 @@ Hedberg, et al.          Expires August 1, 2018                 [Page 4]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                 [Page 5]
+Hedberg, et al.          Expires August 4, 2018                 [Page 5]
 
                         OpenID Connect Federation           January 2018
 
@@ -333,7 +333,7 @@ Hedberg, et al.          Expires August 1, 2018                 [Page 5]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                 [Page 6]
+Hedberg, et al.          Expires August 4, 2018                 [Page 6]
 
                         OpenID Connect Federation           January 2018
 
@@ -389,7 +389,7 @@ Hedberg, et al.          Expires August 1, 2018                 [Page 6]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                 [Page 7]
+Hedberg, et al.          Expires August 4, 2018                 [Page 7]
 
                         OpenID Connect Federation           January 2018
 
@@ -445,7 +445,7 @@ Hedberg, et al.          Expires August 1, 2018                 [Page 7]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                 [Page 8]
+Hedberg, et al.          Expires August 4, 2018                 [Page 8]
 
                         OpenID Connect Federation           January 2018
 
@@ -501,7 +501,7 @@ Hedberg, et al.          Expires August 1, 2018                 [Page 8]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                 [Page 9]
+Hedberg, et al.          Expires August 4, 2018                 [Page 9]
 
                         OpenID Connect Federation           January 2018
 
@@ -557,7 +557,7 @@ Hedberg, et al.          Expires August 1, 2018                 [Page 9]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 10]
+Hedberg, et al.          Expires August 4, 2018                [Page 10]
 
                         OpenID Connect Federation           January 2018
 
@@ -613,7 +613,7 @@ Hedberg, et al.          Expires August 1, 2018                [Page 10]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 11]
+Hedberg, et al.          Expires August 4, 2018                [Page 11]
 
                         OpenID Connect Federation           January 2018
 
@@ -669,7 +669,7 @@ Hedberg, et al.          Expires August 1, 2018                [Page 11]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 12]
+Hedberg, et al.          Expires August 4, 2018                [Page 12]
 
                         OpenID Connect Federation           January 2018
 
@@ -725,7 +725,7 @@ Hedberg, et al.          Expires August 1, 2018                [Page 12]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 13]
+Hedberg, et al.          Expires August 4, 2018                [Page 13]
 
                         OpenID Connect Federation           January 2018
 
@@ -781,7 +781,7 @@ Hedberg, et al.          Expires August 1, 2018                [Page 13]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 14]
+Hedberg, et al.          Expires August 4, 2018                [Page 14]
 
                         OpenID Connect Federation           January 2018
 
@@ -837,7 +837,7 @@ Hedberg, et al.          Expires August 1, 2018                [Page 14]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 15]
+Hedberg, et al.          Expires August 4, 2018                [Page 15]
 
                         OpenID Connect Federation           January 2018
 
@@ -893,7 +893,7 @@ Appendix A.  Constructing Entity Metadata
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 16]
+Hedberg, et al.          Expires August 4, 2018                [Page 16]
 
                         OpenID Connect Federation           January 2018
 
@@ -949,7 +949,7 @@ Appendix B.  Illustrative Example
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 17]
+Hedberg, et al.          Expires August 4, 2018                [Page 17]
 
                         OpenID Connect Federation           January 2018
 
@@ -1005,7 +1005,7 @@ B.1.2.  Feide gets a key pair for signing Metadata Statements
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 18]
+Hedberg, et al.          Expires August 4, 2018                [Page 18]
 
                         OpenID Connect Federation           January 2018
 
@@ -1061,7 +1061,7 @@ B.1.3.  UNINETT gets a key pair for signing Metadata Statements
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 19]
+Hedberg, et al.          Expires August 4, 2018                [Page 19]
 
                         OpenID Connect Federation           January 2018
 
@@ -1117,7 +1117,7 @@ B.2.1.  UNINETT constructs a signing request containing only the public
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 20]
+Hedberg, et al.          Expires August 4, 2018                [Page 20]
 
                         OpenID Connect Federation           January 2018
 
@@ -1173,7 +1173,7 @@ B.2.1.1.  Signed Metadata Statement Created by Feide
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 21]
+Hedberg, et al.          Expires August 4, 2018                [Page 21]
 
                         OpenID Connect Federation           January 2018
 
@@ -1229,7 +1229,7 @@ B.2.1.2.1.  SWAMID Signed Metadata Statement
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 22]
+Hedberg, et al.          Expires August 4, 2018                [Page 22]
 
                         OpenID Connect Federation           January 2018
 
@@ -1285,7 +1285,7 @@ B.3.  Recent
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 23]
+Hedberg, et al.          Expires August 4, 2018                [Page 23]
 
                         OpenID Connect Federation           January 2018
 
@@ -1341,7 +1341,7 @@ B.4.  And Now for the Registration Request
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 24]
+Hedberg, et al.          Expires August 4, 2018                [Page 24]
 
                         OpenID Connect Federation           January 2018
 
@@ -1397,7 +1397,7 @@ B.4.1.  Metadata Statements about Foodle signed by UNINETT
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 25]
+Hedberg, et al.          Expires August 4, 2018                [Page 25]
 
                         OpenID Connect Federation           January 2018
 
@@ -1453,7 +1453,7 @@ B.5.  Foodle Relying Party Registration
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 26]
+Hedberg, et al.          Expires August 4, 2018                [Page 26]
 
                         OpenID Connect Federation           January 2018
 
@@ -1509,7 +1509,7 @@ Hedberg, et al.          Expires August 1, 2018                [Page 26]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 27]
+Hedberg, et al.          Expires August 4, 2018                [Page 27]
 
                         OpenID Connect Federation           January 2018
 
@@ -1565,7 +1565,7 @@ Hedberg, et al.          Expires August 1, 2018                [Page 27]
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 28]
+Hedberg, et al.          Expires August 4, 2018                [Page 28]
 
                         OpenID Connect Federation           January 2018
 
@@ -1621,7 +1621,7 @@ B.7.2.  *** ***
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 29]
+Hedberg, et al.          Expires August 4, 2018                [Page 29]
 
                         OpenID Connect Federation           January 2018
 
@@ -1677,12 +1677,49 @@ Appendix C.  Open Issues
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 30]
+Hedberg, et al.          Expires August 4, 2018                [Page 30]
 
                         OpenID Connect Federation           January 2018
 
 
-Appendix D.  Document History
+Appendix D.  Notices
+
+   Copyright (c) 2018 The OpenID Foundation.
+
+   The OpenID Foundation (OIDF) grants to any Contributor, developer,
+   implementer, or other interested party a non-exclusive, royalty free,
+   worldwide copyright license to reproduce, prepare derivative works
+   from, distribute, perform and display, this Implementers Draft or
+   Final Specification solely for the purposes of (i) developing
+   specifications, and (ii) implementing Implementers Drafts and Final
+   Specifications based on such documents, provided that attribution be
+   made to the OIDF as the source of the material, but that such
+   attribution does not indicate an endorsement by the OIDF.
+
+   The technology described in this specification was made available
+   from contributions from various sources, including members of the
+   OpenID Foundation and others.  Although the OpenID Foundation has
+   taken steps to help ensure that the technology is available for
+   distribution, it takes no position regarding the validity or scope of
+   any intellectual property or other rights that might be claimed to
+   pertain to the implementation or use of the technology described in
+   this specification or the extent to which any license under such
+   rights might or might not be available; neither does it represent
+   that it has made any independent effort to identify any such rights.
+   The OpenID Foundation and the contributors to this specification make
+   no (and hereby expressly disclaim any) warranties (express, implied,
+   or otherwise), including implied warranties of merchantability, non-
+   infringement, fitness for a particular purpose, or title, related to
+   this specification, and the entire risk as to implementing this
+   specification is assumed by the implementer.  The OpenID Intellectual
+   Property Rights policy requires contributors to offer a patent
+   promise not to assert certain patent claims against other
+   contributors and against implementers.  The OpenID Foundation invites
+   any interested party to bring to its attention any copyrights,
+   patents, patent applications, or other proprietary rights that may
+   cover technology that may be required to practice this specification.
+
+Appendix E.  Document History
 
    [[ To be removed from the final specification ]]
 
@@ -1693,9 +1730,20 @@ Appendix D.  Document History
 
    o  Added Open Issues appendix.
 
+
+
+
+Hedberg, et al.          Expires August 4, 2018                [Page 31]
+
+                        OpenID Connect Federation           January 2018
+
+
    o  Added additional references.
 
    o  Editorial improvements.
+
+   o  Added standard Notices section, which is present in all OpenID
+      specifications.
 
 Authors' Addresses
 
@@ -1733,4 +1781,12 @@ Authors' Addresses
 
 
 
-Hedberg, et al.          Expires August 1, 2018                [Page 31]
+
+
+
+
+
+
+
+
+Hedberg, et al.          Expires August 4, 2018                [Page 32]
