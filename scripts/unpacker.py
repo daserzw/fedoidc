@@ -25,7 +25,7 @@ _bundle[args.fo] = kj
 op = Operator(jwks_bundle=_bundle)
 
 if args.req_jws:
-    _fo, _req = open(args.req).read().rsplit(':', 1)
+    _fo, _req = open(args.req_jws).read().rsplit(':', 1)
     _bundle[_fo] = kj
 
     res = op.unpack_metadata_statement(jwt_ms=_req.strip())
