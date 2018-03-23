@@ -1,3 +1,4 @@
+@startuml
 RP1      -> MSS_FA:  Enrolment request (RP1_key)
 MSS_FA   -> RP1:     OK
 RP1      -> MSS_FA:  GET to https://MSS_FA/getms/RP1
@@ -35,3 +36,4 @@ RP1      -> OP1:     Registration request with SMS={"FA": [RP1_key signed by MSS
 OP1      -> OP1:     Checks federations. CE matches.
 OP1      -> RP1:     Registration response with SMS={"FB": [OP1_key signed by MSS_FB_key], \n"CE": [OP1_key signed by MSS_FB_key signed by MSS_CE_key]}
 
+@enduml
