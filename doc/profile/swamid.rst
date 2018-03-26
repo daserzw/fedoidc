@@ -94,8 +94,12 @@ The steps are
   The public part of the RP's signing key are expected to be part
   of the metadata statement.
 3 If the FO accepts the metadata statement as syntactically correct and
-  adhering to the Federations policy. It will add the metadatat statement
+  adhering to the Federations policy. It will add the metadata statement
   to the list of metadata statements that can be signed by the MDSS.
+
+After this the FO will at intervals do (2). If nothing has
+change in the metadata nothing more will happen. If something has changed
+then the FO will do (3).
 
 ------------------------------------
 Using the signed metadata statements
@@ -105,10 +109,21 @@ Once the RP has been accepted by the FO it can start acting within
 the federation. This is what happens then:
 
 1 When the RP needs to construct a client registration request it will
- ask the FO for the current set of Federations/Communities it belongs to.
- It does that by doing a GET on */getms/{entityID}*.
+  ask the FO for the current set of Federations/Communities it belongs to.
+  It does that by doing a GET on */getms/{entityID}*.
 2 When the OP receives the client registration request it can use the
- metadata_statement_uris (which all points to the FOs MDSS) to find the signed
- metadata statements. This means that only metadata_statement_uris can be used
- in the client registration request. No metadata_statements by value are allowed.
+  metadata_statement_uris (which all points to the FOs MDSS) to find the signed
+  metadata statements. This means that only metadata_statement_uris can be used
+  in the client registration request. No metadata_statements by value are allowed.
 
+-------------------------------------------------
+What if the RP wants to change it's signing key ?
+-------------------------------------------------
+
+At some time after enrolment the RP wants to rotate it's signing key it will
+have to do a new enrolment. There is no need at this point for the published URL
+or the entity_id to change.
+
+There are reasons for the OP to issue the same client_id to the RP after the
+change in signing key. One way of solving this is to use the entity_id (or
+a derivative of it) as client_id.
